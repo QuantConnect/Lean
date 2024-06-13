@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_onWarmupFinished != 1)
             {
-                throw new RegressionTestException($"Unexpected {nameof(OnWarmupFinished)} call count {_onWarmupFinished}!");
+                throw new TestException($"Unexpected {nameof(OnWarmupFinished)} call count {_onWarmupFinished}!");
             }
         }
 

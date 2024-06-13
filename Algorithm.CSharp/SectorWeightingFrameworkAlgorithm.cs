@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // Only considers the buy orders, because holding value is zero otherwise
                 if (Math.Abs(_targets[symbol] - portfolioShare) > 0.01m && orderEvent.Direction == OrderDirection.Buy)
                 {
-                    throw new RegressionTestException($"Target for {symbol}: expected {_targets[symbol]}, actual: {portfolioShare}");
+                    throw new TestException($"Target for {symbol}: expected {_targets[symbol]}, actual: {portfolioShare}");
                 }
             }
         }

@@ -110,11 +110,11 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (statistics.ContainsKey(MostTradedSecurityStatistic))
                     {
-                        throw new RegressionTestException($"Statistic {MostTradedSecurityStatistic} should not be set yet");
+                        throw new TestException($"Statistic {MostTradedSecurityStatistic} should not be set yet");
                     }
                     if (statistics.ContainsKey(MostTradedSecurityTradeCountStatistic))
                     {
-                        throw new RegressionTestException($"Statistic {MostTradedSecurityTradeCountStatistic} should not be set yet");
+                        throw new TestException($"Statistic {MostTradedSecurityTradeCountStatistic} should not be set yet");
                     }
                 }
                 else
@@ -146,11 +146,11 @@ namespace QuantConnect.Algorithm.CSharp
             var statistics = Statistics.Summary;
             if (!statistics.ContainsKey(MostTradedSecurityStatistic))
             {
-                throw new RegressionTestException($"Statistic {MostTradedSecurityStatistic} should be in the summary statistics");
+                throw new TestException($"Statistic {MostTradedSecurityStatistic} should be in the summary statistics");
             }
             if (!statistics.ContainsKey(MostTradedSecurityTradeCountStatistic))
             {
-                throw new RegressionTestException($"Statistic {MostTradedSecurityTradeCountStatistic} should be in the summary statistics");
+                throw new TestException($"Statistic {MostTradedSecurityTradeCountStatistic} should be in the summary statistics");
             }
             var mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
             CheckMostTradedSecurityStatistic(statistics, mostTradeSecurityKvp.Key, mostTradeSecurityKvp.Value);
@@ -165,11 +165,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (mostTradedSecurityStatistic != mostTradedSecurity)
             {
-                throw new RegressionTestException($"Most traded security should be {mostTradedSecurity} but it is {mostTradedSecurityStatistic}");
+                throw new TestException($"Most traded security should be {mostTradedSecurity} but it is {mostTradedSecurityStatistic}");
             }
             if (mostTradedSecurityTradeCountStatistic != tradeCount.ToStringInvariant())
             {
-                throw new RegressionTestException($"Most traded security trade count should be {tradeCount} but it is {mostTradedSecurityTradeCountStatistic}");
+                throw new TestException($"Most traded security trade count should be {tradeCount} but it is {mostTradedSecurityTradeCountStatistic}");
             }
         }
 

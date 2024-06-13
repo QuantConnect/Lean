@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var cachedInterestRate = Securities[interestRate.Key].Cache.GetData<MarginInterestRate>();
                 if (cachedInterestRate != interestRate.Value)
                 {
-                    throw new RegressionTestException($"Unexpected cached margin interest rate for {interestRate.Key}!");
+                    throw new TestException($"Unexpected cached margin interest rate for {interestRate.Key}!");
                 }
             }
 
@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var ticket = Buy(_adaUsdt.Symbol, 100000);
                     if(ticket.Status != OrderStatus.Invalid)
                     {
-                        throw new RegressionTestException($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
+                        throw new TestException($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
                     }
 
                     Buy(_adaUsdt.Symbol, 1000);
@@ -108,28 +108,28 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (Math.Abs(adaUsdtHoldings.TotalSaleVolume - holdingsValueUsdt) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected TotalSaleVolume {adaUsdtHoldings.TotalSaleVolume}");
+                        throw new TestException($"Unexpected TotalSaleVolume {adaUsdtHoldings.TotalSaleVolume}");
                     }
                     if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}");
+                        throw new TestException($"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}");
                     }
                     if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
                         || _adaUsdt.BuyingPowerModel.GetMaintenanceMargin(_adaUsdt) != marginUsed)
                     {
-                        throw new RegressionTestException($"Unexpected margin used {marginUsed}");
+                        throw new TestException($"Unexpected margin used {marginUsed}");
                     }
 
                     // position just opened should be just spread here
                     var profit = Portfolio.TotalUnrealizedProfit;
                     if ((5 - Math.Abs(profit)) < 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
+                        throw new TestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
                     }
 
                     if (Portfolio.TotalProfit != 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
+                        throw new TestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
                     }
                 }
             }
@@ -147,19 +147,19 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}");
+                        throw new TestException($"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}");
                     }
 
                     // position just opened should be just spread here
                     var profit = Portfolio.TotalUnrealizedProfit;
                     if ((5 - Math.Abs(profit)) < 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
+                        throw new TestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
                     }
                     // we barely did any difference on the previous trade
                     if ((5 - Math.Abs(Portfolio.TotalProfit)) < 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
+                        throw new TestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
                     }
                 }
 
@@ -174,7 +174,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_interestPerSymbol[_adaUsdt.Symbol] != 1)
             {
-                throw new RegressionTestException($"Unexpected interest rate count {_interestPerSymbol[_adaUsdt.Symbol]}");
+                throw new TestException($"Unexpected interest rate count {_interestPerSymbol[_adaUsdt.Symbol]}");
             }
         }
 

@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var dataSpan = data.EndTime - data.Time;
                     if (dataSpan != QuantConnect.Time.OneDay)
                     {
-                        throw new RegressionTestException($"Unexpected bar span! {data}: {dataSpan}");
+                        throw new TestException($"Unexpected bar span! {data}: {dataSpan}");
                     }
                 }
             }
@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if (atmContract.LastPrice == 0)
                         {
-                            throw new RegressionTestException("Contract price is not set!");
+                            throw new TestException("Contract price is not set!");
                         }
                         _optionWarmupTimes.Add(Time);
                     }
@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (_optionWarmupTimes[count] != start)
                 {
-                    throw new RegressionTestException($"Unexpected time {_optionWarmupTimes[count]} expected {start}");
+                    throw new TestException($"Unexpected time {_optionWarmupTimes[count]} expected {start}");
                 }
                 count++;
                 start = start.AddDays(1);

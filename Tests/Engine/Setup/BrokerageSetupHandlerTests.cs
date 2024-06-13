@@ -772,12 +772,12 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), false);
 
                     yield return new TestCaseData(
-                        new Func<List<Holding>>(() => { throw new RegressionTestException(); }),
+                        new Func<List<Holding>>(() => { throw new TestException(); }),
                         new Func<List<Order>>(() => new List<Order>()), false);
 
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>()),
-                        new Func<List<Order>>(() => { throw new RegressionTestException(); }), false);
+                        new Func<List<Order>>(() => { throw new TestException(); }), false);
                 }
             }
         }

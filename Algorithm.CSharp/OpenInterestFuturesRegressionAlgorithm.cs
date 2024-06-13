@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var matched = slice.Keys.Where(s => !s.IsCanonical() && !ExpectedExpiryDates.Contains(s.ID.Date)).ToList();
                 if (matched.Count != 0)
                 {
-                    throw new RegressionTestException($"{matched.Count}/{slice.Keys.Count} were unexpected expiry date(s): " + string.Join(", ", matched.Select(x => x.ID.Date)));
+                    throw new TestException($"{matched.Count}/{slice.Keys.Count} were unexpected expiry date(s): " + string.Join(", ", matched.Select(x => x.ID.Date)));
                 }
 
                 foreach (var symbol in slice.Keys)

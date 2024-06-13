@@ -86,11 +86,11 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_expectedRawPrices.Current == probableRawPrice)
                     {
-                        throw new RegressionTestException($"Close price was incorrect; it appears to be the adjusted value");
+                        throw new TestException($"Close price was incorrect; it appears to be the adjusted value");
                     }
                     else
                     {
-                        throw new RegressionTestException($"Close price was incorrect; Data may have changed.");
+                        throw new TestException($"Close price was incorrect; Data may have changed.");
                     }
                 }
 

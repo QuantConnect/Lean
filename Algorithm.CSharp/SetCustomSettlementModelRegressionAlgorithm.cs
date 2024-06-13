@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.CashBook[Currencies.USD].Amount != 10101)
             {
-                throw new RegressionTestException($"It was expected to have 10101 USD in Portfolio, but was {Portfolio.CashBook[Currencies.USD].Amount}");
+                throw new TestException($"It was expected to have 10101 USD in Portfolio, but was {Portfolio.CashBook[Currencies.USD].Amount}");
             }
 
             var parameters = new ScanSettlementModelParameters(Portfolio, _spy, new DateTime(2013, 10, 6));
@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Portfolio.CashBook[Currencies.USD].Amount != 10000)
             {
-                throw new RegressionTestException($"It was expected to have 10000 USD in Portfolio, but was {Portfolio.CashBook[Currencies.USD].Amount}");
+                throw new TestException($"It was expected to have 10000 USD in Portfolio, but was {Portfolio.CashBook[Currencies.USD].Amount}");
             }
         }
 

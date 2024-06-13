@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (symbol != _spy)
             {
-                throw new RegressionTestException($"Unexpected 'OnEndOfDay(Symbol symbol)' symbol {symbol}");
+                throw new TestException($"Unexpected 'OnEndOfDay(Symbol symbol)' symbol {symbol}");
             }
             _count++;
         }
@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Monday to Friday
             if (_count != 5)
             {
-                throw new RegressionTestException($"Unexpected 'OnEndOfDay(Symbol symbol)' calls {_count}");
+                throw new TestException($"Unexpected 'OnEndOfDay(Symbol symbol)' calls {_count}");
             }
         }
 

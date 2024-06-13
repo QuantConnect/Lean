@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var cash = Portfolio.CashBook["EUR"];
                 if (cash.CurrencyConversion.GetType() == typeof(ConstantCurrencyConversion) || cash.ConversionRate == 0)
                 {
-                    throw new RegressionTestException("Expected 'EUR' Cash to be fully set");
+                    throw new TestException("Expected 'EUR' Cash to be fully set");
                 }
 
                 var eurUsdSubscription = SubscriptionManager.SubscriptionDataConfigService
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
                     .Single();
                 if (!eurUsdSubscription.IsInternalFeed)
                 {
-                    throw new RegressionTestException("Unexpected not internal 'EURUSD' Subscription");
+                    throw new TestException("Unexpected not internal 'EURUSD' Subscription");
                 }
             }
 

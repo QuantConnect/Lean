@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
                 ||
                 Portfolio.TotalHoldingsValue < Portfolio.TotalPortfolioValue * 0.01m)
             {
-                throw new RegressionTestException($"Unexpected Total Holdings Value: {Portfolio.TotalHoldingsValue}");
+                throw new TestException($"Unexpected Total Holdings Value: {Portfolio.TotalHoldingsValue}");
             }
         }
 

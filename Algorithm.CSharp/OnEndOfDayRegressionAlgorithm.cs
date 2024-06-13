@@ -96,15 +96,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_onEndOfDaySpyCallCount != 5)
             {
-                throw new RegressionTestException($"OnEndOfDay(SPY) unexpected count call {_onEndOfDaySpyCallCount}");
+                throw new TestException($"OnEndOfDay(SPY) unexpected count call {_onEndOfDaySpyCallCount}");
             }
             if (_onEndOfDayBacCallCount != 4)
             {
-                throw new RegressionTestException($"OnEndOfDay(BAC) unexpected count call {_onEndOfDayBacCallCount}");
+                throw new TestException($"OnEndOfDay(BAC) unexpected count call {_onEndOfDayBacCallCount}");
             }
             if (_onEndOfDayIbmCallCount != 1)
             {
-                throw new RegressionTestException($"OnEndOfDay(IBM) unexpected count call {_onEndOfDayIbmCallCount}");
+                throw new TestException($"OnEndOfDay(IBM) unexpected count call {_onEndOfDayIbmCallCount}");
             }
         }
 

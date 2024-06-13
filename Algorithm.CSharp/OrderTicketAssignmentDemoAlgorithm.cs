@@ -59,11 +59,11 @@ namespace QuantConnect.Algorithm.CSharp
             var ticket = orderEvent.Ticket;
             if (ticket == null)
             {
-                throw new RegressionTestException("Expected order ticket in order event to not be null");
+                throw new TestException("Expected order ticket in order event to not be null");
             }
             if (orderEvent.Status == OrderStatus.Submitted && _ticket != null)
             {
-                throw new RegressionTestException("Field _ticket not expected no be assigned on the first order event");
+                throw new TestException("Field _ticket not expected no be assigned on the first order event");
             }
 
             Debug(ticket.ToString());
@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Just checking that orders were placed
             if (!Portfolio.Invested || _tradeCount != Transactions.OrdersCount)
             {
-                throw new RegressionTestException($"Expected the portfolio to have holdings and to have {_tradeCount} trades, but had {Transactions.OrdersCount}");
+                throw new TestException($"Expected the portfolio to have holdings and to have {_tradeCount} trades, but had {Transactions.OrdersCount}");
             }
         }
 

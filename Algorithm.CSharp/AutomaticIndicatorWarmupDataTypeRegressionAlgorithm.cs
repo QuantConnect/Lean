@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!sma11.Current.Equals(sma1.Current))
             {
-                throw new RegressionTestException("Expected SMAs warmed up before and after adding the Future to the algorithm to have the same current value. " +
+                throw new TestException("Expected SMAs warmed up before and after adding the Future to the algorithm to have the same current value. " +
                                     "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed");
             }
 
@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!smaSpy.Current.Equals(sma.Current))
             {
-                throw new RegressionTestException("Expected SMAs warmed up before and after adding the Equity to the algorithm to have the same current value. " +
+                throw new TestException("Expected SMAs warmed up before and after adding the Equity to the algorithm to have the same current value. " +
                                     "The result of 'WarmUpIndicator' shouldn't change if the symbol is or isn't subscribed");
             }
         }
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (indicator.IsReady != isReady)
             {
-                throw new RegressionTestException($"Expected indicator state, expected {isReady} but was {indicator.IsReady}");
+                throw new TestException($"Expected indicator state, expected {isReady} but was {indicator.IsReady}");
             }
         }
 

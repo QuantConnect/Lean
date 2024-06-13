@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Securities[_spy].Leverage != 10)
             {
-                throw new RegressionTestException($"Expecting leverage to be 10, was {Securities[_spy].Leverage}");
+                throw new TestException($"Expecting leverage to be 10, was {Securities[_spy].Leverage}");
             }
         }
 

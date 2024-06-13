@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Common.Util
 
                 if (_throwException)
                 {
-                    throw new RegressionTestException();
+                    throw new TestException();
                 }
             }
         }

@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (!SymbolCache.TryGetSymbol("SPY", out symbol)
                 || !ReferenceEquals(_spy, symbol))
             {
-                throw new RegressionTestException("We expected 'SPY' to be added to the Symbol cache," +
+                throw new TestException("We expected 'SPY' to be added to the Symbol cache," +
                                     " since the algorithm is also using it");
             }
         }
@@ -87,12 +87,12 @@ namespace QuantConnect.Algorithm.CSharp
                     || bar.Period != TimeSpan.FromMinutes(1))
                 {
                     // bar should always be the Minute resolution one here
-                    throw new RegressionTestException("Unexpected Bar error");
+                    throw new TestException("Unexpected Bar error");
                 }
                 if (_previousTime.Date == data.Time.Date
                     && (data.Time - _previousTime) != TimeSpan.FromMinutes(1))
                 {
-                    throw new RegressionTestException("For the same date expected data updates every 1 minute");
+                    throw new TestException("For the same date expected data updates every 1 minute");
                 }
             }
             else
@@ -100,13 +100,13 @@ namespace QuantConnect.Algorithm.CSharp
                 if (data.Time.Minute == 0
                     && _previousSecurityValue == security.Price)
                 {
-                    throw new RegressionTestException($"Security Price error. Price should change every new hour");
+                    throw new TestException($"Security Price error. Price should change every new hour");
                 }
                 if (data.Time.Minute != 0
                     && _previousSecurityValue != security.Price
                     && security.IsTradable)
                 {
-                    throw new RegressionTestException($"Security Price error. Price should not change every minute");
+                    throw new TestException($"Security Price error. Price should not change every minute");
                 }
             }
             _previousSecurityValue = security.Price;
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (currentValue != _previousBenchmarkValue)
                 {
-                    throw new RegressionTestException($"Benchmark value error - expected: {_previousBenchmarkValue} {_previousTime}, actual: {currentValue} {data.Time}. " +
+                    throw new TestException($"Benchmark value error - expected: {_previousBenchmarkValue} {_previousTime}, actual: {currentValue} {data.Time}. " +
                                         "Benchmark value should only change when there is a change in hours");
                 }
             }
@@ -131,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
                         // there are two consecutive equal data points so we give it some room
                         if (_benchmarkPriceDidNotChange > 1)
                         {
-                            throw new RegressionTestException($"Benchmark value error - expected a new value, current {currentValue} {data.Time}" +
+                            throw new TestException($"Benchmark value error - expected a new value, current {currentValue} {data.Time}" +
                                                 "Benchmark value should change when there is a change in hours");
                         }
                     }
@@ -147,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
             // assert algorithm security is the correct one - not the internal one
             if (security.Leverage != ExpectedLeverage)
             {
-                throw new RegressionTestException($"Leverage error - expected: {ExpectedLeverage}, actual: {security.Leverage}");
+                throw new TestException($"Leverage error - expected: {ExpectedLeverage}, actual: {security.Leverage}");
             }
         }
 
@@ -155,7 +155,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_onDataWasCalled)
             {
-                throw new RegressionTestException("OnData was not called");
+                throw new TestException("OnData was not called");
             }
         }
 

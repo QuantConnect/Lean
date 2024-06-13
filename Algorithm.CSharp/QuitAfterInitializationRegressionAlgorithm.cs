@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_stopped)
             {
-                throw new RegressionTestException("Algorithm should of stopped!");
+                throw new TestException("Algorithm should of stopped!");
             }
             _stopped = true;
             Quit();

@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"BTC conversion rate: {Portfolio.CashBook["BTC"].ConversionRate}");
                 Log($"LTC conversion rate: {Portfolio.CashBook["LTC"].ConversionRate}");
 
-                throw new RegressionTestException("Conversion rate is 0");
+                throw new TestException("Conversion rate is 0");
             }
 
             if (IsWarmingUp) return;

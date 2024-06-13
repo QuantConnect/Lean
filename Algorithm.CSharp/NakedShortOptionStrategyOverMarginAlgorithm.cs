@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (orderEvent.Quantity == _quantityOverMargin && orderEvent.Status != OrderStatus.Invalid)
             {
-                throw new RegressionTestException($"Orders with quantity {_quantityOverMargin} should be invalid");
+                throw new TestException($"Orders with quantity {_quantityOverMargin} should be invalid");
             }
         }
 
@@ -107,14 +107,14 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedFilledOrdersCount = 2 * _optionStrategy.OptionLegs.Count;
             if (filledOrdersCount != expectedFilledOrdersCount)
             {
-                throw new RegressionTestException($"Expected {expectedFilledOrdersCount} filled orders, found {filledOrdersCount}");
+                throw new TestException($"Expected {expectedFilledOrdersCount} filled orders, found {filledOrdersCount}");
             }
 
             var expectedQuantity = Math.Abs(_quantity - _quantityToLiquidate);
             var positionGroup = Portfolio.Positions.Groups.Single();
             if (positionGroup.Quantity != expectedQuantity)
             {
-                throw new RegressionTestException($"Expected position quantity to be {expectedQuantity} but was {positionGroup.Quantity}");
+                throw new TestException($"Expected position quantity to be {expectedQuantity} but was {positionGroup.Quantity}");
             }
         }
 

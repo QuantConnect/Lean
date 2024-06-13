@@ -78,19 +78,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_optionAssigned)
             {
-                throw new RegressionTestException("Expected option to have been assigned before the margin call " +
+                throw new TestException("Expected option to have been assigned before the margin call " +
                     "(which should have been triggered by the auto-exercise of the option with inssuficient margin).");
             }
 
             if (_marginCallReceived)
             {
-                throw new RegressionTestException("Received multiple margin calls. Expected just one.");
+                throw new TestException("Received multiple margin calls. Expected just one.");
             }
 
             var request = requests.Single();
             if (request.Symbol != _stock)
             {
-                throw new RegressionTestException("Expected margin call for the stock, but got margin call for: " + request.Symbol);
+                throw new TestException("Expected margin call for the stock, but got margin call for: " + request.Symbol);
             }
 
             _marginCallReceived = true;
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if (!_stockBought)
                         {
-                            throw new RegressionTestException("Stock should have been bought first");
+                            throw new TestException("Stock should have been bought first");
                         }
 
                         _optionSold = true;
@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if (!_optionSold)
                         {
-                            throw new RegressionTestException("Option should have been sold first");
+                            throw new TestException("Option should have been sold first");
                         }
 
                         _optionAssigned = true;
@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 else
                 {
-                    throw new RegressionTestException("Unexpected symbol: " + orderEvent.Symbol);
+                    throw new TestException("Unexpected symbol: " + orderEvent.Symbol);
                 }
             }
         }
@@ -139,22 +139,22 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_stockBought)
             {
-                throw new RegressionTestException("Stock was not bought");
+                throw new TestException("Stock was not bought");
             }
 
             if (!_optionSold)
             {
-                throw new RegressionTestException("Option was not sold");
+                throw new TestException("Option was not sold");
             }
 
             if (!_optionAssigned)
             {
-                throw new RegressionTestException("Option was not assigned");
+                throw new TestException("Option was not assigned");
             }
 
             if (!_marginCallReceived)
             {
-                throw new RegressionTestException("Margin call was not received");
+                throw new TestException("Margin call was not received");
             }
         }
 

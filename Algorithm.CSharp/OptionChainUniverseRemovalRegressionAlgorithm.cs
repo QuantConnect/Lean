@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (universe.Underlying == null)
                 {
-                    throw new RegressionTestException("Underlying data point is null! This shouldn't happen, each OptionChainUniverse handles and should provide this");
+                    throw new TestException("Underlying data point is null! This shouldn't happen, each OptionChainUniverse handles and should provide this");
                 }
                 return universe.IncludeWeeklys()
                     .BackMonth() // back month so that they don't get removed because of being delisted
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // options added should all match prev added security
                     if (security.Symbol.Underlying != _lastEquityAdded)
                     {
-                        throw new RegressionTestException($"Unexpected symbol added {security.Symbol}");
+                        throw new TestException($"Unexpected symbol added {security.Symbol}");
                     }
 
                     _optionCount++;
@@ -104,12 +104,12 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time.Hour != 0 && Time.Hour != 9)
                 {
-                    throw new RegressionTestException($"Unexpected SecurityChanges time: {Time} {changes}");
+                    throw new TestException($"Unexpected SecurityChanges time: {Time} {changes}");
                 }
 
                 if (changes.RemovedSecurities.Count != 0)
                 {
-                    throw new RegressionTestException($"Unexpected removals: {changes}");
+                    throw new TestException($"Unexpected removals: {changes}");
                 }
 
                 if (Time.Hour == 0)
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // first we expect the equity to get Added
                     if (changes.AddedSecurities.Count != 1 || changes.AddedSecurities[0].Symbol != _aapl)
                     {
-                        throw new RegressionTestException($"Unexpected SecurityChanges: {changes}");
+                        throw new TestException($"Unexpected SecurityChanges: {changes}");
                     }
                 }
                 else
@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // later we expect the options to be Added
                     if (changes.AddedSecurities.Count != 5 || changes.AddedSecurities.Any(security => security.Symbol.SecurityType != SecurityType.Option))
                     {
-                        throw new RegressionTestException($"Unexpected SecurityChanges: {changes}");
+                        throw new TestException($"Unexpected SecurityChanges: {changes}");
                     }
                 }
             }
@@ -134,17 +134,17 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time.Hour != 0)
                 {
-                    throw new RegressionTestException($"Unexpected SecurityChanges time: {Time} {changes}");
+                    throw new TestException($"Unexpected SecurityChanges time: {Time} {changes}");
                 }
 
                 if (changes.AddedSecurities.Count != 0)
                 {
-                    throw new RegressionTestException($"Unexpected additions: {changes}");
+                    throw new TestException($"Unexpected additions: {changes}");
                 }
 
                 if (changes.RemovedSecurities.Count != 1 || changes.RemovedSecurities[0].Symbol != _aapl)
                 {
-                    throw new RegressionTestException($"Unexpected SecurityChanges: {changes}");
+                    throw new TestException($"Unexpected SecurityChanges: {changes}");
                 }
             }
             // We expect the options to get Removed, happens in the next loop after removing the equity
@@ -152,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time.Hour != 0)
                 {
-                    throw new RegressionTestException($"Unexpected SecurityChanges time: {Time} {changes}");
+                    throw new TestException($"Unexpected SecurityChanges time: {Time} {changes}");
                 }
 
                 // later we expect the options to be Removed
@@ -162,7 +162,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // the removal of the 5 option contracts
                     || changes.RemovedSecurities.Count(security => security.Symbol.SecurityType == SecurityType.Option) != 5)
                 {
-                    throw new RegressionTestException($"Unexpected SecurityChanges: {changes}");
+                    throw new TestException($"Unexpected SecurityChanges: {changes}");
                 }
             }
 
@@ -173,11 +173,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_optionCount == 0)
             {
-                throw new RegressionTestException("Option universe chain did not add any option!");
+                throw new TestException("Option universe chain did not add any option!");
             }
             if (UniverseManager.Any(pair => pair.Value.DisposeRequested))
             {
-                throw new RegressionTestException("There shouldn't be any disposed universe, they should be removed and replaced by new universes");
+                throw new TestException("There shouldn't be any disposed universe, they should be removed and replaced by new universes");
             }
         }
 

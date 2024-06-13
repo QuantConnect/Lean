@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if(atmContract.LastPrice == 0)
                         {
-                            throw new RegressionTestException("Contract price is not set!");
+                            throw new TestException("Contract price is not set!");
                         }
                         OptionWarmupTimes.Add(Time);
                     }
@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (OptionWarmupTimes[count] != start)
                 {
-                    throw new RegressionTestException($"Unexpected time {OptionWarmupTimes[count]} expected {start}");
+                    throw new TestException($"Unexpected time {OptionWarmupTimes[count]} expected {start}");
                 }
                 count++;
                 start = start.AddMinutes(1);

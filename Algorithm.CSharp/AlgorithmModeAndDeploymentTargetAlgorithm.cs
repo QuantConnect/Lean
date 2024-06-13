@@ -34,25 +34,25 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (AlgorithmMode != AlgorithmMode.Backtesting)
             {
-                throw new RegressionTestException($"Algorithm mode is not backtesting. Actual: {AlgorithmMode}");
+                throw new TestException($"Algorithm mode is not backtesting. Actual: {AlgorithmMode}");
             }
 
             if (LiveMode)
             {
-                throw new RegressionTestException("Algorithm should not be live");
+                throw new TestException("Algorithm should not be live");
             }
 
             if (DeploymentTarget != DeploymentTarget.LocalPlatform)
             {
-                throw new RegressionTestException($"Algorithm deployment target is not local. Actual{DeploymentTarget}");
+                throw new TestException($"Algorithm deployment target is not local. Actual{DeploymentTarget}");
             }
 
             // For a live deployment these checks should pass:
-            //if (AlgorithmMode != AlgorithmMode.Live) throw new RegressionTestException("Algorithm mode is not live");
-            //if (!LiveMode) throw new RegressionTestException("Algorithm should be live");
+            //if (AlgorithmMode != AlgorithmMode.Live) throw new TestException("Algorithm mode is not live");
+            //if (!LiveMode) throw new TestException("Algorithm should be live");
 
             // For a cloud deployment these checks should pass:
-            //if (DeploymentTarget != DeploymentTarget.CloudPlatform) throw new RegressionTestException("Algorithm deployment target is not cloud");
+            //if (DeploymentTarget != DeploymentTarget.CloudPlatform) throw new TestException("Algorithm deployment target is not cloud");
 
             Quit();
         }

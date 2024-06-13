@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (orderEvent.Ticket.OrderType != OrderType.OptionExercise || !orderEvent.IsAssignment)
                     {
-                        throw new RegressionTestException($"Expected option assignment but got: {orderEvent}");
+                        throw new TestException($"Expected option assignment but got: {orderEvent}");
                     }
 
                     _optionAssigned = true;
@@ -93,14 +93,14 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (orderEvent.Ticket.OrderType != OrderType.OptionExercise || orderEvent.IsAssignment || orderEvent.Symbol != _stock)
                     {
-                        throw new RegressionTestException($"Expected stock assignment but got: {orderEvent}");
+                        throw new TestException($"Expected stock assignment but got: {orderEvent}");
                     }
 
                     _stockAssigned = true;
                 }
                 else
                 {
-                    throw new RegressionTestException($"Unexpected order fill event: {orderEvent}");
+                    throw new TestException($"Unexpected order fill event: {orderEvent}");
                 }
             }
             else if (orderEvent.Status == OrderStatus.CancelPending)
@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // We receive the delisting warning before the order cancel is requested
                 if (!_optionSold || !_optionAssigned || !_stockAssigned || !_optionDelistedWarningReceived)
                 {
-                    throw new RegressionTestException($"Unexpected cancel pending event: {orderEvent}");
+                    throw new TestException($"Unexpected cancel pending event: {orderEvent}");
                 }
             }
             else if (orderEvent.Status == OrderStatus.Canceled)
@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // The delisted event is received before the order is canceled
                 if (!_optionSold || !_optionAssigned || !_stockAssigned || !_optionDelistedWarningReceived || !_optionDelisted)
                 {
-                    throw new RegressionTestException($"Unexpected cancel event: {orderEvent}");
+                    throw new TestException($"Unexpected cancel event: {orderEvent}");
                 }
 
                 _orderCanceled = true;
@@ -127,14 +127,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!delistings.TryGetValue(_option, out var delisting))
             {
-                throw new RegressionTestException($"Unexpected delisting events");
+                throw new TestException($"Unexpected delisting events");
             }
 
             if (delisting.Type == DelistingType.Warning)
             {
                 if (!_optionSold || !_optionAssigned || !_stockAssigned || _optionDelistedWarningReceived)
                 {
-                    throw new RegressionTestException($"Unexpected delisting warning event: {delisting}");
+                    throw new TestException($"Unexpected delisting warning event: {delisting}");
                 }
 
                 _optionDelistedWarningReceived = true;
@@ -143,7 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!_optionSold || !_optionAssigned || !_stockAssigned || !_optionDelistedWarningReceived || _optionDelisted)
                 {
-                    throw new RegressionTestException($"Unexpected delisting event: {delisting}");
+                    throw new TestException($"Unexpected delisting event: {delisting}");
                 }
 
                 _optionDelisted = true;
@@ -154,49 +154,49 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_optionSold)
             {
-                throw new RegressionTestException("Option was not sold");
+                throw new TestException("Option was not sold");
             }
 
             if (!_optionAssigned)
             {
-                throw new RegressionTestException("Option was not assigned");
+                throw new TestException("Option was not assigned");
             }
 
             if (!_stockAssigned)
             {
-                throw new RegressionTestException("Stock was not assigned");
+                throw new TestException("Stock was not assigned");
             }
 
             if (!_optionDelistedWarningReceived)
             {
-                throw new RegressionTestException("Option delisting warning was not received");
+                throw new TestException("Option delisting warning was not received");
             }
 
             if (!_optionDelisted)
             {
-                throw new RegressionTestException("Option was not delisted");
+                throw new TestException("Option was not delisted");
             }
 
             if (!_orderCanceled)
             {
-                throw new RegressionTestException("Order was not canceled");
+                throw new TestException("Order was not canceled");
             }
 
             var openOrders = Transactions.GetOpenOrders();
             if (openOrders.Count != 0)
             {
-                throw new RegressionTestException("There should be no open orders");
+                throw new TestException("There should be no open orders");
             }
 
             if (!Portfolio.Invested)
             {
-                throw new RegressionTestException("Portfolio should be invested");
+                throw new TestException("Portfolio should be invested");
             }
 
             // We should have the stock since the option was assigned
             if (Portfolio.Positions.Groups.Single().Single().Symbol != _stock)
             {
-                throw new RegressionTestException("Portfolio should have the stock");
+                throw new TestException("Portfolio should have the stock");
             }
         }
 

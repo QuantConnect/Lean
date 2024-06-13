@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!time.IsOpen(orderEvent.UtcTime, _SP500EMini.IsExtendedMarketHours))
                 {
-                    throw new RegressionTestException($"The Exchange hours was closed, verify 'extendedMarketHours' flag in {nameof(Initialize)} when added new security(ies).");
+                    throw new TestException($"The Exchange hours was closed, verify 'extendedMarketHours' flag in {nameof(Initialize)} when added new security(ies).");
                 }
             }
         }
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (stopMarketOrders.Any(x => x.Status != OrderStatus.Filled))
             {
-                throw new RegressionTestException("The Algorithms was not handled any StopMarketOrders");
+                throw new TestException("The Algorithms was not handled any StopMarketOrders");
             }
         }
 

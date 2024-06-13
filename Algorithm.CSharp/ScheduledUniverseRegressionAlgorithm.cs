@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedTime = _selectionTime.Dequeue();
             if (expectedTime != Time)
             {
-                throw new RegressionTestException($"Unexpected selection time {Time} expected {expectedTime}");
+                throw new TestException($"Unexpected selection time {Time} expected {expectedTime}");
             }
 
             return new[] { _spy };
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_selectionTime.Count > 0)
             {
-                throw new RegressionTestException("Unexpected selection times");
+                throw new TestException("Unexpected selection times");
             }
         }
 

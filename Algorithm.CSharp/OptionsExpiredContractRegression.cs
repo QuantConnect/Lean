@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (contract.Expiry.Date < Time.Date)
                     {
-                        throw new RegressionTestException($"Received expired contract {contract} expired: {contract.Expiry} current time: {Time}");
+                        throw new TestException($"Received expired contract {contract} expired: {contract.Expiry} current time: {Time}");
                     }
                 }
             }
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_receivedData)
             {
-                throw new RegressionTestException("No Options chains were received in this regression");
+                throw new TestException("No Options chains were received in this regression");
             }
         }
 

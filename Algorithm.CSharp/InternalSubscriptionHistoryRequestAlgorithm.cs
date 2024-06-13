@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var history = History(new[] { spy }, TimeSpan.FromDays(10));
                 if (!history.Any() || !history.All(slice => slice.Bars.All(pair => pair.Value.Period == TimeSpan.FromHours(1))))
                 {
-                    throw new RegressionTestException("Unexpected history result for internal subscription");
+                    throw new TestException("Unexpected history result for internal subscription");
                 }
 
                 // we add SPY using Daily > default benchmark using hourly
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 history = History(new[] { spy }, TimeSpan.FromDays(10));
                 if (!history.Any() || !history.All(slice => slice.Bars.All(pair => pair.Value.Period == TimeSpan.FromDays(1))))
                 {
-                    throw new RegressionTestException("Unexpected history result for user subscription");
+                    throw new TestException("Unexpected history result for user subscription");
                 }
             }
         }

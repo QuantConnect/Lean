@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!threwException)
             {
-                throw new RegressionTestException("Expected exception to be thrown for AddUniverse");
+                throw new TestException("Expected exception to be thrown for AddUniverse");
             }
 
             SetUniverseSelection(new FineFundamentalUniverseSelectionModel(CoarseSelectionFunction, FineSelectionFunction));

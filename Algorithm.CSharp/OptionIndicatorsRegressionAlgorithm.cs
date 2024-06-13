@@ -61,14 +61,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
             {
-                throw new RegressionTestException("Expected IV/greeks calculated");
+                throw new TestException("Expected IV/greeks calculated");
             }
             var result = @$"Implied Volatility: {_impliedVolatility},Delta: {_delta},Gamma: {_gamma},Vega: {_vega},Theta: {_theta},Rho: {_rho}";
 
             Debug(result);
             if (result != ExpectedGreeks)
             {
-                throw new RegressionTestException($"Unexpected greek values {result}. Expected {ExpectedGreeks}");
+                throw new TestException($"Unexpected greek values {result}. Expected {ExpectedGreeks}");
             }
         }
 

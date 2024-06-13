@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_firstOnDataCallDone)
                     {
-                        throw new RegressionTestException("Option chain universe selection time was set after OnData was called");
+                        throw new TestException("Option chain universe selection time was set after OnData was called");
                     }
                 }
 
@@ -80,12 +80,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!slice.ContainsKey(_optionSymbol.Underlying))
                 {
-                    throw new RegressionTestException($"Expected to find {_optionSymbol.Underlying} in first slice");
+                    throw new TestException($"Expected to find {_optionSymbol.Underlying} in first slice");
                 }
 
                 if (!slice.OptionChains.ContainsKey(_optionSymbol))
                 {
-                    throw new RegressionTestException($"Expected to find {_optionSymbol} in first slice's Option Chain");
+                    throw new TestException($"Expected to find {_optionSymbol} in first slice's Option Chain");
                 }
             }
         }
@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_securityChangesCallCount <= 2 && _firstOnDataCallDone)
             {
-                throw new RegressionTestException("Expected 2 OnSecuritiesChanged calls (Underlying addition + Options additions) " +
+                throw new TestException("Expected 2 OnSecuritiesChanged calls (Underlying addition + Options additions) " +
                     "before the first data is sent to the algorithm");
             }
 
@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // The first time, only the underlying should have been added
                 if (changes.AddedSecurities.Count != 1 || changes.RemovedSecurities.Count != 0)
                 {
-                    throw new RegressionTestException($"Unexpected securities changes on first OnSecuritiesChanged event. " +
+                    throw new TestException($"Unexpected securities changes on first OnSecuritiesChanged event. " +
                         $"Expected one security added and none removed but got {changes.AddedSecurities.Count} securities added " +
                         $"and {changes.RemovedSecurities.Count} removed.");
                 }
@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var addedSecuritySymbol = changes.AddedSecurities.Single().Symbol;
                 if (addedSecuritySymbol != _optionSymbol.Underlying)
                 {
-                    throw new RegressionTestException($"Expected to find {_optionSymbol.Underlying} in first OnSecuritiesChanged event, " +
+                    throw new TestException($"Expected to find {_optionSymbol.Underlying} in first OnSecuritiesChanged event, " +
                         $"but found {addedSecuritySymbol}");
                 }
             }
@@ -124,19 +124,19 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (_selectionTimeUtc == DateTime.MinValue)
                 {
-                    throw new RegressionTestException("Option chain universe selection time was not set");
+                    throw new TestException("Option chain universe selection time was not set");
                 }
 
                 if (changes.AddedSecurities.Count != _selectedOptionsCount || changes.RemovedSecurities.Count != 0)
                 {
-                    throw new RegressionTestException($"Unexpected securities changes on second OnSecuritiesChanged event. " +
+                    throw new TestException($"Unexpected securities changes on second OnSecuritiesChanged event. " +
                         $"Expected {_selectedOptionsCount} options added and none removed but got {changes.AddedSecurities.Count} " +
                         $"securities added and {changes.RemovedSecurities.Count} removed.");
                 }
 
                 if (!changes.AddedSecurities.All(x => x.Type.IsOption() && !x.Symbol.IsCanonical() && x.Symbol.Canonical == _optionSymbol))
                 {
-                    throw new RegressionTestException($"Expected to find a multiple option contracts");
+                    throw new TestException($"Expected to find a multiple option contracts");
                 }
             }
         }
@@ -145,12 +145,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_firstOnDataCallDone)
             {
-                throw new RegressionTestException("OnData was never called");
+                throw new TestException("OnData was never called");
             }
 
             if (_securityChangesCallCount < 2)
             {
-                throw new RegressionTestException("OnSecuritiesChanged was not called at least twice");
+                throw new TestException("OnSecuritiesChanged was not called at least twice");
             }
         }
 

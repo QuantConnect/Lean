@@ -71,12 +71,12 @@ namespace QuantConnect.Algorithm.CSharp
                     var expected = _scheduledEvents.Dequeue();
                     if (expected != Time)
                     {
-                        throw new RegressionTestException($"Unexpected scheduled event time: {Time}. Expected {expected}");
+                        throw new TestException($"Unexpected scheduled event time: {Time}. Expected {expected}");
                     }
 
                     if (expected.Day > 7 && IsWarmingUp)
                     {
-                        throw new RegressionTestException("Algorithm should be warming up on the 7th!");
+                        throw new TestException("Algorithm should be warming up on the 7th!");
                     }
                 }
             });
@@ -88,11 +88,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_scheduledEvents.Count != 0)
             {
-                throw new RegressionTestException("Some scheduled event was not fired!");
+                throw new TestException("Some scheduled event was not fired!");
             }
             if (_onEndOfDayScheduledEvents.Count != 0)
             {
-                throw new RegressionTestException("Some OnEndOfDay scheduled event was not fired!");
+                throw new TestException("Some OnEndOfDay scheduled event was not fired!");
             }
         }
 
@@ -102,11 +102,11 @@ namespace QuantConnect.Algorithm.CSharp
             var expected = _onEndOfDayScheduledEvents.Dequeue();
             if (expected != Time)
             {
-                throw new RegressionTestException($"Unexpected OnEndOfDay scheduled event time: {Time}. Expected {expected}");
+                throw new TestException($"Unexpected OnEndOfDay scheduled event time: {Time}. Expected {expected}");
             }
             if (expected.Day > 7 && IsWarmingUp)
             {
-                throw new RegressionTestException("Algorithm should be warming up on the 7th!");
+                throw new TestException("Algorithm should be warming up on the 7th!");
             }
         }
 

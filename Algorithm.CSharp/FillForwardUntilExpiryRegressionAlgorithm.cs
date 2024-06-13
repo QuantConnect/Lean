@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_options.Count != _contracts.Length)
             {
-                throw new RegressionTestException($"Options weren't setup properly. Expected: {_contracts.Length}");
+                throw new TestException($"Options weren't setup properly. Expected: {_contracts.Length}");
             }
 
             foreach (var option in _options)
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
                     if (_exchange.Hours.IsDateOpen(date) &&
                         !option.Value.Contains(date))
                     {
-                        throw new RegressionTestException("Delisted security should be FF until expiry date");
+                        throw new TestException("Delisted security should be FF until expiry date");
                     }
                 }
             }

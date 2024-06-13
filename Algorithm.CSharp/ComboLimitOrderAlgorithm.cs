@@ -91,12 +91,12 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_liquidatedQuantity != totalComboQuantity)
                     {
-                        throw new RegressionTestException($"Liquidated quantity {_liquidatedQuantity} does not match combo quantity {totalComboQuantity}");
+                        throw new TestException($"Liquidated quantity {_liquidatedQuantity} does not match combo quantity {totalComboQuantity}");
                     }
 
                     if (Portfolio.TotalHoldingsValue != 0)
                     {
-                        throw new RegressionTestException($"Portfolio value {Portfolio.TotalPortfolioValue} is not zero");
+                        throw new TestException($"Portfolio value {Portfolio.TotalPortfolioValue} is not zero");
                     }
                 }
             }
@@ -108,18 +108,18 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_limitPrice == null)
             {
-                throw new RegressionTestException("Limit price was not set");
+                throw new TestException("Limit price was not set");
             }
 
             var fillPricesSum = FillOrderEvents.Take(OrderLegs.Count).Select(x => x.FillPrice * x.FillQuantity / _comboQuantity).Sum();
             if (_limitPrice < fillPricesSum)
             {
-                throw new RegressionTestException($"Limit price expected to be greater that the sum of the fill prices ({fillPricesSum}), but was {_limitPrice}");
+                throw new TestException($"Limit price expected to be greater that the sum of the fill prices ({fillPricesSum}), but was {_limitPrice}");
             }
 
             if (!_liquidated)
             {
-                throw new RegressionTestException("Combo order was not liquidated");
+                throw new TestException("Combo order was not liquidated");
             }
         }
 

@@ -76,11 +76,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!indicator.IsReady)
                 {
-                    throw new RegressionTestException($"{indicator.Name} indicator should be ready");
+                    throw new TestException($"{indicator.Name} indicator should be ready");
                 }
                 else if (indicator.Current.Value == 0)
                 {
-                    throw new RegressionTestException($"The current value of {indicator.Name} indicator should be different than zero");
+                    throw new TestException($"The current value of {indicator.Name} indicator should be different than zero");
                 }
             }
         }

@@ -68,11 +68,11 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (!config.Any())
                     {
-                        throw new RegressionTestException($"Was expecting configurations for {symbol}");
+                        throw new TestException($"Was expecting configurations for {symbol}");
                     }
                     if (config.Any(dataConfig => dataConfig.DataNormalizationMode != DataNormalizationMode.Raw))
                     {
-                        throw new RegressionTestException($"Was expecting DataNormalizationMode.Raw configurations for {symbol}");
+                        throw new TestException($"Was expecting DataNormalizationMode.Raw configurations for {symbol}");
                     }
                 }
             }
@@ -81,14 +81,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_option).Any())
                 {
-                    throw new RegressionTestException($"Unexpected configurations for {_option} after it has been delisted");
+                    throw new TestException($"Unexpected configurations for {_option} after it has been delisted");
                 }
 
                 if (Securities[_twx].Invested)
                 {
                     if (!SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_twx).Any())
                     {
-                        throw new RegressionTestException($"Was expecting configurations for {_twx}");
+                        throw new TestException($"Was expecting configurations for {_twx}");
                     }
 
                     // first we liquidate the option exercised position
@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_twx).Any())
                 {
-                    throw new RegressionTestException($"Unexpected configurations for {_twx} after it has been liquidated");
+                    throw new TestException($"Unexpected configurations for {_twx} after it has been liquidated");
                 }
             }
         }

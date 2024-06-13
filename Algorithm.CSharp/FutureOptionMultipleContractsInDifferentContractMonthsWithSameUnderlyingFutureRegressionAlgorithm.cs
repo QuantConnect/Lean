@@ -72,11 +72,11 @@ namespace QuantConnect.Algorithm.CSharp
             var notEncountered = _expectedSymbols.Where(kvp => !kvp.Value).ToList();
             if (notEncountered.Any())
             {
-                throw new RegressionTestException($"Expected all Symbols encountered and invested in, but the following were not found: {string.Join(", ", notEncountered.Select(kvp => kvp.Value.ToStringInvariant()))}");
+                throw new TestException($"Expected all Symbols encountered and invested in, but the following were not found: {string.Join(", ", notEncountered.Select(kvp => kvp.Value.ToStringInvariant()))}");
             }
             if (!Portfolio.Invested)
             {
-                throw new RegressionTestException("Expected holdings at the end of algorithm, but none were found.");
+                throw new TestException("Expected holdings at the end of algorithm, but none were found.");
             }
         }
 

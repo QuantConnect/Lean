@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (totalPortfolioValueSnapshot * 1.1m != Portfolio.TotalPortfolioValue)
                 {
-                    throw new RegressionTestException($"Unexpected TotalPortfolioValue {Portfolio.TotalPortfolioValue}." +
+                    throw new TestException($"Unexpected TotalPortfolioValue {Portfolio.TotalPortfolioValue}." +
                         $" Expected: {totalPortfolioValueSnapshot * 1.1m}");
                 }
 
@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (totalPortfolioValueSnapshot * 1.05m != Portfolio.TotalPortfolioValue)
                 {
-                    throw new RegressionTestException($"Unexpected TotalPortfolioValue {Portfolio.TotalPortfolioValue}." +
+                    throw new TestException($"Unexpected TotalPortfolioValue {Portfolio.TotalPortfolioValue}." +
                         $" Expected: {totalPortfolioValueSnapshot * 1.05m}");
                 }
 
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Portfolio.CashBook[AccountCurrency].SetAmount(existingAmount);
                 if (totalPortfolioValueSnapshot != Portfolio.TotalPortfolioValue)
                 {
-                    throw new RegressionTestException($"Unexpected TotalPortfolioValue {Portfolio.TotalPortfolioValue}." +
+                    throw new TestException($"Unexpected TotalPortfolioValue {Portfolio.TotalPortfolioValue}." +
                         $" Expected: {totalPortfolioValueSnapshot}");
                 }
             }

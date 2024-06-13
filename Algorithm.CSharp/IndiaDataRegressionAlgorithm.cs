@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Time.Date == new DateTime(2010, 06, 15) &&
                     (dividend.Price != 0.5m || dividend.ReferencePrice != 88.8m || dividend.Distribution != 0.5m))
                 {
-                    throw new RegressionTestException("Did not receive expected dividend values");
+                    throw new TestException("Did not receive expected dividend values");
                 }
             }
         }
@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
                     _receivedOccurredEvent = true;
                     if (split.Price != 421m || split.ReferencePrice != 421m || split.SplitFactor != 0.2m)
                     {
-                        throw new RegressionTestException("Did not receive expected split values");
+                        throw new TestException("Did not receive expected split values");
                     }
                 }
             }
@@ -124,19 +124,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_initialMapping)
             {
-                throw new RegressionTestException("The ticker generated the initial rename event");
+                throw new TestException("The ticker generated the initial rename event");
             }
             if (!_executionMapping)
             {
-                throw new RegressionTestException("The ticker did not rename throughout the course of its life even though it should have");
+                throw new TestException("The ticker did not rename throughout the course of its life even though it should have");
             }
             if (!_receivedOccurredEvent)
             {
-                throw new RegressionTestException("Did not receive expected split event");
+                throw new TestException("Did not receive expected split event");
             }
             if (!_receivedWarningEvent)
             {
-                throw new RegressionTestException("Did not receive expected split warning event");
+                throw new TestException("Did not receive expected split warning event");
             }
         }
 

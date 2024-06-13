@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_assignedOption)
             {
-                throw new RegressionTestException("In the end, short ITM option position was not assigned.");
+                throw new TestException("In the end, short ITM option position was not assigned.");
             }
         }
 

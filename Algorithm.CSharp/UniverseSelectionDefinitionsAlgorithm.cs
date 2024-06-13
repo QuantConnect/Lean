@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_onSecuritiesChangedWasCalled)
             {
-                throw new RegressionTestException($"OnSecuritiesChanged() method was never called!");
+                throw new TestException($"OnSecuritiesChanged() method was never called!");
             }
         }
 

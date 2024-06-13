@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (MarketOrder(_contract.Symbol, 1).Status != OrderStatus.Filled)
                     {
-                        throw new RegressionTestException("Expected market order to fill immediately");
+                        throw new TestException("Expected market order to fill immediately");
                     }
 
                     _marketOrderDone = true;
@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (ExerciseOption(_contract.Symbol, 1).Status == OrderStatus.Filled)
                 {
-                    throw new RegressionTestException($"Expected European option to not be exercisable before its expiration date. " +
+                    throw new TestException($"Expected European option to not be exercisable before its expiration date. " +
                                         $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
                 }
 
@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (ExerciseOption(_contract.Symbol, 1).Status != OrderStatus.Filled)
                 {
-                    throw new RegressionTestException($"Expected European option to be exercisable on its expiration date. " +
+                    throw new TestException($"Expected European option to be exercisable on its expiration date. " +
                                         $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
                 }
 
@@ -115,7 +115,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_exerciseBeforeExpiryDone || !_exerciseOnExpiryDone)
             {
-                throw new RegressionTestException("Expected to try to exercise option before and on expiry");
+                throw new TestException("Expected to try to exercise option before and on expiry");
             }
         }
 

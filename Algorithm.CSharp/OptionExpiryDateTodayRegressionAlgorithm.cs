@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var greeks = contract.Greeks;
                     if (greeks.Delta == 0m && greeks.Gamma == 0m && greeks.Theta == 0m && greeks.Vega == 0m && greeks.Rho == 0m)
                     {
-                        throw new RegressionTestException($"Expected greeks to not be zero simultaneously for {contract.Symbol} at contract expiration date {contract.Expiry}");
+                        throw new TestException($"Expected greeks to not be zero simultaneously for {contract.Symbol} at contract expiration date {contract.Expiry}");
                     }
                 }
             }
@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_triedGreeksCalculation)
             {
-                throw new RegressionTestException("Expected to have tried greeks calculation");
+                throw new TestException("Expected to have tried greeks calculation");
             }
         }
 

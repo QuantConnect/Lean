@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="orderEvent">Order Event</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            throw new RegressionTestException("OnOrderEvent exception");
+            throw new TestException("OnOrderEvent exception");
         }
 
         /// <summary>

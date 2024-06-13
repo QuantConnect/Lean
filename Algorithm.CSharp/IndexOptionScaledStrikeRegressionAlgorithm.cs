@@ -65,17 +65,17 @@ namespace QuantConnect.Algorithm.CSharp
             var exerciseOrders = Transactions.GetOrders().Where(x => !_orderIds.Contains(x.Id));
             if (!exerciseOrders.Where(x => x.Tag.Contains("OTM")).Any())
             {
-                throw new RegressionTestException($"At least one order should have been exercised OTM");
+                throw new TestException($"At least one order should have been exercised OTM");
             }
 
             if (!exerciseOrders.Where(x => !x.Tag.Contains("OTM")).Any())
             {
-                throw new RegressionTestException($"At least one order should have been exercised ITM");
+                throw new TestException($"At least one order should have been exercised ITM");
             }
 
             if (Portfolio.TotalPortfolioValue <= _initialCash)
             {
-                throw new RegressionTestException($"Since one order was expected to be exercised ITM, Total Portfolio Value was expected to be higher than {_initialCash}, but was {Portfolio.TotalPortfolioValue}");
+                throw new TestException($"Since one order was expected to be exercised ITM, Total Portfolio Value was expected to be higher than {_initialCash}, but was {Portfolio.TotalPortfolioValue}");
             }
         }
 

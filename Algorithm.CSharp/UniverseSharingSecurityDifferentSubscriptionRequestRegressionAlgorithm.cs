@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
                     .GetSubscriptionDataConfigs(_aig);
                 if (config.Any())
                 {
-                    throw new RegressionTestException($"Unexpected SubscriptionDataConfig: {config}");
+                    throw new TestException($"Unexpected SubscriptionDataConfig: {config}");
                 }
             }
 
@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
                     .GetSubscriptionDataConfigs(_aig);
                 if (!config.Any())
                 {
-                    throw new RegressionTestException("Expecting to find a SubscriptionDataConfig for AIG");
+                    throw new TestException("Expecting to find a SubscriptionDataConfig for AIG");
                 }
                 RemoveSecurity(_aig);
             }
@@ -100,14 +100,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!isExtendedMarketHours)
                 {
-                    throw new RegressionTestException($"Unexpected isExtendedMarketHours value: {false}");
+                    throw new TestException($"Unexpected isExtendedMarketHours value: {false}");
                 }
             }
             else
             {
                 if (isExtendedMarketHours)
                 {
-                    throw new RegressionTestException($"Unexpected isExtendedMarketHours value: {true}");
+                    throw new TestException($"Unexpected isExtendedMarketHours value: {true}");
                 }
 
             }
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_onDataCalls == 0)
             {
-                throw new RegressionTestException($"Unexpected OnData() calls count {_onDataCalls}");
+                throw new TestException($"Unexpected OnData() calls count {_onDataCalls}");
             }
         }
 

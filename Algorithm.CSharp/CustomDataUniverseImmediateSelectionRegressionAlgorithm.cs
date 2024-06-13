@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!_selected)
                 {
-                    throw new RegressionTestException("Universe selection should have been triggered right away. " +
+                    throw new TestException("Universe selection should have been triggered right away. " +
                         "The first OnData call should have had happened after the universe selection");
                 }
 
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_selected)
             {
-                throw new RegressionTestException("Universe selection should have been triggered right away");
+                throw new TestException("Universe selection should have been triggered right away");
             }
 
             if (!_securitiesChanged)
@@ -72,12 +72,12 @@ namespace QuantConnect.Algorithm.CSharp
                 // Selection should be happening right on algorithm start
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException("Universe selection should have been triggered right away");
+                    throw new TestException("Universe selection should have been triggered right away");
                 }
 
                 if (changes.AddedSecurities.Count == 0)
                 {
-                    throw new RegressionTestException($"Expected multiple stocks to be added to the algorithm, " +
+                    throw new TestException($"Expected multiple stocks to be added to the algorithm, " +
                         $"but found {changes.AddedSecurities.Count}");
                 }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_firstOnData || !_selected || !_securitiesChanged)
             {
-                throw new RegressionTestException("Expected events didn't happen");
+                throw new TestException("Expected events didn't happen");
             }
         }
 

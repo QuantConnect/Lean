@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (UtcTime.Date > _delistingDate)
             {
-                throw new RegressionTestException($"Performing constituent universe selection on {UtcTime:yyyy-MM-dd HH:mm:ss.fff} after composite ETF has been delisted");
+                throw new TestException($"Performing constituent universe selection on {UtcTime:yyyy-MM-dd HH:mm:ss.fff} after composite ETF has been delisted");
             }
 
             var constituentSymbols = constituents.Select(x => x.Symbol);
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (UtcTime.Date > _delistingDate && data.Keys.Any(x => x != _aapl))
             {
-                throw new RegressionTestException($"Received unexpected slice in OnData(...) after universe was deselected");
+                throw new TestException($"Received unexpected slice in OnData(...) after universe was deselected");
             }
 
             if (!Portfolio.Invested)
@@ -102,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (changes.AddedSecurities.Count != 0 && UtcTime > _delistingDate)
             {
-                throw new RegressionTestException("New securities added after ETF constituents were delisted");
+                throw new TestException("New securities added after ETF constituents were delisted");
             }
 
             // if we added the etf subscription it will get added and delisted and send us a addition/removal event
@@ -126,15 +126,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_universeAdded)
             {
-                throw new RegressionTestException("ETF constituent universe was never added to the algorithm");
+                throw new TestException("ETF constituent universe was never added to the algorithm");
             }
             if (!_universeRemoved)
             {
-                throw new RegressionTestException("ETF constituent universe was not removed from the algorithm after delisting");
+                throw new TestException("ETF constituent universe was not removed from the algorithm after delisting");
             }
             if (ActiveSecurities.Count > 2)
             {
-                throw new RegressionTestException($"Expected less than 2 securities after algorithm ended, found {Securities.Count}");
+                throw new TestException($"Expected less than 2 securities after algorithm ended, found {Securities.Count}");
             }
         }
 

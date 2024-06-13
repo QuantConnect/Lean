@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!ReferenceEquals(_canonicalOptionContract, _optionContract.Canonical))
             {
-                throw new RegressionTestException("Canonical Symbol reference changed!");
+                throw new TestException("Canonical Symbol reference changed!");
             }
 
             _canonicalOptionContract = _optionContract.Canonical;

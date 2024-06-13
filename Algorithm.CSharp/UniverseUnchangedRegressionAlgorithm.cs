@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
                 || changes.AddedSecurities.All(security => security.Symbol != QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA))
                 || changes.AddedSecurities.All(security => security.Symbol != QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA)))
             {
-                throw new RegressionTestException("Unexpected security changes");
+                throw new TestException("Unexpected security changes");
             }
             Log($"OnSecuritiesChanged({Time:o}):: {changes}");
         }

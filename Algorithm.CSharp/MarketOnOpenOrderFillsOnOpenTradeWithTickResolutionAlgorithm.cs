@@ -50,19 +50,19 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (orderEvent.Message != "")
                 {
-                    throw new RegressionTestException($"OrderEvent.Message should be empty, but is '{orderEvent.Message}'");
+                    throw new TestException($"OrderEvent.Message should be empty, but is '{orderEvent.Message}'");
                 }
 
                 var order = Transactions.GetOrderById(orderEvent.OrderId);
                 if (order.Tag != "")
                 {
-                    throw new RegressionTestException($"Order.Tag should be empty, but is '{order.Tag}'");
+                    throw new TestException($"Order.Tag should be empty, but is '{order.Tag}'");
                 }
 
                 var expectedFillPrice = orderEvent.UtcTime.Date == StartDate.Date ? 167.43m : 167.45m;
                 if (orderEvent.FillPrice != expectedFillPrice)
                 {
-                    throw new RegressionTestException(
+                    throw new TestException(
                         $"Expected {orderEvent.UtcTime.Date} order fill price to be {expectedFillPrice} but was {orderEvent.FillPrice}");
                 }
             }
@@ -76,12 +76,12 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedOrdersCount = 2;
             if (orders.Count != expectedOrdersCount)
             {
-                throw new RegressionTestException($"Expected {expectedOrdersCount} orders, but found {orders.Count}");
+                throw new TestException($"Expected {expectedOrdersCount} orders, but found {orders.Count}");
             }
 
             if (orders.Any(x => x.Status != OrderStatus.Filled))
             {
-                throw new RegressionTestException(
+                throw new TestException(
                     $"Expected all orders to be filled, but found {orders.Count(x => x.Status != OrderStatus.Filled)} unfilled orders");
             }
         }

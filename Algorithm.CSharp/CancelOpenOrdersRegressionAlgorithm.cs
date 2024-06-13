@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (orders.Count != expectedOrders)
             {
-                throw new RegressionTestException($"Expected orders: {expectedOrders}, actual orders: {orders.Count}");
+                throw new TestException($"Expected orders: {expectedOrders}, actual orders: {orders.Count}");
             }
 
             for (var i = 0; i < expectedOrders; i++)
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var order = orders[i];
                 if (order.Status != expectedStatus[i])
                 {
-                    throw new RegressionTestException($"Invalid status for order {order.Id}, Expected: {expectedStatus[i]}, actual: {order.Status}");
+                    throw new TestException($"Invalid status for order {order.Id}, Expected: {expectedStatus[i]}, actual: {order.Status}");
                 }
             }
         }

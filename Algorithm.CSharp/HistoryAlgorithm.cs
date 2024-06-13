@@ -198,7 +198,7 @@ namespace QuantConnect.Algorithm.CSharp
             var universeSecurityHistory = History(UniverseManager.Keys, TimeSpan.FromDays(10)).ToList();
             if (universeSecurityHistory.Count != 0)
             {
-                throw new RegressionTestException("History request for universe symbols incorrectly returned data. "
+                throw new TestException("History request for universe symbols incorrectly returned data. "
                     + "These requests are intended to be filtered out and never sent to the history provider.");
             }
         }
@@ -213,7 +213,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_count > 5)
             {
-                throw new RegressionTestException($"Invalid number of bars arrived. Expected exactly 5, but received {_count}");
+                throw new TestException($"Invalid number of bars arrived. Expected exactly 5, but received {_count}");
             }
 
             if (!Portfolio.Invested)
@@ -229,7 +229,7 @@ namespace QuantConnect.Algorithm.CSharp
             var count = history.Count();
             if (count != expected)
             {
-                throw new RegressionTestException(methodCall + " expected " + expected + ", but received " + count);
+                throw new TestException(methodCall + " expected " + expected + ", but received " + count);
             }
 
             IEnumerable<Symbol> unexpectedSymbols = null;
@@ -270,13 +270,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (unexpectedSymbols == null)
             {
-                throw new RegressionTestException("Unhandled case: " + typeof(T).GetBetterTypeName());
+                throw new TestException("Unhandled case: " + typeof(T).GetBetterTypeName());
             }
 
             var unexpectedSymbolsString = string.Join(" | ", unexpectedSymbols);
             if (!string.IsNullOrWhiteSpace(unexpectedSymbolsString))
             {
-                throw new RegressionTestException($"{methodCall} contains unexpected symbols: {unexpectedSymbolsString}");
+                throw new TestException($"{methodCall} contains unexpected symbols: {unexpectedSymbolsString}");
             }
         }
 

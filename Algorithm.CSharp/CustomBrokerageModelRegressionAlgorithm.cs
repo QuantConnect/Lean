@@ -46,11 +46,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (BrokerageModel.DefaultMarkets[SecurityType.Equity] != Market.USA)
             {
-                throw new RegressionTestException($"The default market for Equity should be {Market.USA}");
+                throw new TestException($"The default market for Equity should be {Market.USA}");
             }
             if (BrokerageModel.DefaultMarkets[SecurityType.Crypto] != Market.Binance)
             {
-                throw new RegressionTestException($"The default market for Crypto should be {Market.Binance}");
+                throw new TestException($"The default market for Crypto should be {Market.Binance}");
             }
         }
 
@@ -81,13 +81,13 @@ namespace QuantConnect.Algorithm.CSharp
             var submitExpectedMessage = "BrokerageModel declared unable to submit order: [2] Information - Code:  - Symbol AIG can not be submitted";
             if (_aigTicket.SubmitRequest.Response.ErrorMessage != submitExpectedMessage)
             {
-                throw new RegressionTestException($"Order with ID: {_aigTicket.OrderId} should not have submitted symbol AIG");
+                throw new TestException($"Order with ID: {_aigTicket.OrderId} should not have submitted symbol AIG");
             }
 
             var updateExpectedMessage = "OrderID: 1 Information - Code:  - This order can not be updated";
             if (_spyTicket.UpdateRequests[0].Response.ErrorMessage != updateExpectedMessage)
             {
-                throw new RegressionTestException($"Order with ID: {_spyTicket.OrderId} should have been updated");
+                throw new TestException($"Order with ID: {_spyTicket.OrderId} should have been updated");
             }
         }
 

@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
             _expectedContract = QuantConnect.Symbol.CreateOption(_es19m20, Market.CME, OptionStyle.American, OptionRight.Call, 3300m, new DateTime(2020, 6, 19));
             if (_esOption != _expectedContract)
             {
-                throw new RegressionTestException($"Contract {_expectedContract} was not found in the chain");
+                throw new TestException($"Contract {_expectedContract} was not found in the chain");
             }
         }
 
@@ -90,13 +90,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Securities.ContainsKey(orderEvent.Symbol))
             {
-                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
+                throw new TestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
             }
 
             var security = Securities[orderEvent.Symbol];
             if (security.Symbol == _es19m20)
             {
-                throw new RegressionTestException("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
+                throw new TestException("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
             }
 
             if (_cashAfterMarketOrder > 0)
@@ -104,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // This is the exercise order fill event
                 if (orderEvent.IsInTheMoney || orderEvent.FillPrice != 0)
                 {
-                    throw new RegressionTestException($"Expected exercise order event fill price to be zero and to be marked as OTM, " +
+                    throw new TestException($"Expected exercise order event fill price to be zero and to be marked as OTM, " +
                         $"but was the fill price was {orderEvent.FillPrice} and IsInTheMoney = {orderEvent.IsInTheMoney}");
                 }
             }
@@ -113,30 +113,30 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Ran at the end of the algorithm to ensure the algorithm has no holdings
         /// </summary>
-        /// <exception cref="RegressionTestException">The algorithm has holdings</exception>
+        /// <exception cref="TestException">The algorithm has holdings</exception>
         public override void OnEndOfAlgorithm()
         {
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+                throw new TestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
 
             // No change in cash is expected, only the market order fill price
             if (Portfolio.Cash != _cashAfterMarketOrder)
             {
-                throw new RegressionTestException($"Expected no change in cash after the market order. Cash in portfolio: {Portfolio.Cash}. Cash in portfolio after the market order: {_cashAfterMarketOrder}");
+                throw new TestException($"Expected no change in cash after the market order. Cash in portfolio: {Portfolio.Cash}. Cash in portfolio after the market order: {_cashAfterMarketOrder}");
             }
 
             var orders = Transactions.GetOrders().ToList();
             if (orders.Count != 2)
             {
-                throw new RegressionTestException($"Expected 2 orders (market order and OTM option exercise), but found: {orders.Count}");
+                throw new TestException($"Expected 2 orders (market order and OTM option exercise), but found: {orders.Count}");
             }
 
             var exerciseOrder = orders.Find(x => x.Type == OrderType.OptionExercise);
             if (!exerciseOrder.Tag.Contains("OTM", StringComparison.InvariantCulture) || exerciseOrder.Price != 0)
             {
-                throw new RegressionTestException($"Expected the OTM exercise order to have price = 0, but was: {exerciseOrder.Price}");
+                throw new TestException($"Expected the OTM exercise order to have price = 0, but was: {exerciseOrder.Price}");
             }
         }
 

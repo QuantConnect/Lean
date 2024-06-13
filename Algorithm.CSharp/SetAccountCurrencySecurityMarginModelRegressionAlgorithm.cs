@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Daily);
             if (!(_spy.BuyingPowerModel is SecurityMarginModel))
             {
-                throw new RegressionTestException("This regression algorithm is expected to test the SecurityMarginModel");
+                throw new TestException("This regression algorithm is expected to test the SecurityMarginModel");
             }
         }
 
@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.CashBook["EUR"].Amount != _initialCapital)
             {
-                throw new RegressionTestException($"Unexpected EUR ending cash amount: {Portfolio.CashBook["EUR"].Amount}.");
+                throw new TestException($"Unexpected EUR ending cash amount: {Portfolio.CashBook["EUR"].Amount}.");
             }
             var expectedAmount = Portfolio.CashBook.Convert(Portfolio.TotalProfit, "EUR", "USD")
                 - Portfolio.CashBook.Convert(Portfolio.TotalFees, "EUR", "USD");
@@ -120,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
             // leave 1% for error
             if (Math.Abs(expectedAmount - amount) > Math.Abs(expectedAmount) * 0.01m)
             {
-                throw new RegressionTestException($"Unexpected USD ending cash amount: {amount}. Expected {expectedAmount}");
+                throw new TestException($"Unexpected USD ending cash amount: {amount}. Expected {expectedAmount}");
             }
         }
 
@@ -132,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // leave 1 unit as error in expected value
                 if (Math.Abs(orderEvent.FillQuantity - _expectedOrderQuantity) > 2)
                 {
-                    throw new RegressionTestException($"Unexpected order event fill quantity: {orderEvent.FillQuantity}. " +
+                    throw new TestException($"Unexpected order event fill quantity: {orderEvent.FillQuantity}. " +
                         $"Expected {_expectedOrderQuantity}");
                 }
 
@@ -142,7 +142,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // leave 0.00001m as error in expected fee value
                     || Math.Abs(expectedOrderFee - orderFeeInAccountCurrency) > 0.00001m)
                 {
-                    throw new RegressionTestException($"Unexpected order fee: {orderFeeInAccountCurrency}. " +
+                    throw new TestException($"Unexpected order fee: {orderFeeInAccountCurrency}. " +
                         $"Expected {expectedOrderFee}");
                 }
 
@@ -157,7 +157,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (Math.Abs(expectedProfitLoss - lastTrade.ProfitLoss) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected last trade ProfitLoss: {lastTrade.ProfitLoss}. " +
+                        throw new TestException($"Unexpected last trade ProfitLoss: {lastTrade.ProfitLoss}. " +
                             $"Expected {expectedProfitLoss}");
                     }
 
@@ -170,7 +170,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (Math.Abs(_spy.Holdings.LastTradeProfit - expectedProfitLoss) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected Holdings.NetProfit: {_spy.Holdings.LastTradeProfit}. " +
+                        throw new TestException($"Unexpected Holdings.NetProfit: {_spy.Holdings.LastTradeProfit}. " +
                             $"Expected {expectedProfitLoss}");
                     }
                 }

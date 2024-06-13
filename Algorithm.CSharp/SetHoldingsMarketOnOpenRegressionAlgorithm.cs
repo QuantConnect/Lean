@@ -63,13 +63,13 @@ namespace QuantConnect.Algorithm.CSharp
                 var orderTickets = Transactions.GetOpenOrderTickets(_aapl).ToList(ticket => ticket);
                 if (!orderTickets.IsNullOrEmpty())
                 {
-                    throw new RegressionTestException($"We don't expect any open order tickets: {orderTickets[0]}");
+                    throw new TestException($"We don't expect any open order tickets: {orderTickets[0]}");
                 }
             }
 
             if (orderEvent.OrderId > 1)
             {
-                throw new RegressionTestException($"We only expect 1 order to be placed: {orderEvent}");
+                throw new TestException($"We only expect 1 order to be placed: {orderEvent}");
             }
             Debug($"OnOrderEvent: {orderEvent}");
         }

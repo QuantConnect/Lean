@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (positionGroup.Positions.Count() != 4)
             {
-                throw new RegressionTestException($"Expected position group to have 4 positions. Actual: {positionGroup.Positions.Count()}");
+                throw new TestException($"Expected position group to have 4 positions. Actual: {positionGroup.Positions.Count()}");
             }
 
             var orderedStrikes = _ironCondor.OptionLegs.Select(leg => leg.Strike).OrderBy(x => x).ToArray();
@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == longPutStrike);
             if (longPutPosition.Quantity != 2)
             {
-                throw new RegressionTestException($"Expected long put position quantity to be 2. Actual: {longPutPosition.Quantity}");
+                throw new TestException($"Expected long put position quantity to be 2. Actual: {longPutPosition.Quantity}");
             }
 
             var shortPutStrike = orderedStrikes[1];
@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Single(x => x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == shortPutStrike);
             if (shortPutPosition.Quantity != -2)
             {
-                throw new RegressionTestException($"Expected short put position quantity to be -2. Actual: {shortPutPosition.Quantity}");
+                throw new TestException($"Expected short put position quantity to be -2. Actual: {shortPutPosition.Quantity}");
             }
 
             var shortCallStrike = orderedStrikes[2];
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Single(x => x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == shortCallStrike);
             if (shortCallPosition.Quantity != -2)
             {
-                throw new RegressionTestException($"Expected short call position quantity to be -2. Actual: {shortCallPosition.Quantity}");
+                throw new TestException($"Expected short call position quantity to be -2. Actual: {shortCallPosition.Quantity}");
             }
 
             var longCallStrike = orderedStrikes[3];
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Single(x => x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == longCallStrike);
             if (longCallPosition.Quantity != 2)
             {
-                throw new RegressionTestException($"Expected long call position quantity to be 2. Actual: {longCallPosition.Quantity}");
+                throw new TestException($"Expected long call position quantity to be 2. Actual: {longCallPosition.Quantity}");
             }
         }
 

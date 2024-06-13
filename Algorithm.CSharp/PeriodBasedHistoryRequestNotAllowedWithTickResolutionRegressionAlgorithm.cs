@@ -46,13 +46,13 @@ namespace QuantConnect.Algorithm.CSharp
             var history = History<Tick>(spy, TimeSpan.FromHours(12));
             if (history.Count() == 0)
             {
-                throw new RegressionTestException("On history call with implicit tick resolution: history returned no results");
+                throw new TestException("On history call with implicit tick resolution: history returned no results");
             }
 
             history = History<Tick>(spy, TimeSpan.FromHours(12), Resolution.Tick);
             if (history.Count() == 0)
             {
-                throw new RegressionTestException("On history call with explicit tick resolution: history returned no results");
+                throw new TestException("On history call with explicit tick resolution: history returned no results");
             }
         }
 
@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             try
             {
                 historyCall();
-                throw new RegressionTestException($"{historyCallDescription}: expected an exception to be thrown");
+                throw new TestException($"{historyCallDescription}: expected an exception to be thrown");
             }
             catch (InvalidOperationException)
             {

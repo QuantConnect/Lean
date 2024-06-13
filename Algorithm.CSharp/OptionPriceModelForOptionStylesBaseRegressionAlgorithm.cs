@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_triedGreeksCalculation)
             {
-                throw new RegressionTestException("Expected greeks to be accessed");
+                throw new TestException("Expected greeks to be accessed");
             }
         }
 
@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // Greeks should have not been successfully accessed if the option style is not supported
                     if (!_optionStyleIsSupported)
                     {
-                        throw new RegressionTestException($"Expected greeks not to be calculated for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, which does not support them, but they were");
+                        throw new TestException($"Expected greeks not to be calculated for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, which does not support them, but they were");
 
                     }
                 }
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // ArgumentException is only expected if the option style is not supported
                     if (_optionStyleIsSupported)
                     {
-                        throw new RegressionTestException($"Expected greeks to be calculated for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, which supports them, but they were not");
+                        throw new TestException($"Expected greeks to be calculated for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, which supports them, but they were not");
                     }
                 }
 
@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (greeks.Delta == 0m && greeks.Gamma == 0m && greeks.Theta == 0m && greeks.Vega == 0m && greeks.Rho == 0m)
                     {
-                        throw new RegressionTestException($"Expected greeks to not be zero simultaneously for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, but they were");
+                        throw new TestException($"Expected greeks to not be zero simultaneously for {contract.Symbol.Value}, an {_option.Style} style option, using {_option?.PriceModel.GetType().Name}, but they were");
                     }
 
                     // Delta can be {-1, 0, 1} if the price is too wild, rho can be 0 if risk free rate is 0
@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
                         || (contract.Right == OptionRight.Put && (greeks.Delta < -1m || greeks.Delta > 0m || greeks.Rho > 0m))
                         || greeks.Vega < 0m || greeks.Gamma < 0m))
                     {
-                        throw new RegressionTestException($"Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Theta: {greeks.Theta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}");
+                        throw new TestException($"Expected greeks to have valid values. Greeks were: Delta: {greeks.Delta}, Rho: {greeks.Rho}, Theta: {greeks.Theta}, Vega: {greeks.Vega}, Gamma: {greeks.Gamma}");
                     }
                 }
             }

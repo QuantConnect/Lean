@@ -63,11 +63,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_dateTime != EndDate.Date)
             {
-                throw new RegressionTestException($"Last day was {_dateTime}, should be algorithm end date: {EndDate.Date}");
+                throw new TestException($"Last day was {_dateTime}, should be algorithm end date: {EndDate.Date}");
             }
             if (_changedEvent == null)
             {
-                throw new RegressionTestException("We got not symbol change event! 'SPWR' should of been mapped");
+                throw new TestException("We got not symbol change event! 'SPWR' should of been mapped");
             }
         }
 

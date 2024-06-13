@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedTime = _consolidationDaily.Dequeue();
                 if (expectedTime != Time)
                 {
-                    throw new RegressionTestException($"Unexpected consolidation time {expectedTime} != {Time}");
+                    throw new TestException($"Unexpected consolidation time {expectedTime} != {Time}");
                 }
 
                 if (!Portfolio.Invested)
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedTime = _consolidationHourly.Dequeue();
                 if (expectedTime != Time)
                 {
-                    throw new RegressionTestException($"Unexpected consolidation time {expectedTime} != {Time} 3 hours");
+                    throw new TestException($"Unexpected consolidation time {expectedTime} != {Time} 3 hours");
                 }
             });
             _consolidationHourly.Enqueue(new DateTime(2013, 10, 7, 12, 0, 0));
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedTime = _consolidation2Days.Dequeue();
                 if (expectedTime != Time)
                 {
-                    throw new RegressionTestException($"Unexpected consolidation time {expectedTime} != {Time} 2 days");
+                    throw new TestException($"Unexpected consolidation time {expectedTime} != {Time} 2 days");
                 }
             });
             _consolidation2Days.Enqueue(new DateTime(2013, 10, 9, 9, 0, 0));
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_consolidationDaily.Count != 0 || _consolidationHourly.Count != 0 || _consolidation2Days.Count != 0)
             {
-                throw new RegressionTestException($"Unexpected consolidation count");
+                throw new TestException($"Unexpected consolidation count");
             }
         }
 

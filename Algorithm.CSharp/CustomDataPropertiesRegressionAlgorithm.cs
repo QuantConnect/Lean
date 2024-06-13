@@ -56,13 +56,13 @@ namespace QuantConnect.Algorithm.CSharp
             //Verify our symbol properties were changed and loaded into this security
             if (_bitcoin.SymbolProperties != properties)
             {
-                throw new RegressionTestException("Failed to set and retrieve custom SymbolProperties for BTC");
+                throw new TestException("Failed to set and retrieve custom SymbolProperties for BTC");
             }
 
             //Verify our exchange hours were changed and loaded into this security
             if (_bitcoin.Exchange.Hours != exchangeHours)
             {
-                throw new RegressionTestException("Failed to set and retrieve custom ExchangeHours for BTC");
+                throw new TestException("Failed to set and retrieve custom ExchangeHours for BTC");
             }
 
             // For regression purposes on AddData overloads, this call is simply to ensure Lean can accept this

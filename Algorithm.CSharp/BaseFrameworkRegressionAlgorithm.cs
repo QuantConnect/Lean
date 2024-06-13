@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             var insightsCount = Insights.GetInsights(insight => insight.IsActive(UtcTime)).Count;
             if (insightsCount != 0)
             {
-                throw new RegressionTestException($"The number of active insights should be 0. Actual: {insightsCount}");
+                throw new TestException($"The number of active insights should be 0. Actual: {insightsCount}");
             }
         }
 

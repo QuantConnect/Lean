@@ -45,13 +45,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if(Time.TimeOfDay != new TimeSpan(9, 30, 0))
                 {
-                    throw new RegressionTestException($"Unexpected event time {Time}");
+                    throw new TestException($"Unexpected event time {Time}");
                 }
 
                 var ticket = Buy("SPY", 1);
                 if(ticket.Status != OrderStatus.Submitted)
                 {
-                    throw new RegressionTestException($"Unexpected order status {ticket.Status}");
+                    throw new TestException($"Unexpected order status {ticket.Status}");
                 }
             }
         }
@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             Debug($"OnOrderEvent:: {orderEvent}");
             if (orderEvent.Status == OrderStatus.Filled && (Time.Hour != 10 || Time.Minute != 0))
             {
-                throw new RegressionTestException($"Unexpected fill time {Time}");
+                throw new TestException($"Unexpected fill time {Time}");
             }
         }
 

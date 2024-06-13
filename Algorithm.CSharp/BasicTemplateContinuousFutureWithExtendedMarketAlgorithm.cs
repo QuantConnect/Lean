@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"{Time} - SymbolChanged event: {changedEvent}");
                 if (Time.TimeOfDay != TimeSpan.Zero)
                 {
-                    throw new RegressionTestException($"{Time} unexpected symbol changed event {changedEvent}!");
+                    throw new TestException($"{Time} unexpected symbol changed event {changedEvent}!");
                 }
             }
 

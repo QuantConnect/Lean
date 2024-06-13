@@ -58,13 +58,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (aaplHistory.Count == 0 || spyHistory.Count == 0)
             {
-                throw new RegressionTestException("At least one of the history results is empty");
+                throw new TestException("At least one of the history results is empty");
             }
 
             // Check that both results contain the same data, since CustomData fetches APPL data regardless of the symbol
             if (!aaplHistory.SequenceEqual(spyHistory))
             {
-                throw new RegressionTestException("Histories are not equal");
+                throw new TestException("Histories are not equal");
             }
         }
 

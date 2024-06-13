@@ -25,24 +25,24 @@ namespace QuantConnect
     /// Custom exception class for regression tests
     /// </summary>
     [Serializable]
-    public class RegressionTestException: Exception
+    public class TestException: Exception
     {
         /// <summary>
-        /// Creates a new instance of a <see cref="RegressionTestException"/>
+        /// Creates a new instance of a <see cref="TestException"/>
         /// </summary>
-        public RegressionTestException() { }
+        public TestException() { }
 
         /// <summary>
-        /// Creates a new isntance of a <see cref="RegressionTestException"/>
+        /// Creates a new isntance of a <see cref="TestException"/>
         /// </summary>
         /// <param name="message">Message to be thrown by the exception</param>
-        public RegressionTestException(string message): base(message) { }
+        public TestException(string message): base(message) { }
 
         /// <summary>
-        /// Creates a new instance of a <see cref="RegressionTestException"/>
+        /// Creates a new instance of a <see cref="TestException"/>
         /// </summary>
         /// <param name="message">Message to be thrown by the exception</param>
         /// <param name="inner">Inner exception thrown</param>
-        public RegressionTestException(string message, Exception inner) :base(message, inner) { }
+        public TestException(string message, Exception inner) :base(message, inner) { }
     }
 }

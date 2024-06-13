@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             var history = History(10, Resolution.Minute);
             if (history.Count() < 10)
             {
-                throw new RegressionTestException($"Empty history at {Time}");
+                throw new TestException($"Empty history at {Time}");
             }
             _successCount++;
         }
@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_successCount < ExpectedHistoryCallCount)
             {
-                throw new RegressionTestException($"Scheduled Event did not assert history call as many times as expected: {_successCount}/49");
+                throw new TestException($"Scheduled Event did not assert history call as many times as expected: {_successCount}/49");
             }
         }
 

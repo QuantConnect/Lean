@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"SPY {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
                 if (bar.Volume != 1000000)
                 {
-                    throw new RegressionTestException("Volume of consolidated bar does not match set value!");
+                    throw new TestException("Volume of consolidated bar does not match set value!");
                 }
             };
 
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"IBM {bar.Time} to {bar.EndTime} :: O:{bar.Open} H:{bar.High} L:{bar.Low} C:{bar.Close} V:{bar.Volume}");
                 if (bar.Volume != 1000000)
                 {
-                    throw new RegressionTestException("Volume of consolidated bar does not match set value!");
+                    throw new TestException("Volume of consolidated bar does not match set value!");
                 }
                 _tickConsolidated = true;
             };
@@ -102,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_tickConsolidated)
             {
-                throw new RegressionTestException("Tick consolidator was never been called");
+                throw new TestException("Tick consolidator was never been called");
             }
         }
 

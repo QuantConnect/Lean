@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (trackingBar.Close != _exptectedClose)
                 {
-                    throw new RegressionTestException(
+                    throw new TestException(
                         $"Bar at {_exptectedTime.ToStringInvariant()} closed at price {trackingBar.Close.ToStringInvariant()}; expected {_exptectedClose.ToStringInvariant()}");
                 }
             }

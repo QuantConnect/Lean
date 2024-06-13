@@ -144,7 +144,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (tickers == null && changes.AddedSecurities.Count > 0)
             {
-                throw new RegressionTestException($"{Time}: Expected no additions: {Time.DayOfWeek}");
+                throw new TestException($"{Time}: Expected no additions: {Time.DayOfWeek}");
             }
             if (tickers == null)
             {
@@ -155,7 +155,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (changes.AddedSecurities.All(s => s.Symbol.Value != ticker))
                 {
-                    throw new RegressionTestException($"{Time}: Expected {ticker} to be added: {Time.DayOfWeek}");
+                    throw new TestException($"{Time}: Expected {ticker} to be added: {Time.DayOfWeek}");
                 }
             }
         }
@@ -164,7 +164,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (tickers == null && changes.RemovedSecurities.Count > 0)
             {
-                throw new RegressionTestException($"{Time}: Expected no removals: {Time.DayOfWeek}");
+                throw new TestException($"{Time}: Expected no removals: {Time.DayOfWeek}");
             }
 
             if (tickers == null)
@@ -176,7 +176,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (changes.RemovedSecurities.All(s => s.Symbol.Value != ticker))
                 {
-                    throw new RegressionTestException($"{Time}: Expected {ticker} to be removed: {Time.DayOfWeek}");
+                    throw new TestException($"{Time}: Expected {ticker} to be removed: {Time.DayOfWeek}");
                 }
             }
         }

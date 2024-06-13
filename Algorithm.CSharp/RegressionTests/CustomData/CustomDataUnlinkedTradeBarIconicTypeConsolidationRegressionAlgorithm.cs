@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_bb.Current.Value == 0)
             {
-                throw new RegressionTestException("Bollinger Band value is zero when we expect non-zero value.");
+                throw new TestException("Bollinger Band value is zero when we expect non-zero value.");
             }
 
             if (!_invested && _bb.Current.Value > 0.05m)

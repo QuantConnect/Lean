@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             var constituentSymbols = constituents.Select(x => x.Symbol).ToHashSet();
             if (!constituentSymbols.Contains(_aapl))
             {
-                throw new RegressionTestException("AAPL not found in QQQ constituents");
+                throw new TestException("AAPL not found in QQQ constituents");
             }
             
             _filterDateConstituentSymbolCount[UtcTime.Date] = constituentSymbols.Count;
@@ -80,15 +80,15 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (symbolChanged.Symbol != _qqq)
                     {
-                        throw new RegressionTestException($"Mapped symbol is not QQQ. Instead, found: {symbolChanged.Symbol}");
+                        throw new TestException($"Mapped symbol is not QQQ. Instead, found: {symbolChanged.Symbol}");
                     }
                     if (symbolChanged.OldSymbol != "QQQQ")
                     {
-                        throw new RegressionTestException($"Old QQQ Symbol is not QQQQ. Instead, found: {symbolChanged.OldSymbol}");
+                        throw new TestException($"Old QQQ Symbol is not QQQQ. Instead, found: {symbolChanged.OldSymbol}");
                     }
                     if (symbolChanged.NewSymbol != "QQQ")
                     {
-                        throw new RegressionTestException($"New QQQ Symbol is not QQQ. Instead, found: {symbolChanged.NewSymbol}");
+                        throw new TestException($"New QQQ Symbol is not QQQ. Instead, found: {symbolChanged.NewSymbol}");
                     }
                     
                     _mappingEventOccurred = true;
@@ -120,18 +120,18 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_filterDateConstituentSymbolCount.Count != 2)
             {
-                throw new RegressionTestException($"ETF constituent filtering function was not called 2 times (actual: {_filterDateConstituentSymbolCount.Count}");
+                throw new TestException($"ETF constituent filtering function was not called 2 times (actual: {_filterDateConstituentSymbolCount.Count}");
             }
             if (!_mappingEventOccurred)
             {
-                throw new RegressionTestException("No mapping/SymbolChangedEvent occurred. Expected for QQQ to be mapped from QQQQ -> QQQ");
+                throw new TestException("No mapping/SymbolChangedEvent occurred. Expected for QQQ to be mapped from QQQQ -> QQQ");
             }
 
             foreach (var kvp in _filterDateConstituentSymbolCount)
             {
                 if (kvp.Value < 25)
                 {
-                    throw new RegressionTestException($"Expected 25 or more constituents in filter function on {kvp.Key:yyyy-MM-dd HH:mm:ss.fff}, found {kvp.Value}");
+                    throw new TestException($"Expected 25 or more constituents in filter function on {kvp.Key:yyyy-MM-dd HH:mm:ss.fff}, found {kvp.Value}");
                 }
             }
 
@@ -139,7 +139,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!kvp.Value)
                 {
-                    throw new RegressionTestException($"Received data in OnData(...) but it did not contain any constituent data on {kvp.Key:yyyy-MM-dd HH:mm:ss.fff}");
+                    throw new TestException($"Received data in OnData(...) but it did not contain any constituent data on {kvp.Key:yyyy-MM-dd HH:mm:ss.fff}");
                 }
             }
         }

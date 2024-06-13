@@ -68,24 +68,24 @@ namespace QuantConnect.Algorithm.CSharp
                   _delistings.Any(d => d.Type == DelistingType.Warning) &&
                   _delistings.Any(d => d.Type == DelistingType.Delisted)))
             {
-                throw new RegressionTestException($"Option contract {_optionContract.Symbol} was not correctly delisted.");
+                throw new TestException($"Option contract {_optionContract.Symbol} was not correctly delisted.");
             }
 
             if (_delistings.FirstOrDefault(d => d.Type == DelistingType.Warning).EndTime.Date !=
                 new DateTime(2014, 04, 16))
             {
-                throw new RegressionTestException($"Option contract {_optionContract.Symbol} delisting warning was not fired the right date.");
+                throw new TestException($"Option contract {_optionContract.Symbol} delisting warning was not fired the right date.");
             }
 
             if (_delistings.FirstOrDefault(d => d.Type == DelistingType.Delisted).EndTime.Date !=
                 new DateTime(2014, 04, 17))
             {
-                throw new RegressionTestException($"Option contract {_optionContract.Symbol} was not delisted the right date.");
+                throw new TestException($"Option contract {_optionContract.Symbol} was not delisted the right date.");
             }
 
             if (Portfolio[_optionContract.Symbol].Invested)
             {
-                throw new RegressionTestException($"Option contract {_optionContract.Symbol} was not wasn't liquidated as part of delisting.");
+                throw new TestException($"Option contract {_optionContract.Symbol} was not wasn't liquidated as part of delisting.");
             }
         }
 

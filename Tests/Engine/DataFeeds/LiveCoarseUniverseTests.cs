@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             if (exceptionThrown != null)
             {
-                throw new RegressionTestException("Exception in timer: ", exceptionThrown);
+                throw new TestException("Exception in timer: ", exceptionThrown);
             }
 
             Assert.AreEqual(coarseTimes.Count, coarseUniverseSelectionCount, message: "coarseUniverseSelectionCount");

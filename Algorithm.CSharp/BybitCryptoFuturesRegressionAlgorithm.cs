@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var cachedInterestRate = Securities[interestRate.Key].Cache.GetData<MarginInterestRate>();
                 if (cachedInterestRate != interestRate.Value)
                 {
-                    throw new RegressionTestException($"Unexpected cached margin interest rate for {interestRate.Key}!");
+                    throw new TestException($"Unexpected cached margin interest rate for {interestRate.Key}!");
                 }
             }
 
@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var ticket = Buy(_btcUsd.Symbol, 1000);
                     if (ticket.Status != OrderStatus.Invalid)
                     {
-                        throw new RegressionTestException($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
+                        throw new TestException($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
                     }
 
                     Buy(_btcUsd.Symbol, 100);
@@ -106,17 +106,17 @@ namespace QuantConnect.Algorithm.CSharp
                     var holdingsValueBtcUsd = 100;
                     if (Math.Abs(btcUsdHoldings.TotalSaleVolume - holdingsValueBtcUsd) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected TotalSaleVolume {btcUsdHoldings.TotalSaleVolume}");
+                        throw new TestException($"Unexpected TotalSaleVolume {btcUsdHoldings.TotalSaleVolume}");
                     }
                     if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost - holdingsValueBtcUsd) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
+                        throw new TestException($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
                     }
                     // margin used is based on the maintenance rate
                     if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
                         || _btcUsd.BuyingPowerModel.GetMaintenanceMargin(_btcUsd) != marginUsed)
                     {
-                        throw new RegressionTestException($"Unexpected margin used {marginUsed}");
+                        throw new TestException($"Unexpected margin used {marginUsed}");
                     }
 
                     Buy(_btcUsdt.Symbol, 0.01);
@@ -129,28 +129,28 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (Math.Abs(btcUsdtHoldings.TotalSaleVolume - holdingsValueUsdt) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected TotalSaleVolume {btcUsdtHoldings.TotalSaleVolume}");
+                        throw new TestException($"Unexpected TotalSaleVolume {btcUsdtHoldings.TotalSaleVolume}");
                     }
                     if (Math.Abs(btcUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1)
                     {
-                        throw new RegressionTestException($"Unexpected holdings cost {btcUsdtHoldings.HoldingsCost}");
+                        throw new TestException($"Unexpected holdings cost {btcUsdtHoldings.HoldingsCost}");
                     }
                     if (Math.Abs(btcUsdtHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
                         || _btcUsdt.BuyingPowerModel.GetMaintenanceMargin(_btcUsdt) != marginUsed)
                     {
-                        throw new RegressionTestException($"Unexpected margin used {marginUsed}");
+                        throw new TestException($"Unexpected margin used {marginUsed}");
                     }
 
                     // position just opened should be just spread here
                     var unrealizedProfit = Portfolio.TotalUnrealizedProfit;
                     if ((5 - Math.Abs(unrealizedProfit)) < 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
+                        throw new TestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
                     }
 
                     if (Portfolio.TotalProfit != 0)
                     {
-                        throw new RegressionTestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
+                        throw new TestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
                     }
                 }
             }
@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost - 100 * 2) > 1)
                 {
-                    throw new RegressionTestException($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
+                    throw new TestException($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
                 }
 
                 Sell(_btcUsdt.Symbol, 0.03);
@@ -175,19 +175,19 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Math.Abs(btcUsdtHoldings.AbsoluteHoldingsCost - holdingsValueUsdt) > 1)
                 {
-                    throw new RegressionTestException($"Unexpected holdings cost {btcUsdtHoldings.HoldingsCost}");
+                    throw new TestException($"Unexpected holdings cost {btcUsdtHoldings.HoldingsCost}");
                 }
 
                 // position just opened should be just spread here
                 var profit = Portfolio.TotalUnrealizedProfit;
                 if ((5 - Math.Abs(profit)) < 0)
                 {
-                    throw new RegressionTestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
+                    throw new TestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
                 }
                 // we barely did any difference on the previous trade
                 if ((5 - Math.Abs(Portfolio.TotalProfit)) < 0)
                 {
-                    throw new RegressionTestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
+                    throw new TestException($"Unexpected TotalProfit {Portfolio.TotalProfit}");
                 }
             }
         }
@@ -204,7 +204,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_interestPerSymbol.Any(kvp => kvp.Value == 0))
             {
-                throw new RegressionTestException("Expected interest rate data for all symbols");
+                throw new TestException("Expected interest rate data for all symbols");
             }
         }
 

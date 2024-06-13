@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var buyingPowerModel = positionGroup.BuyingPowerModel as OptionStrategyPositionGroupBuyingPowerModel;
                 if (buyingPowerModel == null)
                 {
-                    throw new RegressionTestException($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
+                    throw new TestException($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
                         }. Actual: {positionGroup.BuyingPowerModel.GetType()}");
                 }
 
@@ -85,13 +85,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException("Expected no holdings at end of algorithm");
+                throw new TestException("Expected no holdings at end of algorithm");
             }
 
             var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
             if (ordersCount != ExpectedOrdersCount)
             {
-                throw new RegressionTestException($@"Expected {ExpectedOrdersCount
+                throw new TestException($@"Expected {ExpectedOrdersCount
                     } orders to have been submitted and filled, half for buying the strategy and the other half for the liquidation. Actual {
                     ordersCount}");
             }

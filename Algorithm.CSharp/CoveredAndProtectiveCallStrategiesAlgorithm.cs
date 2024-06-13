@@ -54,13 +54,13 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (positionGroup.Positions.Count() != 2)
             {
-                throw new RegressionTestException($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
+                throw new TestException($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
             }
 
             var optionPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Option);
             if (optionPosition.Symbol.ID.OptionRight != OptionRight.Call)
             {
-                throw new RegressionTestException($"Expected option position to be a call. Actual: {optionPosition.Symbol.ID.OptionRight}");
+                throw new TestException($"Expected option position to be a call. Actual: {optionPosition.Symbol.ID.OptionRight}");
             }
 
             var underlyingPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Equity);
@@ -69,12 +69,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (optionPosition.Quantity != expectedOptionPositionQuantity)
             {
-                throw new RegressionTestException($@"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}");
+                throw new TestException($@"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}");
             }
 
             if (underlyingPosition.Quantity != expectedUnderlyingPositionQuantity)
             {
-                throw new RegressionTestException($@"Expected underlying position quantity to be {expectedUnderlyingPositionQuantity}. Actual: {underlyingPosition.Quantity}");
+                throw new TestException($@"Expected underlying position quantity to be {expectedUnderlyingPositionQuantity}. Actual: {underlyingPosition.Quantity}");
             }
         }
 

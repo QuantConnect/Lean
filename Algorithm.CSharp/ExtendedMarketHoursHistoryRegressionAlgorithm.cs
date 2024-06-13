@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var history = History(spy.Symbol, 5, Resolution.Minute).Count();
                 if (history != 5)
                 {
-                    throw new RegressionTestException($"Unexpected Minute data count: {history}");
+                    throw new TestException($"Unexpected Minute data count: {history}");
                 }
             }
             else
@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var history = History(spy.Symbol, 5, Resolution.Hour).Count();
                     if (history != 5)
                     {
-                        throw new RegressionTestException($"Unexpected Hour data count {history}");
+                        throw new TestException($"Unexpected Hour data count {history}");
                     }
                 }
                 else
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var history = History(spy.Symbol, 5, Resolution.Daily).Count();
                     if (history != 5)
                     {
-                        throw new RegressionTestException($"Unexpected Daily data count {history}");
+                        throw new TestException($"Unexpected Daily data count {history}");
                     }
                 }
             }
@@ -98,17 +98,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_minuteHistoryCount != 3 * 6)
             {
-                throw new RegressionTestException($"Unexpected minute history requests count {_minuteHistoryCount}");
+                throw new TestException($"Unexpected minute history requests count {_minuteHistoryCount}");
             }
             // 6 pre market from 4am to 9am + 4 post market 4pm to 7pm
             if (_hourHistoryCount != 3 * 10)
             {
-                throw new RegressionTestException($"Unexpected hour history requests count {_hourHistoryCount}");
+                throw new TestException($"Unexpected hour history requests count {_hourHistoryCount}");
             }
             // 0am to 3am + 8pm to 11pm, last day ends at 8pm
             if (_dailyHistoryCount != (2 * 8 + 5))
             {
-                throw new RegressionTestException($"Unexpected Daily history requests count: {_dailyHistoryCount}");
+                throw new TestException($"Unexpected Daily history requests count: {_dailyHistoryCount}");
             }
         }
 

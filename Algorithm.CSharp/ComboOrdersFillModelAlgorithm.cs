@@ -66,17 +66,17 @@ namespace QuantConnect.Algorithm.CSharp
                 var orderType = Transactions.GetOrderById(orderEvent.OrderId).Type;
                 if (orderType == OrderType.ComboMarket && orderEvent.AbsoluteFillQuantity != 50)
                 {
-                    throw new RegressionTestException($"The absolute quantity filled for all combo market orders should be 50, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
+                    throw new TestException($"The absolute quantity filled for all combo market orders should be 50, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
                 }
 
                 if (orderType == OrderType.ComboLimit && orderEvent.AbsoluteFillQuantity != 20)
                 {
-                    throw new RegressionTestException($"The absolute quantity filled for all combo limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
+                    throw new TestException($"The absolute quantity filled for all combo limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
                 }
 
                 if (orderType == OrderType.ComboLegLimit && orderEvent.AbsoluteFillQuantity != 10)
                 {
-                    throw new RegressionTestException($"The absolute quantity filled for all combo leg limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
+                    throw new TestException($"The absolute quantity filled for all combo leg limit orders should be 20, but for order {orderEvent.OrderId} was {orderEvent.AbsoluteFillQuantity}");
                 }
 
                 _orderTypes[orderType] = 1;
@@ -87,22 +87,22 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_orderTypes.Keys.Count != 3)
             {
-                throw new RegressionTestException($"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {_orderTypes.Count}");
+                throw new TestException($"Just 3 different types of order were submitted in this algorithm, but the amount of order types was {_orderTypes.Count}");
             }
 
             if (!_orderTypes.Keys.Contains(OrderType.ComboMarket))
             {
-                throw new RegressionTestException($"One Combo Market Order should have been submitted but it was not");
+                throw new TestException($"One Combo Market Order should have been submitted but it was not");
             }
 
             if (!_orderTypes.Keys.Contains(OrderType.ComboLimit))
             {
-                throw new RegressionTestException($"One Combo Limit Order should have been submitted but it was not");
+                throw new TestException($"One Combo Limit Order should have been submitted but it was not");
             }
 
             if (!_orderTypes.Keys.Contains(OrderType.ComboLegLimit))
             {
-                throw new RegressionTestException($"One Combo Leg Limit Order should have been submitted but it was not");
+                throw new TestException($"One Combo Leg Limit Order should have been submitted but it was not");
             }
         }
 

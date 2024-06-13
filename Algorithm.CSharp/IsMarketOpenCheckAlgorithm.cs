@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"IsMarketOpen at {Time}?: {isMarketOpen}");
             if (isMarketOpen != expected)
             {
-                throw new RegressionTestException($"Expected IsMarketOpen to be {expected} at {Time}.");
+                throw new TestException($"Expected IsMarketOpen to be {expected} at {Time}.");
             }
         }
 

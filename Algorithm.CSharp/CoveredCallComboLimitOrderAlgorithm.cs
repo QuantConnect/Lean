@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
                     if(comboPrice < 734m)
                     {
                         // just to make sure the price makes sense
-                        throw new RegressionTestException($"Unexpected combo price {comboPrice}");
+                        throw new TestException($"Unexpected combo price {comboPrice}");
                     }
                     // place order slightly bellow price
                     ComboLimitOrder(legs, 6, comboPrice - 0.5m);
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status.IsFill() && (Time - _submittionTime) < TimeSpan.FromMinutes(10))
             {
                 // we want to make sure we fill because the price moved and hit our limit price
-                throw new RegressionTestException($"Unexpected fill time {Time} submittion time {_submittionTime}");
+                throw new TestException($"Unexpected fill time {Time} submittion time {_submittionTime}");
             }
         }
 

@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 if (!addedSecurity.HasData)
                 {
-                    throw new RegressionTestException($"Security {addedSecurity.Symbol} was not warmed up!");
+                    throw new TestException($"Security {addedSecurity.Symbol} was not warmed up!");
                 }
             }
         }
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_warmedUpChecked)
             {
-                throw new RegressionTestException($"Security was not warmed up!");
+                throw new TestException($"Security was not warmed up!");
             }
         }
 

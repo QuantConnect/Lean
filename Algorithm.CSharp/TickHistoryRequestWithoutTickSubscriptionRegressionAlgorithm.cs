@@ -40,20 +40,20 @@ namespace QuantConnect.Algorithm.CSharp
             var spyHistory = History<Tick>(spy, TimeSpan.FromDays(1), Resolution.Tick);
             if (spyHistory.Count() == 0)
             {
-                throw new RegressionTestException("SPY tick history is empty");
+                throw new TestException("SPY tick history is empty");
             }
 
             var ibmHistory = History<Tick>(ibm, TimeSpan.FromDays(1), Resolution.Tick);
             if (ibmHistory.Count() == 0)
             {
-                throw new RegressionTestException("IBM tick history is empty");
+                throw new TestException("IBM tick history is empty");
             }
 
             // Requesting history for SPY and IBM (together) with tick resolution
             var spyIbmHistory = History<Tick>(new [] { spy, ibm }, TimeSpan.FromDays(1), Resolution.Tick);
             if (spyIbmHistory.Count() == 0)
             {
-                throw new RegressionTestException("Compound SPY and IBM tick history is empty");
+                throw new TestException("Compound SPY and IBM tick history is empty");
             }
 
             Quit();

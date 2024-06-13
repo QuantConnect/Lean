@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                         case DelistingType.Delisted:
                             if (!_receivedWarning)
                             {
-                                throw new RegressionTestException("Did not receive warning before delisting");
+                                throw new TestException("Did not receive warning before delisting");
                             }
                             break;
                     }
@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // Verify we aren't receiving expired option data.
                 if (_optionExpiry < Time.Date)
                 {
-                    throw new RegressionTestException($"Received expired contract {_optionSymbol} expired: {_optionExpiry} current time: {Time}");
+                    throw new TestException($"Received expired contract {_optionSymbol} expired: {_optionExpiry} current time: {Time}");
                 }
             }
 
@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (holding.Symbol == _optionSymbol && holding.Invested)
                 {
-                    throw new RegressionTestException($"Index option {_optionSymbol.Value} is still invested after delisting");
+                    throw new TestException($"Index option {_optionSymbol.Value} is still invested after delisting");
                 }
             }
         }

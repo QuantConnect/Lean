@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (UtcTime - _lastRebalanceTime > TimeSpan.Zero || UtcTime.DayOfWeek != DayOfWeek.Monday)
                 {
-                    throw new RegressionTestException($"{UtcTime} {orderEvent.Symbol} {UtcTime - _lastRebalanceTime}");
+                    throw new TestException($"{UtcTime} {orderEvent.Symbol} {UtcTime - _lastRebalanceTime}");
                 }
             }
         }

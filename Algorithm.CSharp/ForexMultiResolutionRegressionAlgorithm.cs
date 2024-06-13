@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (symbol == "EURUSD" && kvp.Value.IsFillForward)
                 {
-                    throw new RegressionTestException($"Unexpected fill forward for 'EURUSD' bar at {Time}");
+                    throw new TestException($"Unexpected fill forward for 'EURUSD' bar at {Time}");
                 }
             }
         }
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // data from '10/7/2013 12:00:00 AM' to '10/9/2013 12:00:00 AM'
                 || _dataPointsPerSymbol["EURUSD"] != 49)
             {
-                throw new RegressionTestException($"Data point count mismatch for symbol {string.Join(",", _dataPointsPerSymbol.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
+                throw new TestException($"Data point count mismatch for symbol {string.Join(",", _dataPointsPerSymbol.Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
             }
         }
 

@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!delistings.ContainsKey("AAA.1"))
             {
-                throw new RegressionTestException("Unexpected OnDelistings call");
+                throw new TestException("Unexpected OnDelistings call");
             }
             _onDelistingsCalled = true;
         }
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!symbolsChanged.ContainsKey("SPWR"))
             {
-                throw new RegressionTestException("Unexpected OnSymbolChangedEvents call");
+                throw new TestException("Unexpected OnSymbolChangedEvents call");
             }
             _onSymbolChangedEvents = true;
         }
@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!splits.ContainsKey("AAPL"))
             {
-                throw new RegressionTestException("Unexpected OnSplits call");
+                throw new TestException("Unexpected OnSplits call");
             }
             _onSplits = true;
         }
@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!dividends.ContainsKey("AAPL"))
             {
-                throw new RegressionTestException("Unexpected OnDividends call");
+                throw new TestException("Unexpected OnDividends call");
             }
             _onDividends = true;
         }
@@ -90,19 +90,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_onDelistingsCalled)
             {
-                throw new RegressionTestException("OnDelistings was not called!");
+                throw new TestException("OnDelistings was not called!");
             }
             if (!_onSymbolChangedEvents)
             {
-                throw new RegressionTestException("OnSymbolChangedEvents was not called!");
+                throw new TestException("OnSymbolChangedEvents was not called!");
             }
             if (!_onSplits)
             {
-                throw new RegressionTestException("OnSplits was not called!");
+                throw new TestException("OnSplits was not called!");
             }
             if (!_onDividends)
             {
-                throw new RegressionTestException("OnDividends was not called!");
+                throw new TestException("OnDividends was not called!");
             }
         }
 

@@ -73,17 +73,17 @@ namespace QuantConnect.Algorithm.CSharp
                     || filledEvent.FillQuantity != ticket.QuantityFilled
                     || (0.1m - filledEvent.OrderFee.Value.Amount) != ticket.QuantityFilled)
                 {
-                    throw new RegressionTestException($"Unexpected BaseCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
+                    throw new TestException($"Unexpected BaseCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
                 }
 
                 if (Portfolio.CashBook[quoteCurrency].Amount != (initialQuoteCurrency - 0.1m * filledEvent.FillPrice))
                 {
-                    throw new RegressionTestException($"Unexpected QuoteCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
+                    throw new TestException($"Unexpected QuoteCurrency portfolio status. Event {filledEvent}. CashBook: {Portfolio.CashBook}. ");
                 }
 
                 if (Securities[_symbol].Holdings.Quantity != (0.1m - filledEvent.OrderFee.Value.Amount))
                 {
-                    throw new RegressionTestException($"Unexpected Holdings: {Securities[_symbol].Holdings}. Event {filledEvent}");
+                    throw new TestException($"Unexpected Holdings: {Securities[_symbol].Holdings}. Event {filledEvent}");
                 }
             }
             else

@@ -35,14 +35,14 @@ namespace QuantConnect.Algorithm.CSharp
             var firstCustomSecurity = AddData<ExampleCustomData>(market1.Symbol, Resolution.Hour, TimeZones.Utc, false);
             if (firstCustomSecurity.Exchange.TimeZone != TimeZones.Utc)
             {
-                throw new RegressionTestException($"The time zone of security {firstCustomSecurity} should be {TimeZones.Utc}, but it was {firstCustomSecurity.Exchange.TimeZone}");
+                throw new TestException($"The time zone of security {firstCustomSecurity} should be {TimeZones.Utc}, but it was {firstCustomSecurity.Exchange.TimeZone}");
             }
 
             var market2 = AddForex("EURUSD", Resolution.Hour, Market.Oanda);
             var secondCustomSecurity = AddData<ExampleCustomData>(market2.Symbol, Resolution.Hour, TimeZones.Utc, false);
             if (secondCustomSecurity.Exchange.TimeZone != TimeZones.Utc)
             {
-                throw new RegressionTestException($"The time zone of security {secondCustomSecurity} should be {TimeZones.Utc}, but it was {secondCustomSecurity.Exchange.TimeZone}");
+                throw new TestException($"The time zone of security {secondCustomSecurity} should be {TimeZones.Utc}, but it was {secondCustomSecurity.Exchange.TimeZone}");
             }
             _noDataPointsReceived = true;
         }
@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             _noDataPointsReceived = false;
             if (slice.Count != ActiveSecurities.Count)
             {
-                throw new RegressionTestException($"{ActiveSecurities.Count.ToString().ToCamelCase()} data points were expected, but only {slice.Count} were received");
+                throw new TestException($"{ActiveSecurities.Count.ToString().ToCamelCase()} data points were expected, but only {slice.Count} were received");
             }
         }
 
@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_noDataPointsReceived)
             {
-                throw new RegressionTestException($"No points were received");
+                throw new TestException($"No points were received");
             }
         }
 

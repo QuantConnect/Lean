@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var invalidOrder = MarketOrder("BTCUSD", 0.00002);
                 if (invalidOrder.Status != OrderStatus.Invalid)
                 {
-                    throw new RegressionTestException("Invalid order expected, order size is less than allowed");
+                    throw new TestException("Invalid order expected, order size is less than allowed");
                 }
 
                 // Update an order that fails because of the size
@@ -74,13 +74,13 @@ namespace QuantConnect.Algorithm.CSharp
             // Update of validOrderOne is expected to fail
             if( (order.Id == 2) && (order.LastUpdateTime != null) && (order.Tag == "Updated"))
             {
-                throw new RegressionTestException("Order update expected to fail");
+                throw new TestException("Order update expected to fail");
             }
 
             // Update of validOrdertwo is expected to succeed
             if ((order.Id == 3) && (order.LastUpdateTime != null) && (order.Tag == "NotUpdated"))
             {
-                throw new RegressionTestException("Order update expected to succeed");
+                throw new TestException("Order update expected to succeed");
             }
         }
 

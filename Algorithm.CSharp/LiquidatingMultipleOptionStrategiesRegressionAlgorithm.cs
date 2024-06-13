@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var positionGroups = Portfolio.Positions.Groups;
                 if (positionGroups.Count != 2)
                 {
-                    throw new RegressionTestException($"Expected 2 position groups, one for each spread, but found {positionGroups.Count}");
+                    throw new TestException($"Expected 2 position groups, one for each spread, but found {positionGroups.Count}");
                 }
 
                 var positionGroupMatchesSpreadStrategy = (IPositionGroup positionGroup, OptionStrategy strategy) =>
@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (!positionGroups.All(group =>
                         positionGroupMatchesSpreadStrategy(group, _bullCallSpread) || positionGroupMatchesSpreadStrategy(group, _bearPutSpread)))
                 {
-                    throw new RegressionTestException("Expected both spreads to have a matching position group in the portfolio.");
+                    throw new TestException("Expected both spreads to have a matching position group in the portfolio.");
                 }
 
                 // Step 2: liquidate spreads
@@ -125,12 +125,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_done)
             {
-                throw new RegressionTestException("Expected the algorithm to have bought and sold a Bull Call Spread and a Bear Put Spread.");
+                throw new TestException("Expected the algorithm to have bought and sold a Bull Call Spread and a Bear Put Spread.");
             }
 
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException("The spreads should have been liquidated by the end of the algorithm");
+                throw new TestException("The spreads should have been liquidated by the end of the algorithm");
             }
         }
 

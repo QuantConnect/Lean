@@ -404,7 +404,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             else
             {
-                throw new RegressionTestException("SecurityType not implemented");
+                throw new TestException("SecurityType not implemented");
             }
             var config = new SubscriptionDataConfig(typeof(TradeBar), _symbol, resolution, DateTimeZone.Utc, DateTimeZone.Utc, true, false, isInternalFeed, false, tickType);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);

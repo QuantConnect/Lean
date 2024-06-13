@@ -69,13 +69,13 @@ namespace QuantConnect.Algorithm.CSharp
                     var subscriptions = SubscriptionManager.Subscriptions.Where(x => x.Symbol == contract.Symbol).ToList();
                     if (subscriptions.Count == 0)
                     {
-                        throw new RegressionTestException($"Failed to find valid subscription for {contract.Symbol} at {Time}");
+                        throw new TestException($"Failed to find valid subscription for {contract.Symbol} at {Time}");
                     }
 
                     var openInterest = Securities[contract.Symbol].OpenInterest;
                     if(openInterest == 0)
                     {
-                        throw new RegressionTestException($"Open interest is 0 for {contract.Symbol} at {Time}");
+                        throw new TestException($"Open interest is 0 for {contract.Symbol} at {Time}");
                     }
                 }
             }

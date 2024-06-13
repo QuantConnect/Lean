@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
             positionGroup = Portfolio.Positions.Groups.Single();
             if (positionGroup.Positions.Single().Quantity != quantity)
             {
-                throw new RegressionTestException($@"Expected position group quantity to be {quantity} but was {positionGroup.Quantity}");
+                throw new TestException($@"Expected position group quantity to be {quantity} but was {positionGroup.Quantity}");
             }
 
             TestQuantityForDeltaBuyingPowerForPositionGroup(positionGroup, security);
@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (positionQuantityForDeltaWithPositionGroupBuyingPowerModel != expectedQuantity)
             {
-                throw new RegressionTestException($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {
+                throw new TestException($@"Expected position quantity for delta buying power to be {expectedQuantity} but was {
                     positionQuantityForDeltaWithPositionGroupBuyingPowerModel}");
             }
 
@@ -144,7 +144,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel != expectedSingleSecurityModelsQuantity ||
                 positionQuantityForDeltaWithSecurityBuyingPowerModel != expectedSingleSecurityModelsQuantity)
             {
-                throw new RegressionTestException($@"Expected order quantity for delta buying power calls from default buying power models to return {
+                throw new TestException($@"Expected order quantity for delta buying power calls from default buying power models to return {
                     expectedSingleSecurityModelsQuantity}. Results were:" +
                     $"    \nSecurityPositionGroupBuyingPowerModel: {positionQuantityForDeltaWithSecurityPositionGroupBuyingPowerModel}" +
                     $"    \nBuyingPowerModel: {positionQuantityForDeltaWithSecurityBuyingPowerModel}\n");

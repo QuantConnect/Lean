@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if(_previousFactor == priceFactor)
                 {
-                    throw new RegressionTestException($"Price factor did not change after symbol changed! {Time} {priceFactor}");
+                    throw new TestException($"Price factor did not change after symbol changed! {Time} {priceFactor}");
                 }
 
                 Quit("We asserted what we wanted");
@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_symbolChangedEvent == null)
             {
-                throw new RegressionTestException("Unexpected a symbol changed event but got none!");
+                throw new TestException("Unexpected a symbol changed event but got none!");
             }
         }
 

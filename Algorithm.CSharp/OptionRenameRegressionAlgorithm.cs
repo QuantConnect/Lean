@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (dividend.ReferencePrice != 32.6m || dividend.Distribution != 3.82m)
                 {
-                    throw new RegressionTestException($"{Time} - Invalid dividend {dividend}");
+                    throw new TestException($"{Time} - Invalid dividend {dividend}");
                 }
             }
             if (!Portfolio.Invested)
@@ -87,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
                             // checks
                             if (contract.AskPrice != 1.1m)
                             {
-                                throw new RegressionTestException("Regression test failed: current ask price was not loaded from NWSA backtest file and is not $1.1");
+                                throw new TestException("Regression test failed: current ask price was not loaded from NWSA backtest file and is not $1.1");
                             }
                         }
                     }
@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                         if (contract.BidPrice != 0.05m)
                         {
-                            throw new RegressionTestException("Regression test failed: current bid price was not loaded from FOXA file and is not $0.05");
+                            throw new TestException("Regression test failed: current bid price was not loaded from FOXA file and is not $0.05");
                         }
                     }
                 }

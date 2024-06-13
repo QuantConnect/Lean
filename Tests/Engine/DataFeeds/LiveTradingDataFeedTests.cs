@@ -1778,19 +1778,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (dataNormalizationMode == DataNormalizationMode.ForwardPanamaCanal && price < 150)
                 {
-                    throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    throw new TestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
                 }
                 else if (dataNormalizationMode == DataNormalizationMode.Raw && price == 2)
                 {
-                    throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    throw new TestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
                 }
                 else if (dataNormalizationMode == DataNormalizationMode.BackwardsPanamaCanal && price < -150)
                 {
-                    throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    throw new TestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
                 }
                 else if (dataNormalizationMode == DataNormalizationMode.BackwardsRatio && Math.Abs(price - 1.48m) > price * 0.1m)
                 {
-                    throw new RegressionTestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
+                    throw new TestException($"unexpected price {price} for {symbol} @{security.LocalTime}");
                 }
             });
 
@@ -1910,7 +1910,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     if (delistingEvent.Key != symbol)
                     {
-                        throw new RegressionTestException($"Unexpected delisting for symbol {delistingEvent.Key}");
+                        throw new TestException($"Unexpected delisting for symbol {delistingEvent.Key}");
                     }
 
                     if (delistingEvent.Value.Type == DelistingType.Warning)
@@ -1954,7 +1954,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     {
                         if(delisting.Key != Symbols.SPY_C_192_Feb19_2016)
                         {
-                            throw new RegressionTestException($"Unexpected delisting for symbol {delisting.Key}");
+                            throw new TestException($"Unexpected delisting for symbol {delisting.Key}");
                         }
 
                         if (delisting.Value.Type == DelistingType.Warning)
@@ -3609,7 +3609,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
                     if (!isValidTime)
                     {
-                        lookupSymbolsException = new RegressionTestException($"Invalid LookupSymbols call time: {time} ({algorithmTimeZone})");
+                        lookupSymbolsException = new TestException($"Invalid LookupSymbols call time: {time} ({algorithmTimeZone})");
                     }
 
                     time = utcTime.ConvertFromUtc(exchangeTimeZone);
@@ -4053,7 +4053,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Interlocked.Increment(ref ReaderCallsCount);
             if (ThrowException)
             {
-                throw new RegressionTestException("Custom data Reader threw exception");
+                throw new TestException("Custom data Reader threw exception");
             }
             else if (ReturnNull)
             {

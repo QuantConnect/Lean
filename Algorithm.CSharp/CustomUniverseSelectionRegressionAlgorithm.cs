@@ -55,11 +55,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (data.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected data count: {data.Count}");
+                throw new TestException($"Unexpected data count: {data.Count}");
             }
             if (ActiveSecurities.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected ActiveSecurities count: {ActiveSecurities.Count}");
+                throw new TestException($"Unexpected ActiveSecurities count: {ActiveSecurities.Count}");
             }
             if (!Portfolio.Invested)
             {

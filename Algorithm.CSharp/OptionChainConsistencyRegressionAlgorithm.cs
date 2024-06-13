@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                         if (!Securities.ContainsKey(o.Symbol))
                         {
                             // inconsistency found: option chains contains contract information that is not available in securities manager and not available for trading
-                            throw new RegressionTestException("inconsistency found: option chains contains contract " +
+                            throw new TestException("inconsistency found: option chains contains contract " +
                                 $"{o.Symbol.Value} that is not available in securities manager and not available for trading"
                             );
                         }

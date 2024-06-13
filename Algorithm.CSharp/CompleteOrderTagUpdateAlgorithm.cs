@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (orderEvent.OrderId != _limitOrderTicket.OrderId)
                 {
-                    throw new RegressionTestException("The only canceled order should have been the limit order.");
+                    throw new TestException("The only canceled order should have been the limit order.");
                 }
 
                 // update canceled order tag
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _marketOrderTicket = Transactions.GetOrderTickets(x => x.OrderType == OrderType.Market).Single();
                 if (orderEvent.OrderId != _marketOrderTicket.OrderId)
                 {
-                    throw new RegressionTestException("The only filled order should have been the market order.");
+                    throw new TestException("The only filled order should have been the market order.");
                 }
 
                 // try to update a field other than the tag
@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var response = _marketOrderTicket.Update(updateFields);
                 if (response.IsSuccess)
                 {
-                    throw new RegressionTestException("The market order quantity should not have been updated.");
+                    throw new TestException("The market order quantity should not have been updated.");
                 }
 
                 // update filled order tag
@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
             AssertOrderTagUpdate(_marketOrderTicket, TagAfterFill, "filled");
             if (_marketOrderTicket.Quantity != _quantity || _marketOrderTicket.QuantityFilled != _quantity)
             {
-                throw new RegressionTestException("The market order quantity should not have been updated.");
+                throw new TestException("The market order quantity should not have been updated.");
             }
 
             // check the canceled order
@@ -117,18 +117,18 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (ticket == null)
             {
-                throw new RegressionTestException($"The order ticket was not set for the {orderAction} order");
+                throw new TestException($"The order ticket was not set for the {orderAction} order");
             }
 
             if (ticket.Tag != expectedTag)
             {
-                throw new RegressionTestException($"Order ticket tag was not updated after order was {orderAction}");
+                throw new TestException($"Order ticket tag was not updated after order was {orderAction}");
             }
 
             var order = Transactions.GetOrderById(ticket.OrderId);
             if (order.Tag != expectedTag)
             {
-                throw new RegressionTestException($"Order tag was not updated after order was {orderAction}");
+                throw new TestException($"Order tag was not updated after order was {orderAction}");
             }
         }
 
@@ -140,7 +140,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (response.IsError)
             {
-                throw new RegressionTestException($"{errorMessagePrefix}: {response.ErrorMessage}");
+                throw new TestException($"{errorMessagePrefix}: {response.ErrorMessage}");
             }
         }
 

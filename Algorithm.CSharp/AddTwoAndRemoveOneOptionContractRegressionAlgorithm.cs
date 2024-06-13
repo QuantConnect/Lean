@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
                         SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs("AAPL");
                     if (subscriptions.Count == 0)
                     {
-                        throw new RegressionTestException("No configuration for underlying was found!");
+                        throw new TestException("No configuration for underlying was found!");
                     }
 
                     if (!Portfolio.Invested)
@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_hasRemoved)
             {
-                throw new RegressionTestException("Expect a single call to OnData where we removed the option and underlying");
+                throw new TestException("Expect a single call to OnData where we removed the option and underlying");
             }
         }
 

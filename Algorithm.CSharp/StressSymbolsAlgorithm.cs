@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
             var allSymbols = StressSymbols.StockSymbols.ToList();//.Concat(ForexSymbols).ToList();
             if (TickSymbolsToRun + SecondSymbolsToRun + HourSymbolsToRun + DailySymbolsToRun > allSymbols.Count)
             {
-                throw new RegressionTestException("Too many symbols, all symbols: " + allSymbols.Count);
+                throw new TestException("Too many symbols, all symbols: " + allSymbols.Count);
             }
 
 

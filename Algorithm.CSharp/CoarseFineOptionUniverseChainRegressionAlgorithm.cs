@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (universe.Underlying == null)
                 {
-                    throw new RegressionTestException("Underlying data point is null! This shouldn't happen, each OptionChainUniverse handles and should provide this");
+                    throw new TestException("Underlying data point is null! This shouldn't happen, each OptionChainUniverse handles and should provide this");
                 }
                 return universe.IncludeWeeklys()
                     .FrontMonth()
@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // options added should all match prev added security
                     if (security.Symbol.Underlying != _lastEquityAdded)
                     {
-                        throw new RegressionTestException($"Unexpected symbol added {security.Symbol}");
+                        throw new TestException($"Unexpected symbol added {security.Symbol}");
                     }
 
                     _optionCount++;
@@ -106,11 +106,11 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!config.Any())
                 {
-                    throw new RegressionTestException($"Was expecting configurations for {security.Symbol}");
+                    throw new TestException($"Was expecting configurations for {security.Symbol}");
                 }
                 if (config.Any(dataConfig => dataConfig.DataNormalizationMode != DataNormalizationMode.Raw))
                 {
-                    throw new RegressionTestException($"Was expecting DataNormalizationMode.Raw configurations for {security.Symbol}");
+                    throw new TestException($"Was expecting DataNormalizationMode.Raw configurations for {security.Symbol}");
                 }
 
                 if (security.Symbol.SecurityType == SecurityType.Equity)
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var expectedPrice = _rawPrices[security.Symbol.ID.Symbol];
                     if (Math.Abs(security.Price - expectedPrice) > expectedPrice * 0.1m)
                     {
-                        throw new RegressionTestException($"Unexpected raw prices for symbol {security.Symbol}");
+                        throw new TestException($"Unexpected raw prices for symbol {security.Symbol}");
                     }
                 }
             }
@@ -135,12 +135,12 @@ namespace QuantConnect.Algorithm.CSharp
             var config = SubscriptionManager.Subscriptions.ToList();
             if (config.Any(dataConfig => dataConfig.Symbol == _twx || dataConfig.Symbol.Underlying == _twx))
             {
-                throw new RegressionTestException($"Was NOT expecting any configurations for {_twx} or it's options, since coarse/fine should have deselected it");
+                throw new TestException($"Was NOT expecting any configurations for {_twx} or it's options, since coarse/fine should have deselected it");
             }
 
             if (_optionCount == 0)
             {
-                throw new RegressionTestException("Option universe chain did not add any option!");
+                throw new TestException("Option universe chain did not add any option!");
             }
         }
 

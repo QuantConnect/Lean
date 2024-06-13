@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _gotDividend = true;
                 if (Time != dividend.Value.Time || Time.Day != 24)
                 {
-                    throw new RegressionTestException("Got a dividend at an unexpected point in time");
+                    throw new TestException("Got a dividend at an unexpected point in time");
                 }
             }
             foreach (var tradeBar in data.Bars)
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_gotDividend)
             {
-                throw new RegressionTestException("Never got a dividend!");
+                throw new TestException("Never got a dividend!");
             }
         }
 

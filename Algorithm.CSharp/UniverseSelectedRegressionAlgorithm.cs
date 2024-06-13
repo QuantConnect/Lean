@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_universe.Selected.Contains(QuantConnect.Symbol.Create("TSLA", SecurityType.Equity, Market.USA)))
             {
-                throw new RegressionTestException($"TSLA shouldn't of been selected");
+                throw new TestException($"TSLA shouldn't of been selected");
             }
 
             if (Time.Date < new DateTime(2014, 03, 28))
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!Enumerable.SequenceEqual(expectedSymbols, _universe.Selected))
                 {
-                    throw new RegressionTestException($"Unexpected selected symbols");
+                    throw new TestException($"Unexpected selected symbols");
                 }
             }
 
@@ -81,11 +81,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_selectionCount != 3)
             {
-                throw new RegressionTestException($"Unexpected selection count {_selectionCount}");
+                throw new TestException($"Unexpected selection count {_selectionCount}");
             }
             if (_universe.Selected.Count != 3 || _universe.Selected.Count == _universe.Members.Count)
             {
-                throw new RegressionTestException($"Unexpected universe selected count {_universe.Selected.Count}");
+                throw new TestException($"Unexpected universe selected count {_universe.Selected.Count}");
             }
         }
 

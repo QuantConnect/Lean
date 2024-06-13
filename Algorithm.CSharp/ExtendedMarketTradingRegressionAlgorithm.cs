@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (InMarketHours())
             {
-                throw new RegressionTestException("Order processed during market hours.");
+                throw new TestException("Order processed during market hours.");
             }
 
             Log($"{orderEvent}");

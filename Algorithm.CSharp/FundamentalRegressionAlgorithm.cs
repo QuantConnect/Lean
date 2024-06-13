@@ -54,37 +54,37 @@ namespace QuantConnect.Algorithm.CSharp
             var ibmFundamental = Fundamentals(ibm);
             if (Time != StartDate || Time != ibmFundamental.EndTime)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} time {ibmFundamental.EndTime}");
+                throw new TestException($"Unexpected {nameof(Fundamental)} time {ibmFundamental.EndTime}");
             }
             if (ibmFundamental.Price == 0)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} IBM price!");
+                throw new TestException($"Unexpected {nameof(Fundamental)} IBM price!");
             }
 
             var nb = QuantConnect.Symbol.Create("NB", SecurityType.Equity, Market.USA);
             var fundamentals = Fundamentals(new List<Symbol>{ nb, ibm }).ToList();
             if (fundamentals.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} count {fundamentals.Count}! Expected 2");
+                throw new TestException($"Unexpected {nameof(Fundamental)} count {fundamentals.Count}! Expected 2");
             }
 
             // Request historical fundamental data for symbols
             var history = History<Fundamental>(Securities.Keys, new TimeSpan(2, 0, 0, 0)).ToList();
             if(history.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} history count {history.Count}! Expected 2");
+                throw new TestException($"Unexpected {nameof(Fundamental)} history count {history.Count}! Expected 2");
             }
 
             if (history[0].Values.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected {nameof(Fundamental)} data count {history[0].Values.Count}, expected 2!");
+                throw new TestException($"Unexpected {nameof(Fundamental)} data count {history[0].Values.Count}, expected 2!");
             }
 
             foreach (var ticker in new[] {"AAPL", "SPY"})
             {
                 if (!history[0].TryGetValue(ticker, out var fundamental) || fundamental.Price == 0)
                 {
-                    throw new RegressionTestException($"Unexpected {ticker} fundamental data");
+                    throw new TestException($"Unexpected {ticker} fundamental data");
                 }
             }
             AssertFundamentalUniverseData();
@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var universeDataPerTime = History(_universe, new TimeSpan(2, 0, 0, 0)).ToList();
                 if (universeDataPerTime.Count != 2)
                 {
-                    throw new RegressionTestException($"Unexpected {nameof(Fundamentals)} history count {universeDataPerTime.Count}! Expected 1");
+                    throw new TestException($"Unexpected {nameof(Fundamentals)} history count {universeDataPerTime.Count}! Expected 1");
                 }
 
                 foreach (var universeDataCollection in universeDataPerTime)
@@ -126,7 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (dataPointCount < 7000)
             {
-                throw new RegressionTestException($"Unexpected historical {nameof(Fundamentals)} data count {dataPointCount} case {caseName}! Expected > 7000");
+                throw new TestException($"Unexpected historical {nameof(Fundamentals)} data count {dataPointCount} case {caseName}! Expected > 7000");
             }
         }
 

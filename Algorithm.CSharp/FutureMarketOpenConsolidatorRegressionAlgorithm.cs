@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (open != bar.Time || close != bar.EndTime)
             {
-                throw new RegressionTestException($"Bar span was expected to be from {open} to {close}. " +
+                throw new TestException($"Bar span was expected to be from {open} to {close}. " +
                     $"\n But was from {bar.Time} to {bar.EndTime}.");
             }
 

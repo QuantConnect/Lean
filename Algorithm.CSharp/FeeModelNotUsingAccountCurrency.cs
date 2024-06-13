@@ -95,22 +95,22 @@ namespace QuantConnect.Algorithm.CSharp
             // Fees will be applied to the corresponding Cash currency. 1 ETH * 2 trades
             if (Portfolio.CashBook["ETH"].Amount != -2)
             {
-                throw new RegressionTestException("Unexpected ETH cash amount: " +
+                throw new TestException("Unexpected ETH cash amount: " +
                     $"{Portfolio.CashBook["ETH"].Amount}");
             }
             if (Portfolio.CashBook["USD"].Amount != 0)
             {
-                throw new RegressionTestException("Unexpected USD cash amount: " +
+                throw new TestException("Unexpected USD cash amount: " +
                     $"{Portfolio.CashBook["USD"].Amount}");
             }
             if (Portfolio.CashBook["BTC"].Amount != 0)
             {
-                throw new RegressionTestException("Unexpected BTC cash amount: " +
+                throw new TestException("Unexpected BTC cash amount: " +
                     $"{Portfolio.CashBook["BTC"].Amount}");
             }
             if (Portfolio.CashBook.ContainsKey(Currencies.NullCurrency))
             {
-                throw new RegressionTestException("Unexpected NullCurrency cash");
+                throw new TestException("Unexpected NullCurrency cash");
             }
 
             var closedTrade = TradeBuilder.ClosedTrades[0];
@@ -118,16 +118,16 @@ namespace QuantConnect.Algorithm.CSharp
                 * closedTrade.Quantity;
             if (Portfolio.CashBook["EUR"].Amount != _initialEurCash + profitInQuoteCurrency)
             {
-                throw new RegressionTestException("Unexpected EUR cash amount: " +
+                throw new TestException("Unexpected EUR cash amount: " +
                     $"{Portfolio.CashBook["EUR"].Amount}");
             }
             if (closedTrade.TotalFees != _orderFeesInAccountCurrency)
             {
-                throw new RegressionTestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
+                throw new TestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
             }
             if (_security.Holdings.TotalFees != _orderFeesInAccountCurrency)
             {
-                throw new RegressionTestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
+                throw new TestException($"Unexpected closed trades total fees {closedTrade.TotalFees}");
             }
         }
 

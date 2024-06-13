@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             try
             {
                 Consolidate<QuoteBar>(symbol, TimeSpan.FromDays(1), bar => { UpdateQuoteBar(bar, -1); });
-                throw new RegressionTestException($"Expected {nameof(ArgumentException)} to be thrown");
+                throw new TestException($"Expected {nameof(ArgumentException)} to be thrown");
             }
             catch (ArgumentException)
             {
@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!(tradeBar is TradeBar))
             {
-                throw new RegressionTestException("Expected a TradeBar");
+                throw new TestException("Expected a TradeBar");
             }
             _consolidationCounts[position]++;
             _smas[position].Update(tradeBar.EndTime, tradeBar.Value);
@@ -121,19 +121,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_consolidationCounts.Any(i => i != _expectedConsolidations) || _customDataConsolidator == 0)
             {
-                throw new RegressionTestException("Unexpected consolidation count");
+                throw new TestException("Unexpected consolidation count");
             }
 
             for (var i = 0; i < _smas.Count; i++)
             {
                 if (_smas[i].Samples != _expectedConsolidations)
                 {
-                    throw new RegressionTestException($"Expected {_expectedConsolidations} samples in each SMA but found {_smas[i].Samples} in SMA in index {i}");
+                    throw new TestException($"Expected {_expectedConsolidations} samples in each SMA but found {_smas[i].Samples} in SMA in index {i}");
                 }
 
                 if (_smas[i].Current.Time != _lastSmaUpdates[i])
                 {
-                    throw new RegressionTestException($"Expected SMA in index {i} to have been last updated at {_lastSmaUpdates[i]} but was {_smas[i].Current.Time}");
+                    throw new TestException($"Expected SMA in index {i} to have been last updated at {_lastSmaUpdates[i]} but was {_smas[i].Current.Time}");
                 }
             }
         }

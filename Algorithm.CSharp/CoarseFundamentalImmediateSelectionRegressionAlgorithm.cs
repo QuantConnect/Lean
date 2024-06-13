@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException($"CoarseSelectionFunction called at unexpected time. " +
+                    throw new TestException($"CoarseSelectionFunction called at unexpected time. " +
                         $"Expected it to be called on {StartDate} but was called on {Time}");
                 }
             }
@@ -80,19 +80,19 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (Time != StartDate)
                 {
-                    throw new RegressionTestException($"OnSecuritiesChanged called at unexpected time. " +
+                    throw new TestException($"OnSecuritiesChanged called at unexpected time. " +
                         $"Expected it to be called on {StartDate} but was called on {Time}");
                 }
 
                 if (changes.AddedSecurities.Count != NumberOfSymbols)
                 {
-                    throw new RegressionTestException($"Unexpected number of added securities. " +
+                    throw new TestException($"Unexpected number of added securities. " +
                         $"Expected {NumberOfSymbols} but was {changes.AddedSecurities.Count}");
                 }
 
                 if (changes.RemovedSecurities.Count != 0)
                 {
-                    throw new RegressionTestException($"Unexpected number of removed securities. " +
+                    throw new TestException($"Unexpected number of removed securities. " +
                         $"Expected 0 but was {changes.RemovedSecurities.Count}");
                 }
             }

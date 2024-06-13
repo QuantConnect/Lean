@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (symbol.IsNullOrEmpty())
             {
-                throw new RegressionTestException($"{standard} symbol representation is null or empty");
+                throw new TestException($"{standard} symbol representation is null or empty");
             }
         }
 
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (symbolApiSymbol != algorithmApiSymbol)
             {
-                throw new RegressionTestException($@"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match QCAlgorithm API {
+                throw new TestException($@"Symbol API {standard} symbol representation ({symbolApiSymbol}) does not match QCAlgorithm API {
                     standard} symbol representation ({algorithmApiSymbol})");
             }
         }

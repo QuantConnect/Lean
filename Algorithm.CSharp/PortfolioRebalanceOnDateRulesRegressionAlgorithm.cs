@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Debug($"{orderEvent}");
                 if (UtcTime.DayOfWeek != DayOfWeek.Wednesday)
                 {
-                    throw new RegressionTestException($"{UtcTime} {orderEvent.Symbol} {UtcTime.DayOfWeek}");
+                    throw new TestException($"{UtcTime} {orderEvent.Symbol} {UtcTime.DayOfWeek}");
                 }
             }
         }

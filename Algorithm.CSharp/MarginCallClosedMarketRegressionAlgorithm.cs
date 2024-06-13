@@ -81,13 +81,13 @@ namespace QuantConnect.Algorithm.CSharp
                 // leave a 1% margin for are expected calculations
                 if (Math.Abs(expectedFinalQuantity - actualFinalQuantity) > (quantityHold * 0.01m))
                 {
-                    throw new RegressionTestException($"Expected {expectedFinalQuantity} final quantity but was {actualFinalQuantity}");
+                    throw new TestException($"Expected {expectedFinalQuantity} final quantity but was {actualFinalQuantity}");
                 }
 
                 if (!Securities[_spy].Exchange.ExchangeOpen
                     || !Securities[_spy].Exchange.ClosingSoon)
                 {
-                    throw new RegressionTestException($"Expected exchange to be open: {Securities[_spy].Exchange.ExchangeOpen} and to be closing soon: {Securities[_spy].Exchange.ClosingSoon}");
+                    throw new TestException($"Expected exchange to be open: {Securities[_spy].Exchange.ExchangeOpen} and to be closing soon: {Securities[_spy].Exchange.ClosingSoon}");
                 }
             }
         }
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_marginCall != 1)
             {
-                throw new RegressionTestException($"We expected a single margin call to happen, {_marginCall} occurred");
+                throw new TestException($"We expected a single margin call to happen, {_marginCall} occurred");
             }
         }
 

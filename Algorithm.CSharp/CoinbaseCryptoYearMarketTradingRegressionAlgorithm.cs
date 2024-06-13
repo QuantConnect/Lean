@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Settings.TradingDaysPerYear != _daysInYear)
             {
-                throw new RegressionTestException("The Algorithm was using invalid `TradingDaysPerYear` for this brokerage. The ExpectedStatistics is wrong.");
+                throw new TestException("The Algorithm was using invalid `TradingDaysPerYear` for this brokerage. The ExpectedStatistics is wrong.");
             }
         }
 

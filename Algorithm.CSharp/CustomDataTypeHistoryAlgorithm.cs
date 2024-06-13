@@ -43,14 +43,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (history.Count == 0)
             {
-                throw new RegressionTestException("History request returned no data");
+                throw new TestException("History request returned no data");
             }
 
             var history2 = History<CustomDataType>(new[] { _symbol }, 48, Resolution.Hour).ToList();
 
             if (history2.Count != history.Count)
             {
-                throw new RegressionTestException("History requests returned different data");
+                throw new TestException("History requests returned different data");
             }
 
         }

@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             var freePortfolioValue = Portfolio.TotalPortfolioValue - Portfolio.TotalPortfolioValueLessFreeBuffer;
             if (freePortfolioValue != 500)
             {
-                throw new RegressionTestException($"Unexpected FreePortfolioValue value: {freePortfolioValue}");
+                throw new TestException($"Unexpected FreePortfolioValue value: {freePortfolioValue}");
             }
         }
 

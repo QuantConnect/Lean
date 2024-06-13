@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (FillOrderEvents.Zip(OrderLegs).Any(x => x.Second.OrderPrice < x.First.FillPrice))
             {
-                throw new RegressionTestException($"Limit price expected to be greater that the fill price for each order. Limit prices: {string.Join(",", OrderLegs.Select(x => x.OrderPrice))} Fill prices: {string.Join(",", FillOrderEvents.Select(x => x.FillPrice))}");
+                throw new TestException($"Limit price expected to be greater that the fill price for each order. Limit prices: {string.Join(",", OrderLegs.Select(x => x.OrderPrice))} Fill prices: {string.Join(",", FillOrderEvents.Select(x => x.FillPrice))}");
             }
         }
 

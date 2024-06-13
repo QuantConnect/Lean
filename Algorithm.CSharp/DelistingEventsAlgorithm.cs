@@ -76,11 +76,11 @@ namespace QuantConnect.Algorithm.CSharp
             var aaa = Securities["AAA.1"];
             if (aaa.IsDelisted && aaa.IsTradable)
             {
-                throw new RegressionTestException("Delisted security must NOT be tradable");
+                throw new TestException("Delisted security must NOT be tradable");
             }
             if (!aaa.IsDelisted && !aaa.IsTradable)
             {
-                throw new RegressionTestException("Securities must be marked as tradable until they're delisted or removed from the universe");
+                throw new TestException("Securities must be marked as tradable until they're delisted or removed from the universe");
             }
 
             foreach (var kvp in data.Delistings)
@@ -126,19 +126,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_receivedDelistedEvent)
             {
-                throw new RegressionTestException("Did not receive expected delisted event");
+                throw new TestException("Did not receive expected delisted event");
             }
             if (!_receivedDelistedWarningEvent)
             {
-                throw new RegressionTestException("Did not receive expected delisted warning event");
+                throw new TestException("Did not receive expected delisted warning event");
             }
             if (_dataCount != 13)
             {
-                throw new RegressionTestException($"Unexpected data count {_dataCount}. Expected 13");
+                throw new TestException($"Unexpected data count {_dataCount}. Expected 13");
             }
             if (_receivedSecurityChangesEvent != 1)
             {
-                throw new RegressionTestException($"Did not receive expected security changes removal! Got {_receivedSecurityChangesEvent}");
+                throw new TestException($"Did not receive expected security changes removal! Got {_receivedSecurityChangesEvent}");
             }
         }
 

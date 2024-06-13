@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (strikes.Count > 2)
             {
-                throw new RegressionTestException($"At {Time} found {strikes.Count}. Underlying: {underlyingPrice}. Strikes: [{string.Join(",", strikes)}]");
+                throw new TestException($"At {Time} found {strikes.Count}. Underlying: {underlyingPrice}. Strikes: [{string.Join(",", strikes)}]");
             }
         }
 

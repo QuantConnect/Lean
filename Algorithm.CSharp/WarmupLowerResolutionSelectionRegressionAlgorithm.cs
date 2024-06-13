@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expected = _selection.Dequeue();
             if (expected != Time && !LiveMode)
             {
-                throw new RegressionTestException($"Unexpected selection time: {Time}. Expected {expected}");
+                throw new TestException($"Unexpected selection time: {Time}. Expected {expected}");
             }
 
             Debug($"Coarse selection happening at {Time} {IsWarmingUp}");
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var dataSpan = data.EndTime - data.Time;
                 if (dataSpan != expectedDataSpan)
                 {
-                    throw new RegressionTestException($"Unexpected bar span! {data}: {dataSpan} Expected {expectedDataSpan}");
+                    throw new TestException($"Unexpected bar span! {data}: {dataSpan} Expected {expectedDataSpan}");
                 }
             }
 

@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Securities[orderEvent.Symbol].Holdings.IsShort)
                 {
-                    throw new RegressionTestException("Invalid position, should not be short");
+                    throw new TestException("Invalid position, should not be short");
                 }
                 Debug($"Purchased Stock: {orderEvent}");
             }

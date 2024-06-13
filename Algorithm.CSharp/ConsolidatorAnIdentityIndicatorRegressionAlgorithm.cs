@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _assertCount++;
                 if (_expectedValues[Time] != bar.Value)
                 {
-                    throw new RegressionTestException($"{Time} - Consolidate unexpected current value: {bar.Value}");
+                    throw new TestException($"{Time} - Consolidate unexpected current value: {bar.Value}");
                 }
             });
             _identity = Identity(symbol, Resolution.Daily);
@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
             _assertCount++;
             if (_expectedValues[Time] != _identity.Current.Value)
             {
-                throw new RegressionTestException($"{Time} - _identity_Updated unexpected current value: {_identity.Current.Value}");
+                throw new TestException($"{Time} - _identity_Updated unexpected current value: {_identity.Current.Value}");
             }
         }
 
@@ -74,7 +74,7 @@ namespace QuantConnect.Algorithm.CSharp
             _assertCount++;
             if (_expectedValues[Time] != _identity.Current.Value)
             {
-                throw new RegressionTestException($"{Time} - Min_Updated unexpected current value: {_identity.Current.Value}");
+                throw new TestException($"{Time} - Min_Updated unexpected current value: {_identity.Current.Value}");
             }
         }
 
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_assertCount != 12)
             {
-                throw new RegressionTestException($"IUnexpected assertiong count: {_assertCount}");
+                throw new TestException($"IUnexpected assertiong count: {_assertCount}");
             }
         }
 

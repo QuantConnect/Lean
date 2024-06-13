@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_expectedCloseValues.Count > 0)
             {
-                throw new RegressionTestException($"Not all expected data points were received.");
+                throw new TestException($"Not all expected data points were received.");
             }
         }
 
@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (data.Bars.FirstOrDefault().Value?.Close.SmartRounding() != value)
                 {
-                    throw new RegressionTestException($"Expected tradebar price, expected {value} but was {data.Bars.First().Value.Close.SmartRounding()}");
+                    throw new TestException($"Expected tradebar price, expected {value} but was {data.Bars.First().Value.Close.SmartRounding()}");
                 }
 
                 _expectedCloseValues.Remove(data.Time);

@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (delta >= expected + error || delta <= expected - error)
                     {
-                        throw new RegressionTestException($"{symbol.Value} greeks not calculated accurately! Expected: {expected}, Estimation: {delta}");
+                        throw new TestException($"{symbol.Value} greeks not calculated accurately! Expected: {expected}, Estimation: {delta}");
                     }
                 }
 

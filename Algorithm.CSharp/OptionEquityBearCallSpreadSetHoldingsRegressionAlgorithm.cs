@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (freeMargin >= freeMarginPostTrade)
                     {
-                        throw new RegressionTestException("We expect the margin used to actually be lower once we perform the second trade");
+                        throw new TestException("We expect the margin used to actually be lower once we perform the second trade");
                     }
                 }
             }

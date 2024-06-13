@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var order = Transactions.GetOrderById(orderEvent.OrderId);
                 if (!((StopLimitOrder)order).StopTriggered)
                 {
-                    throw new RegressionTestException("StopLimitOrder StopTriggered should haven been set if the order filled.");
+                    throw new TestException("StopLimitOrder StopTriggered should haven been set if the order filled.");
                 }
 
                 if (orderEvent.Direction == OrderDirection.Buy)
@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var limitPrice = _buyOrderTicket.Get(OrderField.LimitPrice);
                     if (orderEvent.FillPrice > limitPrice)
                     {
-                        throw new RegressionTestException($@"Buy stop limit order should have filled with price less than or equal to the limit price {
+                        throw new TestException($@"Buy stop limit order should have filled with price less than or equal to the limit price {
                             limitPrice}. Fill price: {orderEvent.FillPrice}");
                     }
                 }
@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var limitPrice = _sellOrderTicket.Get(OrderField.LimitPrice);
                     if (orderEvent.FillPrice < limitPrice)
                     {
-                        throw new RegressionTestException($@"Sell stop limit order should have filled with price greater than or equal to the limit price {
+                        throw new TestException($@"Sell stop limit order should have filled with price greater than or equal to the limit price {
                             limitPrice}. Fill price: {orderEvent.FillPrice}");
                     }
                 }
@@ -120,12 +120,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_buyOrderTicket == null || _sellOrderTicket == null)
             {
-                throw new RegressionTestException("Expected two orders (buy and sell) to have been filled at the end of the algorithm.");
+                throw new TestException("Expected two orders (buy and sell) to have been filled at the end of the algorithm.");
             }
 
             if (_buyOrderTicket.Status != OrderStatus.Filled || _sellOrderTicket.Status != OrderStatus.Filled)
             {
-                throw new RegressionTestException("Expected the two orders (buy and sell) to have been filled at the end of the algorithm.");
+                throw new TestException("Expected the two orders (buy and sell) to have been filled at the end of the algorithm.");
             }
         }
 

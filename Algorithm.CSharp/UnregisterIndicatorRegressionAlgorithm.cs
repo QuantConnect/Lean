@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (_trin.IsReady)
                 {
-                    throw new RegressionTestException("Indicator should of stop getting updates!");
+                    throw new TestException("Indicator should of stop getting updates!");
                 }
 
                 if(!Portfolio.Invested)

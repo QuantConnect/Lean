@@ -328,7 +328,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 var result = --MoveNextTrueCount >= 0;
                 if (ThrowException)
                 {
-                    throw new RegressionTestException("TestDataEnumerator.MoveNext()");
+                    throw new TestException("TestDataEnumerator.MoveNext()");
                 }
                 return result;
             }

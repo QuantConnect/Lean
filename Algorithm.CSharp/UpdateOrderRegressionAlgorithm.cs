@@ -151,19 +151,19 @@ namespace QuantConnect.Algorithm.CSharp
             var ticket = Transactions.GetOrderTicket(orderEvent.OrderId);
             if (order.Status == OrderStatus.Canceled && order.CanceledTime != orderEvent.UtcTime)
             {
-                throw new RegressionTestException("Expected canceled order CanceledTime to equal canceled order event time.");
+                throw new TestException("Expected canceled order CanceledTime to equal canceled order event time.");
             }
 
             // fills update LastFillTime
             if ((order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled) && order.LastFillTime != orderEvent.UtcTime)
             {
-                throw new RegressionTestException("Expected filled order LastFillTime to equal fill order event time.");
+                throw new TestException("Expected filled order LastFillTime to equal fill order event time.");
             }
 
             // check the ticket to see if the update was successfully processed
             if (ticket.UpdateRequests.Any(ur => ur.Response?.IsSuccess == true) && order.CreatedTime != UtcTime && order.LastUpdateTime == null)
             {
-                throw new RegressionTestException("Expected updated order LastUpdateTime to equal submitted update order event time");
+                throw new TestException("Expected updated order LastUpdateTime to equal submitted update order event time");
             }
 
             if (orderEvent.Status == OrderStatus.Filled)

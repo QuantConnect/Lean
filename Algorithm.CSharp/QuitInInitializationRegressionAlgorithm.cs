@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            throw new RegressionTestException("Algorithm should of stopped!");
+            throw new TestException("Algorithm should of stopped!");
         }
 
         /// <summary>

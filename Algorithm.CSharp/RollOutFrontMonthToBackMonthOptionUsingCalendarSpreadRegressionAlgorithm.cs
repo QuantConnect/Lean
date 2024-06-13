@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!tickets.Any(ticket => ticket.Symbol == _frontMonthPutSymbol && ticket.Quantity == 1))
                 {
-                    throw new RegressionTestException($"Expected to find a ticket for {_frontMonthPutSymbol} with quantity {-Securities[_frontMonthPutSymbol].Holdings.Quantity}");
+                    throw new TestException($"Expected to find a ticket for {_frontMonthPutSymbol} with quantity {-Securities[_frontMonthPutSymbol].Holdings.Quantity}");
                 }
 
                 _backMonthPutSymbol = tickets.First(ticket => ticket.Symbol != _frontMonthPutSymbol).Symbol;
@@ -102,25 +102,25 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_done)
             {
-                throw new RegressionTestException("Expected the algorithm to have bought and sold a Bull Call Spread and a Bear Put Spread.");
+                throw new TestException("Expected the algorithm to have bought and sold a Bull Call Spread and a Bear Put Spread.");
             }
 
             if (Portfolio.Positions.Groups.Count != 1)
             {
-                throw new RegressionTestException($"Expected 1 position group, found {Portfolio.Positions.Groups.Count}");
+                throw new TestException($"Expected 1 position group, found {Portfolio.Positions.Groups.Count}");
             }
 
             var positions = Portfolio.Positions.Groups.Single().Positions.ToList();
             if (positions.Count != 1)
             {
-                throw new RegressionTestException($"Expected 1 position in the position group, found {positions.Count()}");
+                throw new TestException($"Expected 1 position in the position group, found {positions.Count()}");
             }
 
             // The position should correspond to the far expiry contract
             var position = positions[0];
             if (position.Symbol != _backMonthPutSymbol)
             {
-                throw new RegressionTestException($"Expected final portfolio position to be {_backMonthPutSymbol}, found {position.Symbol}");
+                throw new TestException($"Expected final portfolio position to be {_backMonthPutSymbol}, found {position.Symbol}");
             }
         }
 

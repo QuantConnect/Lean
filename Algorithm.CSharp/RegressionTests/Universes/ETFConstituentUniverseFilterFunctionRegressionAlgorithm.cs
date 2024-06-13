@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_filtered && data.Bars.Count != 0 && data.Bars.ContainsKey(_aapl))
             {
-                throw new RegressionTestException("AAPL TradeBar data added to algorithm before constituent universe selection took place");
+                throw new TestException("AAPL TradeBar data added to algorithm before constituent universe selection took place");
             }
 
             if (data.Bars.Count == 1 && data.Bars.ContainsKey(_spy))
@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
             
             if (data.Bars.Count != 0 && !data.Bars.ContainsKey(_aapl))
             {
-                throw new RegressionTestException($"Expected AAPL TradeBar data in OnData on {UtcTime:yyyy-MM-dd HH:mm:ss}");
+                throw new TestException($"Expected AAPL TradeBar data in OnData on {UtcTime:yyyy-MM-dd HH:mm:ss}");
             }
 
             _receivedData = true;
@@ -156,28 +156,28 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Ensures that all expected events were triggered by the end of the algorithm
         /// </summary>
-        /// <exception cref="RegressionTestException">An expected event didn't happen</exception>
+        /// <exception cref="TestException">An expected event didn't happen</exception>
         public override void OnEndOfAlgorithm()
         {
             if (_rebalanceCount != 2)
             {
-                throw new RegressionTestException($"Expected 2 rebalances, instead rebalanced: {_rebalanceCount}");
+                throw new TestException($"Expected 2 rebalances, instead rebalanced: {_rebalanceCount}");
             }
             if (_rebalanceAssetCount != 8)
             {
-                throw new RegressionTestException($"Invested in {_rebalanceAssetCount} assets (expected 8)");
+                throw new TestException($"Invested in {_rebalanceAssetCount} assets (expected 8)");
             }
             if (!_filtered)
             {
-                throw new RegressionTestException("Universe selection was never triggered");
+                throw new TestException("Universe selection was never triggered");
             }
             if (!_securitiesChanged)
             {
-                throw new RegressionTestException("Security changes never propagated to the algorithm");
+                throw new TestException("Security changes never propagated to the algorithm");
             }
             if (!_receivedData)
             {
-                throw new RegressionTestException("Data was never loaded for the S&P 500 constituent AAPL");
+                throw new TestException("Data was never loaded for the S&P 500 constituent AAPL");
             }
         }
 

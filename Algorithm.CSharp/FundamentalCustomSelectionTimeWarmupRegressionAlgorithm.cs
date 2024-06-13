@@ -60,13 +60,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate.Add(-_warmupSpan))
                 {
-                    throw new RegressionTestException($"Month Start unexpected initial selection: {Time}");
+                    throw new TestException($"Month Start unexpected initial selection: {Time}");
                 }
             }
             else if (Time != new DateTime(2014, 3, 26)
                 && Time != new DateTime(2014, 5, 9))
             {
-                throw new RegressionTestException($"SelectionFunction_SpecificDate unexpected selection: {Time}");
+                throw new TestException($"SelectionFunction_SpecificDate unexpected selection: {Time}");
             }
             return new[] { _symbol };
         }
@@ -77,13 +77,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate.Add(-_warmupSpan))
                 {
-                    throw new RegressionTestException($"Month Start unexpected initial selection: {Time}");
+                    throw new TestException($"Month Start unexpected initial selection: {Time}");
                 }
             }
             else if (Time != new DateTime(2014, 4, 1)
                 && Time != new DateTime(2014, 5, 1))
             {
-                throw new RegressionTestException($"Month Start unexpected selection: {Time}");
+                throw new TestException($"Month Start unexpected selection: {Time}");
             }
             return new[] { _symbol };
         }
@@ -105,11 +105,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_monthStartSelection != 3)
             {
-                throw new RegressionTestException($"Month start unexpected selection count: {_monthStartSelection}");
+                throw new TestException($"Month start unexpected selection count: {_monthStartSelection}");
             }
             if (_specificDateSelection != 3)
             {
-                throw new RegressionTestException($"Specific date unexpected selection count: {_specificDateSelection}");
+                throw new TestException($"Specific date unexpected selection count: {_specificDateSelection}");
             }
         }
 

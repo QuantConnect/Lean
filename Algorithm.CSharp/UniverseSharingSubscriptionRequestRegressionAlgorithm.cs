@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (data.Count != 1)
             {
-                throw new RegressionTestException($"Unexpected data count {data.Count}");
+                throw new TestException($"Unexpected data count {data.Count}");
             }
             Debug($"{data.Time}. Data count {data.Count}. Data {data.Bars.First().Value}");
             _onDataCalls++;
@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_onDataCalls != 23)
             {
-                throw new RegressionTestException($"Unexpected OnData() calls count {_onDataCalls}");
+                throw new TestException($"Unexpected OnData() calls count {_onDataCalls}");
             }
         }
 

@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (futureSymbols.Count > 1)
             {
-                throw new RegressionTestException($"At {Time} found {futureSymbols.Count}. Future symbols: [{string.Join(",", futureSymbols)}]");
+                throw new TestException($"At {Time} found {futureSymbols.Count}. Future symbols: [{string.Join(",", futureSymbols)}]");
             }
         }
 

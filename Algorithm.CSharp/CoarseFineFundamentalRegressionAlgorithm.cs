@@ -102,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (inactiveSymbols.Any())
             {
                 var symbols = string.Join(", ", inactiveSymbols);
-                throw new RegressionTestException($"Received data for non-active security: {symbols}.");
+                throw new TestException($"Received data for non-active security: {symbols}.");
             }
 
             // if we have no changes, do nothing

@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_firstDataConsolidated == null)
             {
-                throw new RegressionTestException("The consolidator should have consolidated at least one RangeBar, but it did not consolidated any one");
+                throw new TestException("The consolidator should have consolidated at least one RangeBar, but it did not consolidated any one");
             }
         }
 
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (Math.Round(rangeBar.High - rangeBar.Low, 2) != (Range * 0.01m)) // The minimum price change for SPY is 0.01, therefore the range size of each bar equals Range * 0.01
             {
-                throw new RegressionTestException($"The difference between the High and Low for all RangeBar's should be {Range * 0.01m}, but for this RangeBar was {Math.Round(rangeBar.High - rangeBar.Low), 2}");
+                throw new TestException($"The difference between the High and Low for all RangeBar's should be {Range * 0.01m}, but for this RangeBar was {Math.Round(rangeBar.High - rangeBar.Low), 2}");
             }
         }
 

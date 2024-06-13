@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (config.Resolution != Resolution.Minute)
                 {
-                    throw new RegressionTestException("Expected resolution to be set to Minute");
+                    throw new TestException("Expected resolution to be set to Minute");
                 }
             }
         }
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
                     if (mappingEvent.NewSymbol != "NWSA"
                         || mappingEvent.OldSymbol != "FOXA")
                     {
-                        throw new RegressionTestException($"Unexpected mapping event {mappingEvent}");
+                        throw new TestException($"Unexpected mapping event {mappingEvent}");
                     }
                     _initialMapping = true;
                 }
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
                     if (mappingEvent.NewSymbol != "FOXA"
                         || mappingEvent.OldSymbol != "NWSA")
                     {
-                        throw new RegressionTestException($"Unexpected mapping event {mappingEvent}");
+                        throw new TestException($"Unexpected mapping event {mappingEvent}");
                     }
 
                     _executionMapping = true;
@@ -98,11 +98,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_initialMapping)
             {
-                throw new RegressionTestException("The ticker generated the initial rename event");
+                throw new TestException("The ticker generated the initial rename event");
             }
             if (!_executionMapping)
             {
-                throw new RegressionTestException("The ticker did not rename throughout the course of its life even though it should have");
+                throw new TestException("The ticker did not rename throughout the course of its life even though it should have");
             }
         }
 

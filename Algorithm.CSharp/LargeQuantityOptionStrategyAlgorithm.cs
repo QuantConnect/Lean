@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (filledOrders.Count != 2)
             {
-                throw new RegressionTestException($"Expected 2 filled orders but found {filledOrders.Count}");
+                throw new TestException($"Expected 2 filled orders but found {filledOrders.Count}");
             }
         }
 

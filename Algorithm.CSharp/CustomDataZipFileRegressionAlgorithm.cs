@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_receivedCustomData)
             {
-                throw new RegressionTestException("Custom data was not received");
+                throw new TestException("Custom data was not received");
             }
         }
 

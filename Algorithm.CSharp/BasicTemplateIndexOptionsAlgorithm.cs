@@ -104,11 +104,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio[_spx].TotalSaleVolume > 0)
             {
-                throw new RegressionTestException("Index is not tradable.");
+                throw new TestException("Index is not tradable.");
             }
             if (Portfolio.TotalSaleVolume == 0)
             {
-                throw new RegressionTestException("Trade volume should be greater than zero by the end of this algorithm");
+                throw new TestException("Trade volume should be greater than zero by the end of this algorithm");
             }
         }
 

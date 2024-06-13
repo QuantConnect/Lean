@@ -74,13 +74,13 @@ namespace QuantConnect.Algorithm.CSharp
                 var cachedInterestRate = Securities[interestRate.Key].Cache.GetData<MarginInterestRate>();
                 if (cachedInterestRate != interestRate.Value)
                 {
-                    throw new RegressionTestException($"Unexpected cached margin interest rate for {interestRate.Key}!");
+                    throw new TestException($"Unexpected cached margin interest rate for {interestRate.Key}!");
                 }
             }
 
             if(interestRates.Count != data.MarginInterestRates.Count)
             {
-                throw new RegressionTestException($"Unexpected cached margin interest rate data!");
+                throw new TestException($"Unexpected cached margin interest rate data!");
             }
 
             if (Portfolio.Invested)
@@ -97,7 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_interestPerSymbol.TryGetValue(AdaUsdt.Symbol, out var count) || count != 1)
             {
-                throw new RegressionTestException($"Unexpected interest rate count {count}");
+                throw new TestException($"Unexpected interest rate count {count}");
             }
 
             // negative because we are long. Rate * Value * Application Count
@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
             var finalCash = Portfolio.CashBook["USDT"].Amount;
             if (Math.Abs(finalCash - (_amountAfterTrade + expectedFundingRateDifference)) > Math.Abs(expectedFundingRateDifference * 0.05m))
             {
-                throw new RegressionTestException($"Unexpected interest rate count {Portfolio.CashBook["USDT"].Amount}");
+                throw new TestException($"Unexpected interest rate count {Portfolio.CashBook["USDT"].Amount}");
             }
         }
 

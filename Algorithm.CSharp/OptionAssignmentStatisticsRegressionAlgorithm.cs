@@ -115,7 +115,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (trades.Count != 4)
             {
-                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 4 closed trades: 2 for the options, 2 for the underlying. Actual: {
+                throw new TestException($@"AssertTradeStatistics(): Expected 4 closed trades: 2 for the options, 2 for the underlying. Actual: {
                     trades.Count}");
             }
 
@@ -123,35 +123,35 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (statistics.TotalNumberOfTrades != 4)
             {
-                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 4 total trades: 2 for the options, 2 for the underlying. Actual: {
+                throw new TestException($@"AssertTradeStatistics(): Expected 4 total trades: 2 for the options, 2 for the underlying. Actual: {
                     statistics.TotalNumberOfTrades}");
             }
 
             if (statistics.NumberOfWinningTrades != 3)
             {
-                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 3 winning trades (the ITM 650 strike option and the underlying trades). Actual {
+                throw new TestException($@"AssertTradeStatistics(): Expected 3 winning trades (the ITM 650 strike option and the underlying trades). Actual {
                     statistics.NumberOfWinningTrades}");
             }
 
             if (statistics.NumberOfLosingTrades != 1)
             {
-                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 1 losing trade (the 600 strike option). Actual {
+                throw new TestException($@"AssertTradeStatistics(): Expected 1 losing trade (the 600 strike option). Actual {
                     statistics.NumberOfLosingTrades}");
             }
 
             if (statistics.WinRate != 0.75m)
             {
-                throw new RegressionTestException($"AssertTradeStatistics(): Expected win rate to be 0.75. Actual {statistics.WinRate}");
+                throw new TestException($"AssertTradeStatistics(): Expected win rate to be 0.75. Actual {statistics.WinRate}");
             }
 
             if (statistics.LossRate != 0.25m)
             {
-                throw new RegressionTestException($"AssertTradeStatistics(): Expected loss rate to be 0.25. Actual {statistics.LossRate}");
+                throw new TestException($"AssertTradeStatistics(): Expected loss rate to be 0.25. Actual {statistics.LossRate}");
             }
 
             if (statistics.WinLossRatio != 3)
             {
-                throw new RegressionTestException($"AssertTradeStatistics(): Expected win-loss ratio to be 3. Actual {statistics.WinLossRatio}");
+                throw new TestException($"AssertTradeStatistics(): Expected win-loss ratio to be 3. Actual {statistics.WinLossRatio}");
             }
 
             // Let's assert the trades per symbol just to be sure
@@ -160,35 +160,35 @@ namespace QuantConnect.Algorithm.CSharp
             var googCall600Trade = trades.Where(t => t.Symbol == _googCall600Symbol).FirstOrDefault();
             if (googCall600Trade == null)
             {
-                throw new RegressionTestException("AssertTradeStatistics(): Expected a closed trade for the 600 strike option");
+                throw new TestException("AssertTradeStatistics(): Expected a closed trade for the 600 strike option");
             }
             if (googCall600Trade.IsWin)
             {
-                throw new RegressionTestException("AssertTradeStatistics(): Expected the 600 strike option to be a losing trade");
+                throw new TestException("AssertTradeStatistics(): Expected the 600 strike option to be a losing trade");
             }
 
             // We expect the second option (650 strike) to be a winning trade
             var googCall650Trade = trades.Where(t => t.Symbol == _googCall650Symbol).FirstOrDefault();
             if (googCall650Trade == null)
             {
-                throw new RegressionTestException("AssertTradeStatistics(): Expected a closed trade for the 650 strike option");
+                throw new TestException("AssertTradeStatistics(): Expected a closed trade for the 650 strike option");
             }
             if (!googCall650Trade.IsWin)
             {
-                throw new RegressionTestException("AssertTradeStatistics(): Expected the 650 strike option to be a winning trade");
+                throw new TestException("AssertTradeStatistics(): Expected the 650 strike option to be a winning trade");
             }
 
             // We expect the both underlying trades to be winning trades
             var googTrades = trades.Where(t => t.Symbol == _goog.Symbol).ToList();
             if (googTrades.Count != 2)
             {
-                throw new RegressionTestException(
+                throw new TestException(
                     $@"AssertTradeStatistics(): Expected 2 closed trades for the underlying, one for each option assignment. Actual: {
                         googTrades.Count}");
             }
             if (googTrades.Any(x => !x.IsWin || x.ProfitLoss < 0))
             {
-                throw new RegressionTestException("AssertTradeStatistics(): Expected both underlying trades to be winning trades");
+                throw new TestException("AssertTradeStatistics(): Expected both underlying trades to be winning trades");
             }
         }
 
@@ -200,50 +200,50 @@ namespace QuantConnect.Algorithm.CSharp
             // and 1 losing transaction (the other option assignment)
             if (Transactions.WinCount != 2)
             {
-                throw new RegressionTestException($"AssertPortfolioStatistics(): Expected 2 winning transactions. Actual {Transactions.WinCount}");
+                throw new TestException($"AssertPortfolioStatistics(): Expected 2 winning transactions. Actual {Transactions.WinCount}");
             }
             if (Transactions.LossCount != 1)
             {
-                throw new RegressionTestException($"AssertPortfolioStatistics(): Expected 1 losing transaction. Actual {Transactions.LossCount}");
+                throw new TestException($"AssertPortfolioStatistics(): Expected 1 losing transaction. Actual {Transactions.LossCount}");
             }
 
             var portfolioStatistics = Statistics.TotalPerformance.PortfolioStatistics;
 
             if (portfolioStatistics.WinRate != 2m / 3m)
             {
-                throw new RegressionTestException($"AssertPortfolioStatistics(): Expected win rate to be 2/3. Actual {portfolioStatistics.WinRate}");
+                throw new TestException($"AssertPortfolioStatistics(): Expected win rate to be 2/3. Actual {portfolioStatistics.WinRate}");
             }
 
             if (portfolioStatistics.LossRate != 1m / 3m)
             {
-                throw new RegressionTestException($"AssertPortfolioStatistics(): Expected loss rate to be 1/3. Actual {portfolioStatistics.LossRate}");
+                throw new TestException($"AssertPortfolioStatistics(): Expected loss rate to be 1/3. Actual {portfolioStatistics.LossRate}");
             }
 
             var expectedAverageWinRate = 0.32962000910479m;
             if (!AreEqual(expectedAverageWinRate, portfolioStatistics.AverageWinRate))
             {
-                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected average win rate to be {expectedAverageWinRate}. Actual {
+                throw new TestException($@"AssertPortfolioStatistics(): Expected average win rate to be {expectedAverageWinRate}. Actual {
                     portfolioStatistics.AverageWinRate}");
             }
 
             var expectedAverageLossRate = -0.13556638257576m;
             if (!AreEqual(expectedAverageLossRate, portfolioStatistics.AverageLossRate))
             {
-                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected average loss rate to be {expectedAverageLossRate}. Actual {
+                throw new TestException($@"AssertPortfolioStatistics(): Expected average loss rate to be {expectedAverageLossRate}. Actual {
                     portfolioStatistics.AverageLossRate}");
             }
 
             var expectedProfitLossRatio = 2.43142881621545m;
             if (!AreEqual(expectedProfitLossRatio, portfolioStatistics.ProfitLossRatio))
             {
-                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected profit loss ratio to be {expectedProfitLossRatio}. Actual {
+                throw new TestException($@"AssertPortfolioStatistics(): Expected profit loss ratio to be {expectedProfitLossRatio}. Actual {
                     portfolioStatistics.ProfitLossRatio}");
             }
 
             var totalNetProfit = -0.00697m;
             if (!AreEqual(totalNetProfit, portfolioStatistics.TotalNetProfit))
             {
-                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected total net profit to be {totalNetProfit}. Actual {
+                throw new TestException($@"AssertPortfolioStatistics(): Expected total net profit to be {totalNetProfit}. Actual {
                     portfolioStatistics.TotalNetProfit}");
             }
         }

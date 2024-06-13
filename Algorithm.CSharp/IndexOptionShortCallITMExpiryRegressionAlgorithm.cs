@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             _expectedContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 3200m, new DateTime(2021, 1, 15));
             if (_esOption != _expectedContract)
             {
-                throw new RegressionTestException($"Contract {_expectedContract} was not found in the chain");
+                throw new TestException($"Contract {_expectedContract} was not found in the chain");
             }
 
             Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_spx, 1), () =>
@@ -88,14 +88,14 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (delisting.Time != new DateTime(2021, 1, 15))
                     {
-                        throw new RegressionTestException($"Delisting warning issued at unexpected date: {delisting.Time}");
+                        throw new TestException($"Delisting warning issued at unexpected date: {delisting.Time}");
                     }
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
                     if (delisting.Time != new DateTime(2021, 1, 16))
                     {
-                        throw new RegressionTestException($"Delisting happened at unexpected date: {delisting.Time}");
+                        throw new TestException($"Delisting happened at unexpected date: {delisting.Time}");
                     }
                 }
             }
@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Securities.ContainsKey(orderEvent.Symbol))
             {
-                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
+                throw new TestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
             }
 
             var security = Securities[orderEvent.Symbol];
@@ -125,7 +125,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                throw new RegressionTestException($"Received order event for unknown Symbol: {orderEvent.Symbol}");
+                throw new TestException($"Received order event for unknown Symbol: {orderEvent.Symbol}");
             }
 
             Log($"{orderEvent}");
@@ -137,11 +137,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (orderEvent.FillPrice != 3200m)
                 {
-                    throw new RegressionTestException("Option was not assigned at expected strike price (3200)");
+                    throw new TestException("Option was not assigned at expected strike price (3200)");
                 }
                 if (orderEvent.Direction != OrderDirection.Sell || index.Holdings.Quantity != 0)
                 {
-                    throw new RegressionTestException($"Expected Qty: 0 index holdings for assigned index option {index.Symbol}, found {index.Holdings.Quantity}");
+                    throw new TestException($"Expected Qty: 0 index holdings for assigned index option {index.Symbol}, found {index.Holdings.Quantity}");
                 }
             }
         }
@@ -150,23 +150,23 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != -1)
             {
-                throw new RegressionTestException($"No holdings were created for option contract {option.Symbol}");
+                throw new TestException($"No holdings were created for option contract {option.Symbol}");
             }
             if (orderEvent.IsAssignment && option.Holdings.Quantity != 0)
             {
-                throw new RegressionTestException($"Holdings were found after option contract was assigned: {option.Symbol}");
+                throw new TestException($"Holdings were found after option contract was assigned: {option.Symbol}");
             }
         }
 
         /// <summary>
         /// Ran at the end of the algorithm to ensure the algorithm has no holdings
         /// </summary>
-        /// <exception cref="RegressionTestException">The algorithm has holdings</exception>
+        /// <exception cref="TestException">The algorithm has holdings</exception>
         public override void OnEndOfAlgorithm()
         {
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+                throw new TestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
         }
 

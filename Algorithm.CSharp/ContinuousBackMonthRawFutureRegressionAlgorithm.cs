@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (data.Keys.Count != 1)
             {
-                throw new RegressionTestException($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
+                throw new TestException($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
             }
 
             foreach (var changedEvent in data.SymbolChangedEvents.Values)
@@ -73,13 +73,13 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (currentExpiration != frontMonthExpiration.Date)
                     {
-                        throw new RegressionTestException($"Unexpected current mapped contract expiration {currentExpiration}" +
+                        throw new TestException($"Unexpected current mapped contract expiration {currentExpiration}" +
                             $" @ {Time} it should be AT front month expiration {frontMonthExpiration}");
                     }
 
                     if (_continuousContract.Mapped != changedEvent.Symbol.Underlying)
                     {
-                        throw new RegressionTestException($"Unexpected mapped continuous contract {_continuousContract.Mapped} expected {changedEvent.Symbol.Underlying}");
+                        throw new TestException($"Unexpected mapped continuous contract {_continuousContract.Mapped} expected {changedEvent.Symbol.Underlying}");
                     }
                 }
             }
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var response = History(new[] { _continuousContract.Symbol }, 60 * 24 * 90);
                     if (!response.Any())
                     {
-                        throw new RegressionTestException("Unexpected empty history response");
+                        throw new TestException("Unexpected empty history response");
                     }
                 }
             }
@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedMappingCounts = 2;
             if (_mappings.Count != expectedMappingCounts)
             {
-                throw new RegressionTestException($"Unexpected symbol changed events: {_mappings.Count}, was expecting {expectedMappingCounts}");
+                throw new TestException($"Unexpected symbol changed events: {_mappings.Count}, was expecting {expectedMappingCounts}");
             }
         }
 

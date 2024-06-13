@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
                         history = History(1, Resolution.Daily).Get<TradeBar>(symbol).Cast<BaseData>().ToList();
                     }
 
-                    if (!history.Any()) throw new RegressionTestException($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
+                    if (!history.Any()) throw new TestException($"No {symbol} data on the eve of {Time} {Time.DayOfWeek}");
                 }
             }
         }
@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_received.Count != _symbols.Length)
             {
-                throw new RegressionTestException($"Data for symbols {string.Join(",", _symbols.Except(_received))} were not received");
+                throw new TestException($"Data for symbols {string.Join(",", _symbols.Except(_received))} were not received");
             }
         }
 

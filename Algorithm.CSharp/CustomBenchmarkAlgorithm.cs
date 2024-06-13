@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             Symbol symbol;
             if (SymbolCache.TryGetSymbol("AAPL", out symbol))
             {
-                throw new RegressionTestException("Benchmark Symbol is not expected to be added to the Symbol cache");
+                throw new TestException("Benchmark Symbol is not expected to be added to the Symbol cache");
             }
         }
 

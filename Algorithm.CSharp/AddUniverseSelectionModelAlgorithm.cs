@@ -57,14 +57,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (UniverseManager.Count != 3)
             {
-                throw new RegressionTestException("Unexpected universe count");
+                throw new TestException("Unexpected universe count");
             }
             if (UniverseManager.ActiveSecurities.Count != 3
                 || UniverseManager.ActiveSecurities.Keys.All(symbol => symbol.Value != "SPY")
                 || UniverseManager.ActiveSecurities.Keys.All(symbol => symbol.Value != "AAPL")
                 || UniverseManager.ActiveSecurities.Keys.All(symbol => symbol.Value != "FB"))
             {
-                throw new RegressionTestException("Unexpected active securities");
+                throw new TestException("Unexpected active securities");
             }
         }
 

@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             const int expected = 74;
             if (Insights.TotalCount != expected)
             {
-                throw new RegressionTestException($"The total number of insights should be {expected}. Actual: {Insights.TotalCount}");
+                throw new TestException($"The total number of insights should be {expected}. Actual: {Insights.TotalCount}");
             }
         }
 

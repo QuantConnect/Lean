@@ -70,16 +70,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (spxOptions.Count != 2)
             {
-                throw new RegressionTestException($"Expected 2 index options symbols from chain provider, found {spxOptions.Count}");
+                throw new TestException($"Expected 2 index options symbols from chain provider, found {spxOptions.Count}");
             }
 
             if (spxOptions[0] != expectedContract3700)
             {
-                throw new RegressionTestException($"Contract {expectedContract3700} was not found in the chain, found instead: {spxOptions[0]}");
+                throw new TestException($"Contract {expectedContract3700} was not found in the chain, found instead: {spxOptions[0]}");
             }
             if (spxOptions[1] != expectedContract3800)
             {
-                throw new RegressionTestException($"Contract {expectedContract3800} was not found in the chain, found instead: {spxOptions[1]}");
+                throw new TestException($"Contract {expectedContract3800} was not found in the chain, found instead: {spxOptions[1]}");
             }
 
             Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(spx, 1), () =>
@@ -96,12 +96,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Ran at the end of the algorithm to ensure the algorithm has no holdings
         /// </summary>
-        /// <exception cref="RegressionTestException">The algorithm has holdings</exception>
+        /// <exception cref="TestException">The algorithm has holdings</exception>
         public override void OnEndOfAlgorithm()
         {
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+                throw new TestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
         }
 

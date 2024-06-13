@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (esIsInRegularHours != currentTimeIsRegularHours || esIsInExtendedHours != currentTimeIsExtendedHours)
             {
-                throw new RegressionTestException($"At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or viceversa");
+                throw new TestException($"At {Time}, {_es.Symbol} is either in regular hours but current time is in extended hours, or viceversa");
             }
         }
 
@@ -81,22 +81,22 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_esRanOnRegularHours)
             {
-                throw new RegressionTestException($"Algorithm should have run on regular hours for {_es.Symbol} future, which enabled extended market hours");
+                throw new TestException($"Algorithm should have run on regular hours for {_es.Symbol} future, which enabled extended market hours");
             }
 
             if (!_esRanOnExtendedHours)
             {
-                throw new RegressionTestException($"Algorithm should have run on extended hours for {_es.Symbol} future, which enabled extended market hours");
+                throw new TestException($"Algorithm should have run on extended hours for {_es.Symbol} future, which enabled extended market hours");
             }
 
             if (!_gcRanOnRegularHours)
             {
-                throw new RegressionTestException($"Algorithm should have run on regular hours for {_gc.Symbol} future, which did not enable extended market hours");
+                throw new TestException($"Algorithm should have run on regular hours for {_gc.Symbol} future, which did not enable extended market hours");
             }
 
             if (_gcRanOnExtendedHours)
             {
-                throw new RegressionTestException($"Algorithm should have not run on extended hours for {_gc.Symbol} future, which did not enable extended market hours");
+                throw new TestException($"Algorithm should have not run on extended hours for {_gc.Symbol} future, which did not enable extended market hours");
             }
         }
 

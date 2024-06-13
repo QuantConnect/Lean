@@ -40,11 +40,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Time.Date == (new DateTime(2020, 5, 28)) && _model.GetInterestRate(Time) != 0)
             {
-                throw new RegressionTestException($"Risk Free interest rate should be 0, but was {_model.GetInterestRate(Time)}");
+                throw new TestException($"Risk Free interest rate should be 0, but was {_model.GetInterestRate(Time)}");
             }
             else if (Time.Date != (new DateTime(2020, 5, 28)) && _model.GetInterestRate(Time) != 1)
             {
-                throw new RegressionTestException($"Risk Free interest rate should be 1, but was {_model.GetInterestRate(Time)}");
+                throw new TestException($"Risk Free interest rate should be 1, but was {_model.GetInterestRate(Time)}");
             }
         }
 

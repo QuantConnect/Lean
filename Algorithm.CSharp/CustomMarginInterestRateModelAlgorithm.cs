@@ -67,12 +67,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (marginInterestRateModel == null)
             {
-                throw new RegressionTestException("CustomMarginInterestRateModel was not set");
+                throw new TestException("CustomMarginInterestRateModel was not set");
             }
 
             if (marginInterestRateModel.CallCount == 0)
             {
-                throw new RegressionTestException("CustomMarginInterestRateModel was not called");
+                throw new TestException("CustomMarginInterestRateModel was not called");
             }
 
             var expectedCash = _cashAfterOrder * (decimal)Math.Pow(1 + (double)marginInterestRateModel.InterestRate, marginInterestRateModel.CallCount);
@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
             // add a tolerance since using Math.Pow(double, double) given the lack of a decimal overload
             if (Math.Abs(Portfolio.Cash - expectedCash) > 1e-10m)
             {
-                throw new RegressionTestException($"Expected cash {expectedCash} but got {Portfolio.Cash}");
+                throw new TestException($"Expected cash {expectedCash} but got {Portfolio.Cash}");
             }
         }
 

@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var continuousContractMarketOrder = MarketOrder(_continuousContract.Mapped, 1);
                 if (futureContractMarketOrder.Status == OrderStatus.Invalid || continuousContractMarketOrder.Status == OrderStatus.Invalid)
                 {
-                    throw new RegressionTestException($"Market orders should be allowed for futures outside of regular market hours");
+                    throw new TestException($"Market orders should be allowed for futures outside of regular market hours");
                 }
             }
         }
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Transactions.GetOrders().Any(order => order.Status != OrderStatus.Filled ))
             {
-                throw new RegressionTestException("Not all orders were filled");
+                throw new TestException("Not all orders were filled");
             }
         }
 
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderEvent.Status == OrderStatus.Filled && !Securities[orderEvent.Symbol].Exchange.DateTimeIsOpen(orderEvent.UtcTime) &&
                 (orderEvent.UtcTime.TimeOfDay >= new TimeSpan(13, 30, 0) && orderEvent.UtcTime.TimeOfDay < new TimeSpan(21, 0, 0)))
             {
-                throw new RegressionTestException($"Order should have been filled during extended market hours");
+                throw new TestException($"Order should have been filled during extended market hours");
             }
         }
 

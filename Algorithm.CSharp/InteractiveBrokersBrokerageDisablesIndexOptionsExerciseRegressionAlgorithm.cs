@@ -81,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (MarketOrder(_contract.Symbol, 1).Status != OrderStatus.Filled)
                 {
-                    throw new RegressionTestException("Expected market order to fill immediately");
+                    throw new TestException("Expected market order to fill immediately");
                 }
 
                 _marketOrderDone = true;
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (ExerciseOption(_contract.Symbol, 1).Status == OrderStatus.Filled)
                 {
-                    throw new RegressionTestException($"Expected index option to not be exercisable on its expiration date. " +
+                    throw new TestException($"Expected index option to not be exercisable on its expiration date. " +
                                         $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
                 }
 
@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var profit = Portfolio.TotalPortfolioValue - _initialCash;
                 if (profit < 0)
                 {
-                    throw new RegressionTestException($"Expected profit to be positive. Actual: {profit}");
+                    throw new TestException($"Expected profit to be positive. Actual: {profit}");
                 }
 
                 _automaticallyExercised = true;
@@ -123,12 +123,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_triedExercise)
             {
-                throw new RegressionTestException("Expected to try to exercise index option before and on expiry");
+                throw new TestException("Expected to try to exercise index option before and on expiry");
             }
 
             if (!_automaticallyExercised || Portfolio.Cash <= _initialCash)
             {
-                throw new RegressionTestException("Expected index option to have ben automatically exercised on expiry and to have received cash");
+                throw new TestException("Expected index option to have ben automatically exercised on expiry and to have received cash");
             }
         }
 

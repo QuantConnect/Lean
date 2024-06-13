@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedTime = _selectionTime.Dequeue();
                 if (expectedTime != Time)
                 {
-                    throw new RegressionTestException($"Unexpected selection time {Time} expected {expectedTime}");
+                    throw new TestException($"Unexpected selection time {Time} expected {expectedTime}");
                 }
                 return coarse.OfType<CoarseFundamental>().OrderByDescending(x => x.DollarVolume)
                     .SelectMany(x => new[] {
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (!customData.Any(custom => custom.Key.Underlying == symbol))
                     {
-                        throw new RegressionTestException($"Custom data was not found for underlying symbol {symbol}");
+                        throw new TestException($"Custom data was not found for underlying symbol {symbol}");
                     }
                 }
             }
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_selectionTime.Count != 0)
             {
-                throw new RegressionTestException($"Unexpected selection times, missing {_selectionTime.Count}");
+                throw new TestException($"Unexpected selection times, missing {_selectionTime.Count}");
             }
         }
 

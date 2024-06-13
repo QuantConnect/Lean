@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!ActiveSecurities.ContainsKey(customSymbol.Underlying))
                 {
-                    throw new RegressionTestException($"Custom data underlying ({customSymbol.Underlying}) Symbol was not found in active securities");
+                    throw new TestException($"Custom data underlying ({customSymbol.Underlying}) Symbol was not found in active securities");
                 }
             }
         }

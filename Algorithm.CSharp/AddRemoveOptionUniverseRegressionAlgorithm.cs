@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
                 != (_expectUniverseSubscription ? 1 : 0))
             {
                 Log($"SubscriptionManager.Subscriptions:  {string.Join(" -- ", SubscriptionManager.Subscriptions)}");
-                throw new RegressionTestException($"Unexpected {OptionChainSymbol} subscription presence");
+                throw new TestException($"Unexpected {OptionChainSymbol} subscription presence");
             }
             if (!data.ContainsKey(Underlying))
             {
@@ -77,25 +77,25 @@ namespace QuantConnect.Algorithm.CSharp
                 // of the internal flag's purpose, so kicking this issue for now with a big fat note here about it :) to be considerd for any future
                 // refactorings of how we manage subscription/security data and track various aspects about the security (thinking a flags enum with
                 // things like manually added, auto added, internal, and any other boolean state we need to track against a single security)
-                throw new RegressionTestException("The underlying equity data should NEVER be removed in this algorithm because it was manually added");
+                throw new TestException("The underlying equity data should NEVER be removed in this algorithm because it was manually added");
             }
             if (_expectedSecurities.AreDifferent(Securities.Total.Select(x => x.Symbol).ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, _expectedSecurities.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, Securities.Keys.OrderBy(s => s.ToString()));
-                throw new RegressionTestException($"{Time}:: Detected differences in expected and actual securities{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
+                throw new TestException($"{Time}:: Detected differences in expected and actual securities{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
             if (_expectedUniverses.AreDifferent(UniverseManager.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, _expectedUniverses.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, UniverseManager.Keys.OrderBy(s => s.ToString()));
-                throw new RegressionTestException($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
+                throw new TestException($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
             if (_expectedData.AreDifferent(data.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, _expectedData.OrderBy(s => s.ToString()));
                 var actual = string.Join(Environment.NewLine, data.Keys.OrderBy(s => s.ToString()));
-                throw new RegressionTestException($"{Time}:: Detected differences in expected and actual slice data keys{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
+                throw new TestException($"{Time}:: Detected differences in expected and actual slice data keys{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
 
             // 10AM add GOOG option chain
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Securities.ContainsKey(OptionChainSymbol))
                 {
-                    throw new RegressionTestException("The option chain security should not have been added yet");
+                    throw new TestException("The option chain security should not have been added yet");
                 }
 
                 var googOptionChain = AddOption(UnderlyingTicker);
@@ -112,7 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
                     // we added the universe at 10, the universe selection data should not be from before
                     if (u.Underlying.EndTime.Hour < 10)
                     {
-                        throw new RegressionTestException($"Unexpected underlying data point {u.Underlying.EndTime} {u.Underlying}");
+                        throw new TestException($"Unexpected underlying data point {u.Underlying.EndTime} {u.Underlying}");
                     }
                     // find first put above market price
                     return u.IncludeWeeklys()
@@ -151,7 +151,7 @@ namespace QuantConnect.Algorithm.CSharp
                         var expectedContract = _expectedContracts[_expectedContractIndex];
                         if (added.Symbol != expectedContract)
                         {
-                            throw new RegressionTestException($"Expected option contract {expectedContract} to be added but received {added.Symbol}");
+                            throw new TestException($"Expected option contract {expectedContract} to be added but received {added.Symbol}");
                         }
 
                         _expectedContractIndex++;
@@ -172,7 +172,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // receive removed event next timestep at 11:31AM
                 if (Time.TimeOfDay.Hours != 11 || Time.TimeOfDay.Minutes != 31)
                 {
-                    throw new RegressionTestException($"Expected option contracts to be removed at 11:31AM, instead removed at: {Time}");
+                    throw new TestException($"Expected option contracts to be removed at 11:31AM, instead removed at: {Time}");
                 }
 
                 if (changes.RemovedSecurities
@@ -180,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
                     .ToHashSet(s => s.Symbol)
                     .AreDifferent(_expectedContracts.ToHashSet()))
                 {
-                    throw new RegressionTestException("Expected removed securities to equal expected contracts added");
+                    throw new TestException("Expected removed securities to equal expected contracts added");
                 }
             }
 

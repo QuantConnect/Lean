@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
                         }
                     }
                 }
-                catch (RegressionTestException ex)
+                catch (TestException ex)
                 {
                     Debug("Ex: " + ex.Message);
                     Debug("## rsi: " + _rsi + " mom: " + _mom);

@@ -78,17 +78,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_split == null)
             {
-                throw new RegressionTestException("No split occurred.");
+                throw new TestException("No split occurred.");
             }
 
             if (_buyFillEvent == null)
             {
-                throw new RegressionTestException("Buy order either never filled or was never placed.");
+                throw new TestException("Buy order either never filled or was never placed.");
             }
 
             if (TradeBuilder.ClosedTrades.Count != 1)
             {
-                throw new RegressionTestException($"Expected 1 closed trade, but found {TradeBuilder.ClosedTrades.Count}");
+                throw new TestException($"Expected 1 closed trade, but found {TradeBuilder.ClosedTrades.Count}");
             }
 
             var trade = TradeBuilder.ClosedTrades[0];
@@ -96,13 +96,13 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedEntryPrice = _buyFillEvent.FillPrice * _split.SplitFactor;
             if (trade.EntryPrice != expectedEntryPrice)
             {
-                throw new RegressionTestException($"Expected closed trade entry price of {expectedEntryPrice}, but found {trade.EntryPrice}");
+                throw new TestException($"Expected closed trade entry price of {expectedEntryPrice}, but found {trade.EntryPrice}");
             }
 
             var expectedTradeQuantity = (int)(_buyFillEvent.FillQuantity / _split.SplitFactor);
             if (trade.Quantity != expectedTradeQuantity)
             {
-                throw new RegressionTestException($"Expected closed trade quantity of {expectedTradeQuantity}, but found {trade.Quantity}");
+                throw new TestException($"Expected closed trade quantity of {expectedTradeQuantity}, but found {trade.Quantity}");
             }
         }
 

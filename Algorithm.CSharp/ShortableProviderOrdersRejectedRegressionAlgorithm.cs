@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var response = orderTicket.UpdateQuantity(-999); // should be allowed, we are reducing the quantity we want to short
                 if(!response.IsSuccess)
                 {
-                    throw new RegressionTestException("Order update should of succeeded!");
+                    throw new TestException("Order update should of succeeded!");
                 }
                 _initialize = true;
                 return;
@@ -73,11 +73,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (_ordersAllowed.Count != 1)
                 {
-                    throw new RegressionTestException($"Expected 1 successful order, found: {_ordersAllowed.Count}");
+                    throw new TestException($"Expected 1 successful order, found: {_ordersAllowed.Count}");
                 }
                 if (_ordersDenied.Count != 2)
                 {
-                    throw new RegressionTestException($"Expected 2 failed orders, found: {_ordersDenied.Count}");
+                    throw new TestException($"Expected 2 failed orders, found: {_ordersDenied.Count}");
                 }
 
                 var allowedOrder = _ordersAllowed[0];
@@ -91,13 +91,13 @@ namespace QuantConnect.Algorithm.CSharp
                 var response = allowedOrder.Update(orderUpdate);
                 if (response.ErrorCode != OrderResponseErrorCode.ExceedsShortableQuantity)
                 {
-                    throw new RegressionTestException($"Expected order to fail due to exceeded shortable quantity, found: {response.ErrorCode.ToString()}");
+                    throw new TestException($"Expected order to fail due to exceeded shortable quantity, found: {response.ErrorCode.ToString()}");
                 }
 
                 var cancelResponse = allowedOrder.Cancel();
                 if (cancelResponse.IsError)
                 {
-                    throw new RegressionTestException("Expected to be able to cancel open order after bad qty update");
+                    throw new TestException("Expected to be able to cancel open order after bad qty update");
                 }
 
                 _invalidatedAllowedOrder = true;
@@ -112,13 +112,13 @@ namespace QuantConnect.Algorithm.CSharp
                 var spyShares = Portfolio[_spy.Symbol].Quantity;
                 if (spyShares != -1000m)
                 {
-                    throw new RegressionTestException($"Expected -1000 shares in portfolio, found: {spyShares}");
+                    throw new TestException($"Expected -1000 shares in portfolio, found: {spyShares}");
                 }
 
                 HandleOrder(LimitOrder(_spy.Symbol, -1, 0.01m)); // Should fail, portfolio holdings are at the max shortable quantity.
                 if (_ordersDenied.Count != 1)
                 {
-                    throw new RegressionTestException($"Expected limit order to fail due to existing holdings, but found {_ordersDenied.Count} failures");
+                    throw new TestException($"Expected limit order to fail due to existing holdings, but found {_ordersDenied.Count} failures");
                 }
 
                 _ordersAllowed.Clear();
@@ -127,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
                 HandleOrder(MarketOrder(_aig.Symbol, -1001));
                 if (_ordersAllowed.Count != 1)
                 {
-                    throw new RegressionTestException($"Expected market order of -1001 BAC to not fail");
+                    throw new TestException($"Expected market order of -1001 BAC to not fail");
                 }
 
                 _invalidatedNewOrderWithPortfolioHoldings = true;
@@ -145,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (_lastOrderEvent == null || _lastOrderEvent.Status != OrderStatus.Invalid)
                 {
-                    throw new RegressionTestException($"Expected order event with invalid status for ticket {orderTicket}");
+                    throw new TestException($"Expected order event with invalid status for ticket {orderTicket}");
                 }
 
                 _lastOrderEvent = null;

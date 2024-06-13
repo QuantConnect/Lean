@@ -48,13 +48,13 @@ namespace QuantConnect.Algorithm.CSharp
                     .GetSubscriptionDataConfigs(custom.Symbol)
                     .Any(config => config.Resolution != Resolution.Daily))
                 {
-                    throw new RegressionTestException("Was expecting resolution to be set to Daily");
+                    throw new TestException("Was expecting resolution to be set to Daily");
                 }
 
                 try
                 {
                     AddData(type, spy, Resolution.Tick);
-                    throw new RegressionTestException("Was expecting an ArgumentException to be thrown");
+                    throw new TestException("Was expecting an ArgumentException to be thrown");
                 }
                 catch (ArgumentException)
                 {
@@ -66,14 +66,14 @@ namespace QuantConnect.Algorithm.CSharp
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol)
                 .Any(config => config.Resolution != Resolution.Hour))
             {
-                throw new RegressionTestException("Was expecting resolution to be set to Hour");
+                throw new TestException("Was expecting resolution to be set to Hour");
             }
 
             var option = AddOption("AAPL");
             if (SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(option.Symbol)
                 .Any(config => config.Resolution != Resolution.Minute))
             {
-                throw new RegressionTestException("Was expecting resolution to be set to Minute");
+                throw new TestException("Was expecting resolution to be set to Minute");
             }
         }
 

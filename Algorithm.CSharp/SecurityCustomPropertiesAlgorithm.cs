@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedFee = _dynamicSpy.OrdersFeesPrices[orderEvent.OrderId] * orderEvent.AbsoluteFillQuantity * _dynamicSpy.FeeFactor;
                 if (fee.Value.Amount != expectedFee)
                 {
-                    throw new RegressionTestException($"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}");
+                    throw new TestException($"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}");
                 }
             }
         }
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Transactions.OrdersCount == 0)
             {
-                throw new RegressionTestException("No orders executed");
+                throw new TestException("No orders executed");
             }
         }
 

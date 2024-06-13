@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
 
                         history = History<QuoteBar>(symbol, 10, Resolution.Daily).Select(bar => bar as BaseData);
-                        throw new RegressionTestException("We were expecting an argument exception to be thrown. Equity does not have daily QuoteBars!");
+                        throw new TestException("We were expecting an argument exception to be thrown. Equity does not have daily QuoteBars!");
                     }
                     catch (ArgumentException)
                     {
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (duplications.Any())
                 {
                     var time = duplications.First().Key;
-                    throw new RegressionTestException($"Duplicated bars were issued for time {time}");
+                    throw new TestException($"Duplicated bars were issued for time {time}");
                 }
             }
         }

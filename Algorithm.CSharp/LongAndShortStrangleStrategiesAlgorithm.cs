@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (positionGroup.Positions.Count() != 2)
             {
-                throw new RegressionTestException($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
+                throw new TestException($"Expected position group to have 2 positions. Actual: {positionGroup.Positions.Count()}");
             }
 
             var callPosition = positionGroup.Positions.Single(x => x.Symbol.ID.OptionRight == OptionRight.Call);
@@ -81,12 +81,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (callPosition.Quantity != expectedCallPositionQuantity)
             {
-                throw new RegressionTestException($@"Expected call position quantity to be {expectedCallPositionQuantity}. Actual: {callPosition.Quantity}");
+                throw new TestException($@"Expected call position quantity to be {expectedCallPositionQuantity}. Actual: {callPosition.Quantity}");
             }
 
             if (putPosition.Quantity != expectedPutPositionQuantity)
             {
-                throw new RegressionTestException($@"Expected put position quantity to be {expectedPutPositionQuantity}. Actual: {putPosition.Quantity}");
+                throw new TestException($@"Expected put position quantity to be {expectedPutPositionQuantity}. Actual: {putPosition.Quantity}");
             }
         }
 

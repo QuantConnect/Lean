@@ -64,11 +64,11 @@ namespace QuantConnect.Algorithm.CSharp
                 if (!data.ContainsKey(_qqq)
                     || !data.ContainsKey(_appl))
                 {
-                    throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
+                    throw new TestException($"Unexpected symbols found, step: {_step}");
                 }
                 if (data.Count != 2)
                 {
-                    throw new RegressionTestException($"Unexpected data count, step: {_step}");
+                    throw new TestException($"Unexpected data count, step: {_step}");
                 }
                 // AAPL will be deselected by the ConstituentsUniverse
                 // but it shouldn't be removed since we hold it
@@ -78,11 +78,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!data.ContainsKey(_appl))
                 {
-                    throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
+                    throw new TestException($"Unexpected symbols found, step: {_step}");
                 }
                 if (data.Count != 1)
                 {
-                    throw new RegressionTestException($"Unexpected data count, step: {_step}");
+                    throw new TestException($"Unexpected data count, step: {_step}");
                 }
                 // AAPL should now be released
                 // note: takes one extra loop because the order is executed on market open
@@ -94,11 +94,11 @@ namespace QuantConnect.Algorithm.CSharp
                     || !data.ContainsKey(_spy)
                     || !data.ContainsKey(_appl))
                 {
-                    throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
+                    throw new TestException($"Unexpected symbols found, step: {_step}");
                 }
                 if (data.Count != 3)
                 {
-                    throw new RegressionTestException($"Unexpected data count, step: {_step}");
+                    throw new TestException($"Unexpected data count, step: {_step}");
                 }
             }
             else if (_step == 4)
@@ -106,11 +106,11 @@ namespace QuantConnect.Algorithm.CSharp
                 if (!data.ContainsKey(_fb)
                     || !data.ContainsKey(_spy))
                 {
-                    throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
+                    throw new TestException($"Unexpected symbols found, step: {_step}");
                 }
                 if (data.Count != 2)
                 {
-                    throw new RegressionTestException($"Unexpected data count, step: {_step}");
+                    throw new TestException($"Unexpected data count, step: {_step}");
                 }
             }
             else if (_step == 5)
@@ -118,11 +118,11 @@ namespace QuantConnect.Algorithm.CSharp
                 if (!data.ContainsKey(_fb)
                     || !data.ContainsKey(_spy))
                 {
-                    throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
+                    throw new TestException($"Unexpected symbols found, step: {_step}");
                 }
                 if (data.Count != 2)
                 {
-                    throw new RegressionTestException($"Unexpected data count, step: {_step}");
+                    throw new TestException($"Unexpected data count, step: {_step}");
                 }
             }
         }
@@ -131,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_step != 5)
             {
-                throw new RegressionTestException($"Unexpected step count: {_step}");
+                throw new TestException($"Unexpected step count: {_step}");
             }
         }
 
@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (removed.Symbol == _appl && _step != 1 && _step != 2
                     || removed.Symbol == _qqq && _step != 1)
                 {
-                    throw new RegressionTestException($"Unexpected removal step count: {_step}");
+                    throw new TestException($"Unexpected removal step count: {_step}");
                 }
             }
         }

@@ -61,14 +61,14 @@ namespace QuantConnect.Algorithm.CSharp
             var symbol = SymbolCache.GetSymbol("TWX");
             if (symbol == null)
             {
-                throw new RegressionTestException("Unexpected removal of symbol from cache!");
+                throw new TestException("Unexpected removal of symbol from cache!");
             }
 
             foreach (var dataDelisting in data.Delistings.Where(pair => pair.Value.Type == DelistingType.Delisted))
             {
                 if (dataDelisting.Key != _optionContract)
                 {
-                    throw new RegressionTestException("Unexpected delisting event!");
+                    throw new TestException("Unexpected delisting event!");
                 }
                 _optionWasRemoved = true;
             }
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_optionWasRemoved)
             {
-                throw new RegressionTestException("Option contract was not removed!");
+                throw new TestException("Option contract was not removed!");
             }
         }
 

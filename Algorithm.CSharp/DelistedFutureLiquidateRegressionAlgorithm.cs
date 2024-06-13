@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"{_contractSymbol}: {Securities[_contractSymbol].Invested}");
             if (Securities[_contractSymbol].Invested)
             {
-                throw new RegressionTestException($"Position should be closed when {_contractSymbol} got delisted {_contractSymbol.ID.Date}");
+                throw new TestException($"Position should be closed when {_contractSymbol} got delisted {_contractSymbol.ID.Date}");
             }
         }
 

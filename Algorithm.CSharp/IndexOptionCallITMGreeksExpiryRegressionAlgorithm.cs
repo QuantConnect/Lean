@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             _expectedOptionContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 3200m, new DateTime(2021, 1, 15));
             if (_spxOption.Symbol != _expectedOptionContract)
             {
-                throw new RegressionTestException($"Contract {_expectedOptionContract} was not found in the chain");
+                throw new TestException($"Contract {_expectedOptionContract} was not found in the chain");
             }
         }
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (data.OptionChains.Values.First().Contracts.Count == 0)
             {
-                throw new RegressionTestException($"No contracts found in the option {data.OptionChains.Keys.First()}");
+                throw new TestException($"No contracts found in the option {data.OptionChains.Keys.First()}");
             }
 
             var deltas = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Delta).ToList();
@@ -130,16 +130,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Ran at the end of the algorithm to ensure the algorithm has no holdings
         /// </summary>
-        /// <exception cref="RegressionTestException">The algorithm has holdings</exception>
+        /// <exception cref="TestException">The algorithm has holdings</exception>
         public override void OnEndOfAlgorithm()
         {
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+                throw new TestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
             if (!_invested)
             {
-                throw new RegressionTestException($"Never checked greeks, maybe we have no option data?");
+                throw new TestException($"Never checked greeks, maybe we have no option data?");
             }
         }
 

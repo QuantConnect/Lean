@@ -91,7 +91,7 @@ namespace QuantConnect.Algorithm.CSharp
                             QuantConnect.Symbol.Create("FB", SecurityType.Equity, Market.USA)
                         };
                     default:
-                        throw new RegressionTestException("Unexpected step count");
+                        throw new TestException("Unexpected step count");
                 }
             });
 
@@ -142,7 +142,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"AddedSecurities {added}");
                 if (_currentSelection.Contains(added.Symbol))
                 {
-                    throw new RegressionTestException("Added symbol already selected");
+                    throw new TestException("Added symbol already selected");
                 }
                 _currentSelection.Add(added.Symbol);
             }
@@ -152,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"RemovedSecurities {removed}");
                 if (!_currentSelection.Contains(removed.Symbol))
                 {
-                    throw new RegressionTestException("Removing symbol already deselected");
+                    throw new TestException("Removing symbol already deselected");
                 }
                 _currentSelection.Remove(removed.Symbol);
             }

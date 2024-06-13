@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (ticket.Quantity != 69.0m)
                 {
-                    throw new RegressionTestException($"The Quantity of order with ID: {ticket.OrderId} should be 69, but was {ticket.Quantity}");
+                    throw new TestException($"The Quantity of order with ID: {ticket.OrderId} should be 69, but was {ticket.Quantity}");
                 }
 
                 switch (ticket.OrderType)
@@ -76,26 +76,26 @@ namespace QuantConnect.Algorithm.CSharp
                     case OrderType.LimitIfTouched:
                         if (ticket.Get(OrderField.TriggerPrice) != 1.43m)
                         {
-                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Trigger Price equal to 1.43, but was {ticket.Get(OrderField.TriggerPrice)}");
+                            throw new TestException($"Order with ID: {ticket.OrderId} should have a Trigger Price equal to 1.43, but was {ticket.Get(OrderField.TriggerPrice)}");
                         }
 
                         if (ticket.Get(OrderField.LimitPrice) != 1.43m)
                         {
-                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 1.43, but was {ticket.Get(OrderField.LimitPrice)}");
+                            throw new TestException($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 1.43, but was {ticket.Get(OrderField.LimitPrice)}");
                         }
                         break;
 
                     case OrderType.Limit:
                         if (ticket.Get(OrderField.LimitPrice) != 0.7143m)
                         {
-                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 0.7143, but was {ticket.Get(OrderField.LimitPrice)}");
+                            throw new TestException($"Order with ID: {ticket.OrderId} should have a Limit Price equal to 0.7143, but was {ticket.Get(OrderField.LimitPrice)}");
                         }
                         break;
 
                     case OrderType.StopLimit:
                         if (ticket.Get(OrderField.StopPrice) != 2.14m)
                         {
-                            throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                            throw new TestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
                         }
                         break;
 
@@ -108,13 +108,13 @@ namespace QuantConnect.Algorithm.CSharp
                             // We only expect one stop price update in this algorithm
                             if (Math.Abs(stopPrice - _marketPriceAtLatestSplit) > 0.1m * stopPrice)
                             {
-                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                                throw new TestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
                             }
 
                             // Trailing amount unchanged since it's a percentage
                             if (trailingAmount != 0.1m)
                             {
-                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {trailingAmount}");
+                                throw new TestException($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 0.214m, but was {trailingAmount}");
                             }
                         }
                         else
@@ -122,12 +122,12 @@ namespace QuantConnect.Algorithm.CSharp
                             // We only expect one stop price update in this algorithm
                             if (Math.Abs(stopPrice - _marketPriceAtLatestSplit) > 60m * _splitFactor)
                             {
-                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
+                                throw new TestException($"Order with ID: {ticket.OrderId} should have a Stop Price equal to 2.14, but was {ticket.Get(OrderField.StopPrice)}");
                             }
 
                             if (trailingAmount != 8.57m)
                             {
-                                throw new RegressionTestException($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 8.57m, but was {trailingAmount}");
+                                throw new TestException($"Order with ID: {ticket.OrderId} should have a Trailing Amount equal to 8.57m, but was {trailingAmount}");
                             }
                         }
                         break;

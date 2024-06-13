@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var delistedSecurity = investedSymbols.Where(symbol => symbol.ID.Date.AddDays(1) < Time).ToList();
                 if (delistedSecurity.Count > 0)
                 {
-                    throw new RegressionTestException($"[{UtcTime}] We hold a delisted securities: {string.Join(",", delistedSecurity)}");
+                    throw new TestException($"[{UtcTime}] We hold a delisted securities: {string.Join(",", delistedSecurity)}");
                 }
                 Log($"Holdings({Time}): {string.Join(",", investedSymbols)}");
             }
@@ -86,11 +86,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_traded)
             {
-                throw new RegressionTestException("We expected some FOP trading to happen");
+                throw new TestException("We expected some FOP trading to happen");
             }
             if (Portfolio.Invested)
             {
-                throw new RegressionTestException("We shouldn't be invested anymore");
+                throw new TestException("We shouldn't be invested anymore");
             }
         }
 

@@ -49,12 +49,12 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if (ticket.Status != OrderStatus.Filled)
                         {
-                            throw new RegressionTestException($"Order was expected to be filled on {Time}. Resolution: {Resolution}");
+                            throw new TestException($"Order was expected to be filled on {Time}. Resolution: {Resolution}");
                         }
                     }
                     else if (ticket.Status.IsFill())
                     {
-                        throw new RegressionTestException($"Order was not expected to be filled on {Time}. Resolution: {Resolution}");
+                        throw new TestException($"Order was not expected to be filled on {Time}. Resolution: {Resolution}");
                     }
                 }
             });

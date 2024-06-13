@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!_onDataReached)
             {
-                throw new RegressionTestException("OnData() was never called.");
+                throw new TestException("OnData() was never called.");
             }
             if (_symbolsReceived.Count != _expectedSymbolsReceived.Count)
             {
@@ -132,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (missingSymbols.Count > 0)
             {
-                throw new RegressionTestException($"Symbols: \"{string.Join(", ", missingSymbols)}\" were not found in OnData");
+                throw new TestException($"Symbols: \"{string.Join(", ", missingSymbols)}\" were not found in OnData");
             }
 
             foreach (var expectedSymbol in _expectedSymbolsReceived)
@@ -146,7 +146,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (nonDupeDataCount < 1000)
                 {
-                    throw new RegressionTestException($"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}");
+                    throw new TestException($"Received too few data points. Expected >=1000, found {nonDupeDataCount} for {expectedSymbol}");
                 }
             }
         }
