@@ -179,11 +179,15 @@ namespace QuantConnect.Tests.Engine.RealTime
                 new BacktestingResultHandler(),
                 null,
                 new TestTimeLimitManager());
-            realTimeHandler.SpdbRefreshed.Reset();
-            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
             algorithm.SetFinishedWarmingUp();
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
+
+            // wait for the internal thread to start
+            Thread.Sleep(500);
+
+            realTimeHandler.SpdbRefreshed.Reset();
+            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
             var events = new[] { realTimeHandler.SpdbRefreshed, realTimeHandler.SecuritySymbolPropertiesUpdated };
             for (var i = 0; i < 10; i++)
@@ -235,11 +239,15 @@ namespace QuantConnect.Tests.Engine.RealTime
                 new BacktestingResultHandler(),
                 null,
                 new TestTimeLimitManager());
-            realTimeHandler.SpdbRefreshed.Reset();
-            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
             algorithm.SetFinishedWarmingUp();
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
+
+            // wait for the internal thread to start
+            Thread.Sleep(500);
+
+            realTimeHandler.SpdbRefreshed.Reset();
+            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
             var previousSymbolProperties = security.SymbolProperties;
 
@@ -387,23 +395,28 @@ namespace QuantConnect.Tests.Engine.RealTime
 
         private class SPDBTestLiveTradingRealTimeHandler : LiveTradingRealTimeHandler, IDisposable
         {
+            private bool _disposed;
             private int _securitiesUpdated;
 
             public ManualTimeProvider PublicTimeProvider = new ManualTimeProvider();
 
             protected override ITimeProvider TimeProvider { get { return PublicTimeProvider; } }
 
-            public ManualResetEvent SpdbRefreshed { get; } = new ManualResetEvent(false);
+            public ManualResetEvent SpdbRefreshed = new ManualResetEvent(false);
             public ManualResetEvent SecuritySymbolPropertiesUpdated = new ManualResetEvent(false);
 
             protected override void RefreshSymbolProperties()
             {
+                if (_disposed) return;
+
                 base.RefreshSymbolProperties();
                 SpdbRefreshed.Set();
             }
 
             protected override void UpdateSymbolProperties(Security security)
             {
+                if (_disposed) return;
+
                 base.UpdateSymbolProperties(security);
                 Algorithm.Log($"{Algorithm.Securities.Count}");
 
@@ -416,8 +429,11 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             public void Dispose()
             {
+                if (_disposed) return;
+                Exit();
                 SpdbRefreshed.Dispose();
                 SecuritySymbolPropertiesUpdated.Dispose();
+                _disposed = true;
             }
         }
 
