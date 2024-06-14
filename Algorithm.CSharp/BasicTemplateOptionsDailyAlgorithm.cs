@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 36834;
+        public long DataPoints => 10339;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -141,31 +141,31 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Orders", "2"},
             {"Average Win", "0%"},
-            {"Average Loss", "-1.31%"},
-            {"Compounding Annual Return", "-15.304%"},
-            {"Drawdown", "1.300%"},
+            {"Average Loss", "-1.41%"},
+            {"Compounding Annual Return", "-16.377%"},
+            {"Drawdown", "1.400%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
-            {"End Equity", "98689"},
-            {"Net Profit", "-1.311%"},
-            {"Sharpe Ratio", "-3.607"},
-            {"Sortino Ratio", "-1.188"},
-            {"Probabilistic Sharpe Ratio", "0.035%"},
+            {"End Equity", "98589"},
+            {"Net Profit", "-1.411%"},
+            {"Sharpe Ratio", "-3.471"},
+            {"Sortino Ratio", "-1.087"},
+            {"Probabilistic Sharpe Ratio", "0.052%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
-            {"Annual Standard Deviation", "0.034"},
+            {"Annual Standard Deviation", "0.037"},
             {"Annual Variance", "0.001"},
-            {"Information Ratio", "-3.31"},
-            {"Tracking Error", "0.034"},
+            {"Information Ratio", "-3.203"},
+            {"Tracking Error", "0.037"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
+            {"Estimated Strategy Capacity", "$17000.00"},
+            {"Lowest Capacity Asset", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "0.05%"},
-            {"OrderListHash", "e188868e048fab6b6a0481b4479e97f9"}
+            {"OrderListHash", "f2ff56b31336805c533173e87d3eaa60"}
         };
     }
 }
