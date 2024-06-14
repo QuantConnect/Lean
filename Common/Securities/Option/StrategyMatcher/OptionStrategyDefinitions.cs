@@ -396,5 +396,36 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike == legs[0].Strike,
                                                     (legs, c) => c.Expiration == legs[0].Expiration)
             );
+
+        /// <summary>
+        /// Jelly Roll is short 1 call and long 1 call with the same strike but further expiry, together with
+        /// long 1 put and short 1 put with the same strike and expiries as calls.
+        /// </summary>
+        public static OptionStrategyDefinition JellyRoll { get; }
+            = OptionStrategyDefinition.Create("Jelly Roll",
+                OptionStrategyDefinition.CallLeg(-1),
+                OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike == legs[0].Strike,
+                                                     (legs, c) => c.Expiration > legs[0].Expiration),
+                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike == legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[1].Expiration)
+            );
+
+        /// <summary>
+        /// Short Jelly Roll is long 1 call and short 1 call with the same strike but further expiry, together with
+        /// short 1 put and long 1 put with the same strike and expiries as calls.
+        /// expiration.
+        /// </summary>
+        public static OptionStrategyDefinition ShortJellyRoll { get; }
+            = OptionStrategyDefinition.Create("Short Jelly Roll",
+                OptionStrategyDefinition.CallLeg(+1),
+                OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike == legs[0].Strike,
+                                                     (legs, c) => c.Expiration > legs[0].Expiration),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike == legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[1].Expiration)
+            );
     }
 }

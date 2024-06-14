@@ -913,6 +913,43 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Creates new Jelly Roll strategy which combines a long call calendar spread and a short put calendar spread
+        /// with the same strikes and the same pair of expiration dates.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price of the all legs</param>
+        /// <param name="nearExpiration">Near expiration date for the short call and the long put</param>
+        /// <param name="farExpiration">Far expiration date for the long call and the short put</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy JellyRoll(Symbol canonicalOption, decimal strike, DateTime nearExpiration, DateTime farExpiration)
+        {
+            var callCalendarSpread = CallCalendarSpread(canonicalOption, strike, nearExpiration, farExpiration);
+            var shortPutCalendarSpread = ShortPutCalendarSpread(canonicalOption, strike, nearExpiration, farExpiration);
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.JellyRoll.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = callCalendarSpread.OptionLegs.Concat(shortPutCalendarSpread.OptionLegs).ToList()
+            };
+        }
+
+        /// <summary>
+        /// Creates new Short Jelly Roll strategy which combines a long call calendar spread and a short put calendar spread
+        /// with the same strikes and the same pair of expiration dates.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="strike">The strike price of the all legs</param>
+        /// <param name="nearExpiration">Near expiration date for the short call and the long put</param>
+        /// <param name="farExpiration">Far expiration date for the long call and the short put</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy ShortJellyRoll(Symbol canonicalOption, decimal strike, DateTime nearExpiration, DateTime farExpiration)
+        {
+            return InvertStrategy(JellyRoll(canonicalOption, strike, nearExpiration, farExpiration), OptionStrategyDefinitions.ShortJellyRoll.Name);
+        }
+
+        /// <summary>
         /// Checks that canonical option symbol is valid
         /// </summary>
         private static void CheckCanonicalOptionSymbol(Symbol canonicalOption, string strategyName)
