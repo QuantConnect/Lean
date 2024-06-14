@@ -48,7 +48,13 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Minute;
 
             SetStartDate(2014, 06, 04);
-            SetEndDate(2014, 06, 06);
+            // TWX is selected the 4th and 5th and aapl after that.
+            // If the algo ends on the 6th, TWX subscriptions will not be removed before OnEndOfAlgorithm is called:
+            //   - 6th: AAPL is selected, TWX is removed but subscriptions are not removed because the securities are invested.
+            //      - TWX and its options are liquidated.
+            //   - 7th: Since options universe selection is daily now, TWX subscriptions are removed the next day (7th)
+            //SetEndDate(2014, 06, 06);
+            SetEndDate(2014, 06, 07);
 
             var selectionUniverse = AddUniverse(enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl },
                 enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl });
@@ -157,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 998464;
+        public long DataPoints => 19182;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -197,8 +203,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0.048"},
             {"Treynor Ratio", "0.172"},
             {"Total Fees", "$16.10"},
-            {"Estimated Strategy Capacity", "$3100000.00"},
-            {"Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X"},
+            {"Estimated Strategy Capacity", "$5000000.00"},
+            {"Lowest Capacity Asset", "AOL R735QTJ8XC9X"},
             {"Portfolio Turnover", "17.64%"},
             {"OrderListHash", "a8605c1f5a9c67f60f1ddc963ec45542"}
         };
