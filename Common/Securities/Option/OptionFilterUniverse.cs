@@ -16,8 +16,9 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
@@ -223,6 +224,53 @@ namespace QuantConnect.Securities
         public OptionFilterUniverse PutsOnly()
         {
             return Contracts(contracts => contracts.Where(x => x.ID.OptionRight == OptionRight.Put));
+        }
+
+        /// <summary>
+        /// Sets universe of 2 call and 2 put contracts with the same strike price and 2 expiration dates, with closest match to the criteria given
+        /// </summary>
+        /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
+        /// <param name="nearDaysTillExpiry">The desire days till expiry of the closer contract from the current time</param>
+        /// <param name="farDaysTillExpiry">The desire days till expiry of the further conrtact from the current time</param>
+        /// <remarks>Applicable to Long and Short Jelly Roll Option Strategy</remarks>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse JellyRoll(decimal strikeFromAtm = 0, int nearDaysTillExpiry = 30, int farDaysTillExpiry = 60)
+        {
+            if (farDaysTillExpiry <= nearDaysTillExpiry)
+            {
+                throw new ArgumentException("JellyRoll(): expiry arguments must be in ascending order, "
+                    + $"{nameof(nearDaysTillExpiry)}, {nameof(farDaysTillExpiry)}");
+            }
+
+            if (nearDaysTillExpiry < 0)
+            {
+                throw new ArgumentException("JellyRoll(): near expiry argument must be positive.");
+            }
+
+            // Select the set strike
+            var strike = AllSymbols.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + strikeFromAtm))
+                .First().ID.StrikePrice;
+            var contracts = AllSymbols.Where(x => x.ID.StrikePrice == strike);
+
+            // Select the expiries
+            var nearExpiry = contracts.OrderBy(x => Math.Abs((_lastExchangeDate.AddDays(nearDaysTillExpiry) - x.ID.Date).Days))
+                .First().ID.Date;
+            var furtherContracts = contracts.Where(x => x.ID.Date > nearExpiry).ToList();
+            if (furtherContracts.Count == 0)
+            {
+                Log.Trace("JellyRoll(): insufficient depth in expiries, returning empty universe.");
+                return this.WhereContains(new List<Symbol>());
+            }
+            var farExpiry = furtherContracts.OrderBy(x => Math.Abs((_lastExchangeDate.AddDays(farDaysTillExpiry) - x.ID.Date).Days))
+                .First().ID.Date;
+
+            // Select the contracts
+            var nearCall = contracts.Single(x => x.ID.OptionRight == OptionRight.Call && x.ID.Date == nearExpiry);
+            var farCall = contracts.Single(x => x.ID.OptionRight == OptionRight.Call && x.ID.Date == farExpiry);
+            var nearPut = contracts.Single(x => x.ID.OptionRight == OptionRight.Put && x.ID.Date == nearExpiry);
+            var farPut = contracts.Single(x => x.ID.OptionRight == OptionRight.Put && x.ID.Date == farExpiry);
+
+            return this.WhereContains(new List<Symbol> { nearCall, farCall, nearPut, farPut });
         }
     }
 
