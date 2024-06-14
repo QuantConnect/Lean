@@ -246,6 +246,20 @@ namespace QuantConnect.Securities.Option
 
                 return new MaintenanceMargin(inAccountCurrency);
             }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.JellyRoll.Name
+                || _optionStrategy.Name == OptionStrategyDefinitions.ShortJellyRoll.Name)
+            {
+                // long calendar spread part has no margin requirement due to same strike
+                // only the short calendar spread's short option has margin requirement
+                var furtherExpiry = parameters.PositionGroup.Positions.Max(position => position.Symbol.ID.Date);
+                var shortCalendarSpreadShortLeg = parameters.PositionGroup.Positions.Single(position => 
+                    position.Quantity < 0 && position.Symbol.ID.Date == furtherExpiry);
+                var shortCalendarSpreadShortLegSecurity = (Option)parameters.Portfolio.Securities[shortCalendarSpreadShortLeg.Symbol];
+                var result = shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
+                    shortCalendarSpreadShortLegSecurity, shortCalendarSpreadShortLeg.Quantity));
+
+                return new MaintenanceMargin(result);
+            }
 
             throw new NotImplementedException($"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented");
         }
@@ -366,6 +380,18 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.ShortBoxSpread.Name)
             {
                 result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
+            }
+            else if (_optionStrategy.Name == OptionStrategyDefinitions.JellyRoll.Name
+                || _optionStrategy.Name == OptionStrategyDefinitions.ShortJellyRoll.Name)
+            {
+                // long calendar spread part has no margin requirement due to same strike
+                // only the short calendar spread's short option has margin requirement
+                var furtherExpiry = parameters.PositionGroup.Positions.Max(position => position.Symbol.ID.Date);
+                var shortCalendarSpreadShortLeg = parameters.PositionGroup.Positions.Single(position =>
+                    position.Quantity < 0 && position.Symbol.ID.Date == furtherExpiry);
+                var shortCalendarSpreadShortLegSecurity = (Option)parameters.Portfolio.Securities[shortCalendarSpreadShortLeg.Symbol];
+                result = shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetInitialMarginRequirement(new InitialMarginParameters(
+                    shortCalendarSpreadShortLegSecurity, shortCalendarSpreadShortLeg.Quantity));
             }
             else
             {
