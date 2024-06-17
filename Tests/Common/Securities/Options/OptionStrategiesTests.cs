@@ -934,5 +934,111 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(expiration, longCallLeg.Expiration);
             Assert.AreEqual(1, longCallLeg.Quantity);
         }
+
+        [Test]
+        public void FailsBuildingJellyRollStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            // Invalid expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, DateTime.MinValue, farExpiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, DateTime.MaxValue, farExpiration));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, nearExpiration, DateTime.MinValue));
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, nearExpiration, DateTime.MaxValue));
+
+            // Switched expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, farExpiration, nearExpiration));
+
+            // Same expiration dates
+            Assert.Throws<ArgumentException>(
+                () => OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, nearExpiration, nearExpiration));
+        }
+
+        [Test]
+        public void BuildsJellyRollStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            var strategy = OptionStrategies.JellyRoll(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.JellyRoll.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(4, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var nearExpirationCall = strategy.OptionLegs.Single(x => 
+                x.Expiration == nearExpiration && x.Right == OptionRight.Call);
+            Assert.AreEqual(strike, nearExpirationCall.Strike);
+            Assert.AreEqual(-1, nearExpirationCall.Quantity);
+
+            var farExpirationCall = strategy.OptionLegs.Single(x =>
+                x.Expiration == farExpiration && x.Right == OptionRight.Call);
+            Assert.AreEqual(strike, farExpirationCall.Strike);
+            Assert.AreEqual(+1, farExpirationCall.Quantity);
+
+            var nearExpirationPut = strategy.OptionLegs.Single(x =>
+                x.Expiration == nearExpiration && x.Right == OptionRight.Put);
+            Assert.AreEqual(strike, nearExpirationPut.Strike);
+            Assert.AreEqual(+1, nearExpirationPut.Quantity);
+
+            var farExpirationPut = strategy.OptionLegs.Single(x =>
+                x.Expiration == farExpiration && x.Right == OptionRight.Put);
+            Assert.AreEqual(strike, farExpirationPut.Strike);
+            Assert.AreEqual(-1, farExpirationPut.Quantity);
+        }
+
+        [Test]
+        public void BuildsShortJellyRollStrategy()
+        {
+            var canonicalOptionSymbol = Symbols.SPY_Option_Chain;
+            var underlying = Symbols.SPY;
+            var strike = 350m;
+            var nearExpiration = new DateTime(2023, 08, 18);
+            var farExpiration = new DateTime(2023, 09, 18);
+
+            var strategy = OptionStrategies.ShortJellyRoll(canonicalOptionSymbol, strike, nearExpiration, farExpiration);
+
+            Assert.AreEqual(OptionStrategyDefinitions.ShortJellyRoll.Name, strategy.Name);
+            Assert.AreEqual(underlying, strategy.Underlying);
+            Assert.AreEqual(canonicalOptionSymbol, strategy.CanonicalOption);
+
+            Assert.AreEqual(4, strategy.OptionLegs.Count);
+            Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
+
+            var nearExpirationCall = strategy.OptionLegs.Single(x =>
+                x.Expiration == nearExpiration && x.Right == OptionRight.Call);
+            Assert.AreEqual(strike, nearExpirationCall.Strike);
+            Assert.AreEqual(+1, nearExpirationCall.Quantity);
+
+            var farExpirationCall = strategy.OptionLegs.Single(x =>
+                x.Expiration == farExpiration && x.Right == OptionRight.Call);
+            Assert.AreEqual(strike, farExpirationCall.Strike);
+            Assert.AreEqual(-1, farExpirationCall.Quantity);
+
+            var nearExpirationPut = strategy.OptionLegs.Single(x =>
+                x.Expiration == nearExpiration && x.Right == OptionRight.Put);
+            Assert.AreEqual(strike, nearExpirationPut.Strike);
+            Assert.AreEqual(-1, nearExpirationPut.Quantity);
+
+            var farExpirationPut = strategy.OptionLegs.Single(x =>
+                x.Expiration == farExpiration && x.Right == OptionRight.Put);
+            Assert.AreEqual(strike, farExpirationPut.Strike);
+            Assert.AreEqual(+1, farExpirationPut.Quantity);
+        }
     }
 }

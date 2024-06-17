@@ -255,8 +255,8 @@ namespace QuantConnect.Securities.Option
                 var shortCalendarSpreadShortLeg = parameters.PositionGroup.Positions.Single(position => 
                     position.Quantity < 0 && position.Symbol.ID.Date == furtherExpiry);
                 var shortCalendarSpreadShortLegSecurity = (Option)parameters.Portfolio.Securities[shortCalendarSpreadShortLeg.Symbol];
-                var result = shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    shortCalendarSpreadShortLegSecurity, shortCalendarSpreadShortLeg.Quantity));
+                var result = Math.Abs(shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetMaintenanceMargin(
+                    MaintenanceMarginParameters.ForQuantityAtCurrentPrice(shortCalendarSpreadShortLegSecurity, shortCalendarSpreadShortLeg.Quantity)));
 
                 return new MaintenanceMargin(result);
             }
@@ -390,8 +390,8 @@ namespace QuantConnect.Securities.Option
                 var shortCalendarSpreadShortLeg = parameters.PositionGroup.Positions.Single(position =>
                     position.Quantity < 0 && position.Symbol.ID.Date == furtherExpiry);
                 var shortCalendarSpreadShortLegSecurity = (Option)parameters.Portfolio.Securities[shortCalendarSpreadShortLeg.Symbol];
-                result = shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetInitialMarginRequirement(new InitialMarginParameters(
-                    shortCalendarSpreadShortLegSecurity, shortCalendarSpreadShortLeg.Quantity));
+                result = Math.Abs(shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetInitialMarginRequirement(
+                    new InitialMarginParameters(shortCalendarSpreadShortLegSecurity, shortCalendarSpreadShortLeg.Quantity)));
             }
             else
             {

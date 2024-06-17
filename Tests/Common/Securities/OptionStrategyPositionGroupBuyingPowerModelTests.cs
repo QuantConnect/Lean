@@ -489,6 +489,36 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -20, -(1000000 - 20 * 0) / (0 + 2003), true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -20, -(1000000 - 20 * 0) / (0 + 2003) - 1, false),  // -20 to max short + 1
+            // Initial margin requirement|premium for JellyRoll with quantities 1 and -1 are 11448|84 and 11537|0 respectively
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 0, (1000000 - 0 * 11448) / (11448 + 84), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 0, (1000000 - 0 * 11448) / (11448 + 84) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 0, -(1000000 + 0 * 11537) / (11537 + 0), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 0, -(1000000 + 0 * 11537) / (11537 + 0) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 20, (1000000 - 20 * 11448) / (11448 + 84), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 20, (1000000 - 20 * 11448) / (11448 + 84) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 20, -20, true), // 20 to 0
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 20, -(1000000 + 20 * 11537) / (11537 + 0), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 20, -(1000000 + 20 * 11537) / (11537 + 0) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -20, (1000000 + 20 * 11448) / (11448 + 84), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -20, (1000000 + 20 * 11448) / (11448 + 84) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -20, 20, true), // -20 to 0
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -20, -(1000000 - 20 * 11537) / (11537 + 0), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -20, -(1000000 - 20 * 11537) / (11537 + 0) - 1, false),  // -20 to max short + 1
+            // Initial margin requirement|premium for ShortJellyRoll with quantities 1 and -1 are 11537|0 and 11448|84 respectively
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 0, (1000000 - 0 * 11537) / (11537 + 0), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 0, (1000000 - 0 * 11537) / (11537 + 0) + 1, false), // 0 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 0, -(1000000 + 0 * 11448) / (11448 + 84), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 0, -(1000000 + 0 * 11448) / (11448 + 84) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 20, (1000000 - 20 * 11537) / (11537 + 0), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 20, (1000000 - 20 * 11537) / (11537 + 0) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 20, -20, true), // 20 to 0
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 20, -(1000000 + 20 * 11448) / (11448 + 84), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 20, -(1000000 + 20 * 11448) / (11448 + 84) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -20, (1000000 + 20 * 11537) / (11537 + 0), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -20, (1000000 + 20 * 11537) / (11537 + 0) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -20, 20, true), // -20 to 0
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -20, -(1000000 - 20 * 11448) / (11448 + 84), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -20, -(1000000 - 20 * 11448) / (11448 + 84) - 1, false),  // -20 to max short + 1
         };
 
         [TestCaseSource(nameof(HasSufficientBuyingPowerForOrderTestCases))]
@@ -737,6 +767,10 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BoxSpread, -1, 2000m),                       // IB:  short box spread
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 1, 2000m),                   // IB:  2000
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -1, 0m),                     // IB:  box spread
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 1, 11447.5m),                     // IB:  11459
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -1, 11537.2m),                    // IB:  short jelly roll
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 1, 11537.2m),                // IB:  11589
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -1, 11447.5m),               // IB:  jelly roll
         };
 
         [TestCaseSource(nameof(InitialMarginRequirementsTestCases))]
@@ -841,6 +875,10 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BoxSpread, -1, 2000m),                       // IB:  short box spread
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, 1, 2000m),                   // IB:  2000
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -1, 0m),                     // IB:  box spread
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 1, 11447.5m),                     // IB:  11459
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -1, 11537.2m),                    // IB:  short jelly roll
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 1, 11537.2m),                // IB:  11589
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -1, 11447.5m),               // IB:  jelly roll
         };
 
         [TestCaseSource(nameof(MaintenanceMarginTestCases))]
@@ -1111,6 +1149,24 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -20030m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -20030m, -10),
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -20030m - 20000m, -20),
+            // Initial margin requirement (including premium) for JellyRoll with quantity 10 and -10 is 115319 and 115372 respectively
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, 115319m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -115319m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -115319m, -10),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -115319m - 115372m, -20),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 115372m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, -115372m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, -115372m, -10),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, -115372m - 115319m, -20),
+            // Initial margin requirement (including premium) for ShortJellyRoll with quantity 10 and -10 is 115372 and 115319 respectively
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, 115372m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -115372m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -115372m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -115372m - 115319m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 115319m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, -115319m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, -115319m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, -115319m - 115372m, -20),
         };
 
         [TestCaseSource(nameof(OrderQuantityForDeltaBuyingPowerTestCases))]
@@ -1480,6 +1536,24 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 20030m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, -20000m, -20),
+            // Initial margin requirement (including premium) for JellyRoll with quantity 10 and -10 is 115319 and 115372 respectively
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, 115319m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, 115319m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -115372m, -20),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 115372m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 115372m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, -115319m, -20),
+            // Initial margin requirement (including premium) for ShortJellyRoll with quantity 10 and -10 is 115319 and 115372 respectively
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, 115372m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, 115372m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -115319m, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 115319m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 115319m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 0m, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, -115372m, -20),
         };
 
         [TestCaseSource(nameof(OrderQuantityForTargetBuyingPowerTestCases))]
@@ -1793,6 +1867,22 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 1, (1000000m - 0) + 0 + 20030m),
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 10, (1000000m - 0) + 0 + 20030m),
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 20, (1000000m - 0) + 0 + 20030m),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, 1, 1000000m - 114475m),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -1, (1000000m - 115319m) + 115319m + 115319m),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -10, (1000000m - 115319m) + 115319m + 115319m),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -20, (1000000m - 115319m) + 115319m + 115319m),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, -1, 1000000m - 115372m),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 1, (1000000m - 115372m) + 115372m + 115372m),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 10, (1000000m - 115372m) + 115372m + 115372m),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 20, (1000000m - 115372m) + 115372m + 115372m),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, 1, 1000000m - 115372m),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -1, (1000000m - 115372m) + 115372m + 115372m),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -10, (1000000m - 115372m) + 115372m + 115372m),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -20, (1000000m - 115372m) + 115372m + 115372m),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, -1, 1000000m - 114475m),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 1, (1000000m - 115319m) + 115319m + 115319m),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 10, (1000000m - 115319m) + 115319m + 115319m),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 20, (1000000m - 115319m) + 115319m + 115319m),
         };
 
         [TestCaseSource(nameof(PositionGroupBuyingPowerTestCases))]
@@ -2250,6 +2340,22 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 1),
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 10),
             new TestCaseData(OptionStrategyDefinitions.ShortBoxSpread, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.JellyRoll, -10, 20),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -10),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, 10, -20),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, -1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 1),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 10),
+            new TestCaseData(OptionStrategyDefinitions.ShortJellyRoll, -10, 20),
         };
 
         [TestCaseSource(nameof(ReservedBuyingPowerImpactTestCases))]
@@ -2425,11 +2531,23 @@ namespace QuantConnect.Tests.Common.Securities
             spyJun21_534Call.SetMarketPrice(new Tick { Value = 0.01m });
             var spyJun21_524Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 524, jun212024));
             spyJun21_524Call.SetMarketPrice(new Tick { Value = 2.29m });
+            var spyJun21_542Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 542, jun212024));
+            spyJun21_542Call.SetMarketPrice(new Tick { Value = 3.047m });
 
             var spyJun21_524Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 524, jun212024));
             spyJun21_524Put.SetMarketPrice(new Tick { Value = 0.827m });
             var spyJun21_514Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 514, jun212024));
             spyJun21_514Put.SetMarketPrice(new Tick { Value = 0.018m });
+            var spyJun21_542Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 542, jun212024));
+            spyJun21_542Put.SetMarketPrice(new Tick { Value = 2.994m });
+
+            var jul192024 = new DateTime(2024, 07, 19);
+
+            var spyJul19_542Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 542, jul192024));
+            spyJul19_542Call.SetMarketPrice(new Tick { Value = 6.972m });
+
+            var spyJul19_542Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 542, jul192024));
+            spyJul19_542Put.SetMarketPrice(new Tick { Value = 6.075m });
 
             _equity.SetMarketPrice(new Tick { Value = 410m });
             _equity.SetLeverage(4);
@@ -2792,6 +2910,44 @@ namespace QuantConnect.Tests.Common.Securities
                 if (initialHoldingsQuantity < 0)
                 {
                     expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.BoxSpread.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.JellyRoll.Name)
+            {
+                _equity.SetMarketPrice(new Tick { Value = 542m });
+
+                var shortCallOption = spyJun21_542Call;
+                var longPutOption = spyJun21_542Put;
+                var longCallOption = spyJul19_542Call;
+                var shortPutOption = spyJul19_542Put;
+
+                shortCallOption.Holdings.SetHoldings(shortCallOption.Price, -initialHoldingsQuantity);
+                longPutOption.Holdings.SetHoldings(longPutOption.Price, initialHoldingsQuantity);
+                longCallOption.Holdings.SetHoldings(longCallOption.Price, initialHoldingsQuantity);
+                shortPutOption.Holdings.SetHoldings(shortPutOption.Price, -initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.ShortJellyRoll.Name;
+                }
+            }
+            else if (optionStrategyDefinition.Name == OptionStrategyDefinitions.ShortJellyRoll.Name)
+            {
+                _equity.SetMarketPrice(new Tick { Value = 542m });
+
+                var longCallOption = spyJun21_542Call;
+                var shortPutOption = spyJun21_542Put;
+                var shortCallOption = spyJul19_542Call;
+                var longPutOption = spyJul19_542Put;
+
+                longCallOption.Holdings.SetHoldings(longCallOption.Price, initialHoldingsQuantity);
+                shortPutOption.Holdings.SetHoldings(shortPutOption.Price, -initialHoldingsQuantity);
+                shortCallOption.Holdings.SetHoldings(shortCallOption.Price, -initialHoldingsQuantity);
+                longPutOption.Holdings.SetHoldings(longPutOption.Price, initialHoldingsQuantity);
+
+                if (initialHoldingsQuantity < 0)
+                {
+                    expectedPositionGroupBPMStrategy = OptionStrategyDefinitions.JellyRoll.Name;
                 }
             }
 
