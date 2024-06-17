@@ -44,7 +44,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 4);
+            SetStartDate(2021, 1, 1);
             SetEndDate(2021, 1, 30);
             SetCash(_initialCash);
 
@@ -145,7 +145,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all time slices of algorithm
         /// </summary>
-        public long DataPoints => 1960;
+        public long DataPoints => 1093;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -165,29 +165,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "-4.10%"},
-            {"Compounding Annual Return", "10.046%"},
+            {"Compounding Annual Return", "8.843%"},
             {"Drawdown", "1.900%"},
             {"Expectancy", "0"},
             {"Start Equity", "200000"},
             {"End Equity", "201353"},
             {"Net Profit", "0.676%"},
-            {"Sharpe Ratio", "3.253"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "86.292%"},
+            {"Sharpe Ratio", "0.684"},
+            {"Sortino Ratio", "0.386"},
+            {"Probabilistic Sharpe Ratio", "45.666%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
-            {"Annual Standard Deviation", "0.081"},
-            {"Annual Variance", "0.007"},
-            {"Information Ratio", "3.284"},
-            {"Tracking Error", "0.081"},
+            {"Annual Standard Deviation", "0.091"},
+            {"Annual Variance", "0.008"},
+            {"Information Ratio", "0.711"},
+            {"Tracking Error", "0.091"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
             {"Estimated Strategy Capacity", "$1700000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
-            {"Portfolio Turnover", "0.16%"},
+            {"Portfolio Turnover", "0.14%"},
             {"OrderListHash", "d0ff308d240d80eb3774f0307a64ac7e"}
         };
     }

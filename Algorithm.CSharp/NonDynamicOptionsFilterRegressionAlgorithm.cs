@@ -25,6 +25,15 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting that universe selection is not dynamic by default, that is, selection happens only on market open by default.
     /// </summary>
+    ///
+    ///
+    ///
+    ///
+    /// TODO: Remove this algorithm since options universe selection is now file-based and happens only once a day
+    ///
+    ///
+    ///
+    ///
     public class NonDynamicOptionsFilterRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "AAPL";
@@ -32,8 +41,6 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _optionSymbol;
 
         private int _securitiesChangedCount;
-
-        private int _previouslyAddedOptionsCount;
 
         public override void Initialize()
         {
@@ -52,55 +59,31 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            if (++_securitiesChangedCount == 1)
-            {
-                // This is the underlying security addition
-                if (changes.AddedSecurities.Count != 1 || changes.RemovedSecurities.Count != 0)
-                {
-                    throw new RegressionTestException("Unexpected security changes count: " +
-                        "on the first OnSecuritiesChanged callback, we expect only the underlying to be added.");
-                }
-
-                if (changes.AddedSecurities[0].Symbol != _optionSymbol.Underlying)
-                {
-                    throw new RegressionTestException("Unexpected security added: " +
-                        "on the first OnSecuritiesChanged callback, we expect only the underlying to be added.");
-                }
-            }
-            else if (_securitiesChangedCount < 4)
+            if (++_securitiesChangedCount < 3)
             {
                 // This is the universe selection, which we expect to happen twice, on market open of each day
 
-                // Check the time
-                var option = Securities[_optionSymbol];
-                var exchangeHours = option.Exchange.Hours;
-                var marketOpen = exchangeHours.GetNextMarketOpen(Time.Date, false);
-                if (Time.AddMinutes(-1) != marketOpen)
+                if (_securitiesChangedCount == 1)
                 {
-                    throw new RegressionTestException($"Unexpected security changes time. Current time {Time}. Expected time: {marketOpen.AddMinutes(1)}");
+                    var underlying = changes.AddedSecurities.Where(security => security.Symbol == _optionSymbol.Underlying).SingleOrDefault();
+                    if (underlying == null)
+                    {
+                        throw new RegressionTestException("Unexpected security changes: on the first OnSecuritiesChanged callback, we expect the underlying to be added.");
+                    }
                 }
 
                 // Check the changes
-                if (changes.AddedSecurities.Count == 0)
+                if (changes.AddedSecurities.Count <= 1)
                 {
                     throw new RegressionTestException("Unexpected security changes count: " +
-                        "on second and third OnSecuritiesChanged callbacks we expect options to be added");
+                        "on first and second OnSecuritiesChanged callbacks we expect options to be added");
                 }
 
-                if (changes.AddedSecurities.Any(security => !security.Symbol.HasCanonical() || security.Symbol.Canonical != _optionSymbol))
+                if (changes.AddedSecurities.Where(security => security.Symbol != _optionSymbol.Underlying)
+                        .Any(security => !security.Symbol.HasCanonical() || security.Symbol.Canonical != _optionSymbol))
                 {
                     throw new RegressionTestException("Unexpected security added: " +
-                        $"on second and third OnSecuritiesChanged callbacks we expect only {UnderlyingTicker} options to be added");
-                }
-
-                if (_securitiesChangedCount == 3)
-                {
-                    // The options added the previous day should be removed
-                    if (changes.RemovedSecurities.Count != _previouslyAddedOptionsCount)
-                    {
-                        throw new RegressionTestException("Unexpected security changes count: " +
-                            "on the third OnSecuritiesChanged callback we expect the previous day selection to be removed.");
-                    }
+                        $"on second and second OnSecuritiesChanged callbacks we expect only {UnderlyingTicker} options to be added");
                 }
 
                 _previouslyAddedOptionsCount = changes.AddedSecurities.Count;
@@ -113,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnEndOfAlgorithm()
         {
-            if (_securitiesChangedCount != 3)
+            if (_securitiesChangedCount != 2)
             {
                 throw new RegressionTestException($"Unexpected number of calls to OnSecuritiesChanged: {_securitiesChangedCount}. " +
                     "We expect only 3 OnSecuritiesChanged callbacks for this algorithm");
@@ -133,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1814313;
+        public long DataPoints => 55705;
 
         /// <summary>
         /// Data Points count of the algorithm history
