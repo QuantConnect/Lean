@@ -21,7 +21,7 @@ from AlgorithmImports import *
 ### <meta name="tag" content="indexes" />
 class BasicTemplateSPXWeeklyIndexOptionsAlgorithm(QCAlgorithm):
     def initialize(self):
-        self.set_start_date(2021, 1, 4)
+        self.set_start_date(2021, 1, 1)
         self.set_end_date(2021, 1, 10)
         self.set_cash(1000000)
 
