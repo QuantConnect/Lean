@@ -621,6 +621,40 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Generates the relative directory to the universe files for the specified symbol
+        /// </summary>
+        public static string GenerateRelativeUniversesDirectory(Symbol symbol)
+        {
+            var path = Path.Combine(symbol.SecurityType.SecurityTypeToLower(), symbol.ID.Market, "universes");
+            switch (symbol.SecurityType)
+            {
+                case SecurityType.Option:
+                    path = Path.Combine(path, symbol.Underlying.Value.ToLowerInvariant());
+                    break;
+
+                case SecurityType.IndexOption:
+                    path = Path.Combine(path, symbol.ID.Symbol.ToLowerInvariant());
+                    break;
+
+                case SecurityType.FutureOption:
+                    path = Path.Combine(path,
+                        symbol.Underlying.Value.ToLowerInvariant(),
+                        symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter));
+                    break;
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// Generates the directory to the universe files for the specified symbol
+        /// </summary>
+        public static string GenerateUniversesDirectory(string dataDirectory, Symbol symbol)
+        {
+            return Path.Combine(dataDirectory, GenerateRelativeUniversesDirectory(symbol));
+        }
+
+        /// <summary>
         /// Generate's the zip entry name to hold the specified data.
         /// </summary>
         public static string GenerateZipEntryName(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)

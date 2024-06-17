@@ -198,6 +198,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public override DateTime EndTime
         {
+            // TODO: Should EndTime be midnight of next tradable date and Time = EndTime - Period?
             get { return Time + Period; }
             set { Time = value - Period; }
         }
@@ -266,15 +267,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>String URL of source file.</returns>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
-            var path = Path.Combine(Globals.DataFolder,
-                config.SecurityType.SecurityTypeToLower(),
-                config.Market,
-                "universes",
-                config.Symbol.Underlying.Value.ToLowerInvariant());
-            if (config.SecurityType == SecurityType.FutureOption)
-            {
-                path = Path.Combine(path, $"{config.Symbol.ID.Date:yyyyMMdd}");
-            }
+            var path = LeanData.GenerateUniversesDirectory(Globals.DataFolder, config.Symbol);
             path = Path.Combine(path, $"{date:yyyyMMdd}.csv");
 
             return new SubscriptionDataSource(path, SubscriptionTransportMedium.LocalFile, FileFormat.FoldingCollection);
@@ -302,7 +295,7 @@ namespace QuantConnect.Data.UniverseSelection
             if (!string.IsNullOrEmpty(_underlyingSid))
             {
                 var optionSid = SecurityIdentifier.Parse($"{csv[0]}");
-                symbol = Symbol.CreateOption(_underlyingSymbol, optionSid.Market, optionSid.OptionStyle, optionSid.OptionRight,
+                symbol = Symbol.CreateOption(_underlyingSymbol, optionSid.Symbol, optionSid.Market, optionSid.OptionStyle, optionSid.OptionRight,
                     optionSid.StrikePrice, optionSid.Date);
             }
             else
