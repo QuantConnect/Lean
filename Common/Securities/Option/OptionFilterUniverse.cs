@@ -272,6 +272,66 @@ namespace QuantConnect.Securities
 
             return this.WhereContains(new List<Symbol> { nearCall, farCall, nearPut, farPut });
         }
+
+        /// Sets universe of 3 call contracts with the same expiry and different strike prices, with closest match to the criteria given
+        /// </summary>
+        /// <param name="daysTillExpiry">The desire days till expiry from the current time</param>
+        /// <param name="higherStrikeFromAtm">The desire strike price distance from the current underlying price of the higher strike price</param>
+        /// <param name="middleStrikeFromAtm">The desire strike price distance from the current underlying price of the middle strike price</param>
+        /// <param name="lowerStrikeFromAtm">The desire strike price distance from the current underlying price of the lower strike price</param>
+        /// <remarks>Applicable to Bear Call Ladder and Bull Call Ladder Option Strategy</remarks>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse CallLadder(int daysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        {
+            return Ladder(OptionRight.Call, daysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm);
+        }
+
+        /// <summary>
+        /// Sets universe of 3 put contracts with the same expiry and different strike prices, with closest match to the criteria given
+        /// </summary>
+        /// <param name="daysTillExpiry">The desire days till expiry from the current time</param>
+        /// <param name="higherStrikeFromAtm">The desire strike price distance from the current underlying price of the higher strike price</param>
+        /// <param name="middleStrikeFromAtm">The desire strike price distance from the current underlying price of the middle strike price</param>
+        /// <param name="lowerStrikeFromAtm">The desire strike price distance from the current underlying price of the lower strike price</param>
+        /// <remarks>Applicable to Bear Put Ladder and Bull Put Ladder Option Strategy</remarks>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse PutLadder(int daysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        {
+            return Ladder(OptionRight.Put, daysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm);
+        }
+
+        private OptionFilterUniverse Ladder(OptionRight right, int daysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        {
+            if (higherStrikeFromAtm <= lowerStrikeFromAtm || higherStrikeFromAtm <= middleStrikeFromAtm || middleStrikeFromAtm <= lowerStrikeFromAtm )
+            {
+                throw new ArgumentException("Ladder(): strike price arguments must be in descending order, "
+                    + $"{nameof(higherStrikeFromAtm)}, {nameof(middleStrikeFromAtm)}, {nameof(lowerStrikeFromAtm)}");
+            }
+
+            // Select the expiry as the nearest to set days later
+            var expiry = AllSymbols.OrderBy(x => Math.Abs((x.ID.Date - _lastExchangeDate.AddDays(daysTillExpiry)).Days))
+                .First().ID.Date;
+            var contracts = AllSymbols.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right);
+
+            // Select the strike prices with the set ladder range
+            var lowerStrikeContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + lowerStrikeFromAtm)).First();
+            var higherStrikeContracts = contracts.Where(x => x.ID.StrikePrice > lowerStrikeContract.ID.StrikePrice).ToList();
+            if (higherStrikeContracts.Count == 0)
+            {
+                Log.Trace("Ladder(): insufficient depth in strike prices, returning empty universe.");
+                return this.WhereContains( new List<Symbol>() );
+            }
+            var middleStrikeContract = higherStrikeContracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + middleStrikeFromAtm)).First();
+            higherStrikeContracts = contracts.Where(x => x.ID.StrikePrice > middleStrikeContract.ID.StrikePrice).ToList();
+            if (higherStrikeContracts.Count == 0)
+            {
+                Log.Trace("Ladder(): insufficient depth in strike prices, returning empty universe.");
+                return this.WhereContains( new List<Symbol>() );
+            }
+            var higherStrikeContract = higherStrikeContracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + middleStrikeFromAtm)).First();
+
+            return this.WhereContains(new List<Symbol> { lowerStrikeContract, middleStrikeContract, higherStrikeContract });
+        }
     }
 
     /// <summary>
