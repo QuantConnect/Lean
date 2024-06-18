@@ -904,8 +904,13 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable();
+            Type dataType = null;
+            if (symbols.Any() && symbols.All(x => Securities.Keys.Contains(x)) && symbols.All(x => Securities[x].IsCustomData()))
+            {
+                dataType = Securities[symbols.First()]?.SubscriptionDataConfig.Type;
+            }
             return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset));
+                contractDepthOffset), dataType);
         }
 
         /// <summary>
