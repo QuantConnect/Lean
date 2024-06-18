@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             option.SetFilter(universe => from symbol in universe
                                 .WeeklysOnly()
-                                .Strikes(-5, +5)
+                                .Strikes(-6, +6)
                                 .Expiration(TimeSpan.Zero, TimeSpan.FromDays(29))
                                          select symbol);
         }
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1864376;
+        public long DataPoints => 129191;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -133,7 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "3"},
             {"Average Win", "2.13%"},
             {"Average Loss", "-2.21%"},
-            {"Compounding Annual Return", "-12.347%"},
+            {"Compounding Annual Return", "-11.379%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "-0.019"},
             {"Start Equity", "1000000"},

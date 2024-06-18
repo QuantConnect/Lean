@@ -42,6 +42,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private int _securitiesChangedCount;
 
+        private int _previouslyAddedOptionsCount;
+
         public override void Initialize()
         {
             SetStartDate(2014, 06, 06);
@@ -86,7 +88,18 @@ namespace QuantConnect.Algorithm.CSharp
                         $"on second and second OnSecuritiesChanged callbacks we expect only {UnderlyingTicker} options to be added");
                 }
 
-                _previouslyAddedOptionsCount = changes.AddedSecurities.Count;
+                if (_securitiesChangedCount == 2)
+                {
+                    // The options added the previous day should be removed
+                    if (changes.RemovedSecurities.Count != _previouslyAddedOptionsCount)
+                    {
+                        throw new Exception("Unexpected security changes count: " +
+                            "on the second OnSecuritiesChanged callback we expect the previous day selection to be removed.");
+                    }
+                }
+
+                // Subtract 1 to account for the underlying
+                _previouslyAddedOptionsCount = changes.AddedSecurities.Count - 1;
             }
             else
             {
