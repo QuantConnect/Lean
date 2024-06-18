@@ -427,5 +427,60 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike == legs[0].Strike,
                                                     (legs, p) => p.Expiration == legs[1].Expiration)
             );
+
+        /// Bear Call Ladder strategy is short 1 call and long 2 calls, with ascending strike prices in order,
+        /// All options have the same expiry.
+        /// expiration.
+        /// </summary>
+        public static OptionStrategyDefinition BearCallLadder { get; }
+            = OptionStrategyDefinition.Create("Bear Call Ladder",
+                OptionStrategyDefinition.CallLeg(-1),
+                OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike > legs[0].Strike,
+                                                     (legs, c) => c.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike > legs[1].Strike,
+                                                     (legs, c) => c.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Bear Call Ladder strategy is long 1 put and short 2 puts, with descending strike prices in order,
+        /// All options have the same expiry.
+        /// expiration.
+        /// </summary>
+        public static OptionStrategyDefinition BearPutLadder { get; }
+            = OptionStrategyDefinition.Create("Bear Put Ladder",
+                OptionStrategyDefinition.PutLeg(+1),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike < legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike < legs[1].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Bull Call Ladder strategy is long 1 call and short 2 calls, with ascending strike prices in order,
+        /// All options have the same expiry.
+        /// expiration.
+        /// </summary>
+        public static OptionStrategyDefinition BullCallLadder { get; }
+            = OptionStrategyDefinition.Create("Bull Call Ladder",
+                OptionStrategyDefinition.CallLeg(+1),
+                OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike > legs[0].Strike,
+                                                     (legs, c) => c.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike > legs[1].Strike,
+                                                     (legs, c) => c.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Bull Call Ladder strategy is short 1 put and long 2 puts, with descending strike prices in order,
+        /// All options have the same expiry.
+        /// expiration.
+        /// </summary>
+        public static OptionStrategyDefinition BullPutLadder { get; }
+            = OptionStrategyDefinition.Create("Bull Put Ladder",
+                OptionStrategyDefinition.PutLeg(-1),
+                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike < legs[0].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike < legs[1].Strike,
+                                                    (legs, p) => p.Expiration == legs[0].Expiration)
+            );
     }
 }

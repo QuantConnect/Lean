@@ -949,6 +949,147 @@ namespace QuantConnect.Securities.Option
             return InvertStrategy(JellyRoll(canonicalOption, strike, nearExpiration, farExpiration), OptionStrategyDefinitions.ShortJellyRoll.Name);
         }
 
+        /// Method creates new Bear Call Ladder strategy, that consists of three calls with the same expiration but different strikes.
+        /// The strike price of the short call is below the strikes of the two long calls.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="leg1Strike">The strike price of the short call</param>
+        /// <param name="leg2Strike">The strike price of the long call with lower strike price</param>
+        /// <param name="leg3Strike">The strike price of the long call with higher strike price</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy BearCallLadder(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            decimal leg3Strike,
+            DateTime expiration
+            )
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "BearCallLadder");
+            CheckExpirationDate(expiration, "BearCallLadder", nameof(expiration));
+
+            if (leg1Strike >= leg2Strike || leg1Strike >= leg3Strike || leg2Strike >= leg3Strike)
+            {
+                throw new ArgumentException("BearCallLadder: strike prices must be in ascending order", 
+                    $"{nameof(leg1Strike)}, {nameof(leg2Strike)}, {nameof(leg3Strike)}");
+            }
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.BearCallLadder.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = -1, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1, Expiration = expiration
+                    }
+                }
+            };
+        }
+
+        /// Method creates new Bear Put Ladder strategy, that consists of three puts with the same expiration but different strikes.
+        /// The strike price of the long put is above the strikes of the two short puts.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="leg1Strike">The strike price of the long put</param>
+        /// <param name="leg2Strike">The strike price of the short put with higher strike price</param>
+        /// <param name="leg3Strike">The strike price of the short put with lower strike price</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy BearPutLadder(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            decimal leg3Strike,
+            DateTime expiration
+            )
+        {
+            CheckCanonicalOptionSymbol(canonicalOption, "BearPutLadder");
+            CheckExpirationDate(expiration, "BearPutLadder", nameof(expiration));
+
+            if (leg1Strike <= leg2Strike || leg1Strike <= leg3Strike || leg2Strike <= leg3Strike)
+            {
+                throw new ArgumentException("BearPutLadder: strike prices must be in descending order", 
+                    $"{nameof(leg1Strike)}, {nameof(leg2Strike)}, {nameof(leg3Strike)}");
+            }
+
+            return new OptionStrategy
+            {
+                Name = OptionStrategyDefinitions.BearPutLadder.Name,
+                Underlying = canonicalOption.Underlying,
+                CanonicalOption = canonicalOption,
+                OptionLegs = new List<OptionStrategy.OptionLegData>
+                {
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1,
+                        Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1, Expiration = expiration
+                    },
+                    new OptionStrategy.OptionLegData
+                    {
+                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1, Expiration = expiration
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Method creates new Bull Call Ladder strategy, that consists of three calls with the same expiration but different strikes.
+        /// The strike price of the long call is below the strikes of the two short calls.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="leg1Strike">The strike price of the long call</param>
+        /// <param name="leg2Strike">The strike price of the short call with lower strike price</param>
+        /// <param name="leg3Strike">The strike price of the short call with higher strike price</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy BullCallLadder(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            decimal leg3Strike,
+            DateTime expiration
+            )
+        {
+            return InvertStrategy(BearCallLadder(canonicalOption, leg1Strike, leg2Strike, leg3Strike, expiration), OptionStrategyDefinitions.BullCallLadder.Name);
+        }
+
+        /// <summary>
+        /// Method creates new Bull Put Ladder strategy, that consists of three puts with the same expiration but different strikes.
+        /// The strike price of the short put is above the strikes of the two long puts.
+        /// </summary>
+        /// <param name="canonicalOption">Option symbol</param>
+        /// <param name="leg1Strike">The strike price of the short put</param>
+        /// <param name="leg2Strike">The strike price of the long put with higher strike price</param>
+        /// <param name="leg3Strike">The strike price of the long put with lower strike price</param>
+        /// <param name="expiration">Option expiration date</param>
+        /// <returns>Option strategy specification</returns>
+        public static OptionStrategy BullPutLadder(
+            Symbol canonicalOption,
+            decimal leg1Strike,
+            decimal leg2Strike,
+            decimal leg3Strike,
+            DateTime expiration
+            )
+        {
+            return InvertStrategy(BearPutLadder(canonicalOption, leg1Strike, leg2Strike, leg3Strike, expiration), OptionStrategyDefinitions.BullPutLadder.Name);
+        }
+
         /// <summary>
         /// Checks that canonical option symbol is valid
         /// </summary>
