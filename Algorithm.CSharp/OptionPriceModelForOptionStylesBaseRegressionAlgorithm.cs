@@ -148,6 +148,11 @@ namespace QuantConnect.Algorithm.CSharp
         abstract public int AlgorithmHistoryDataPoints { get; }
 
         /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        abstract public AlgorithmStatus AlgorithmStatus { get; }
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         abstract public Dictionary<string, string> ExpectedStatistics { get; }

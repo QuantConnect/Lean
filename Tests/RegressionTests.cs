@@ -85,15 +85,6 @@ namespace QuantConnect.Tests
             // since these are static test cases, they are executed before test setup
             AssemblyInitialize.AdjustCurrentDirectory();
 
-            var nonDefaultStatuses = new Dictionary<string, AlgorithmStatus>
-            {
-                { "TrainingInitializeRegressionAlgorithm", AlgorithmStatus.RuntimeError },
-                { "OnOrderEventExceptionRegression", AlgorithmStatus.RuntimeError },
-                { "WarmUpAfterInitializeRegression", AlgorithmStatus.RuntimeError },
-                { "CoarseFineAsyncUniverseRegressionAlgorithm", AlgorithmStatus.Running },
-                { "ScaledRawDataNormalizationModeNotAllowedSecuritiesAlgorithm", AlgorithmStatus.Running }
-            };
-
             var languages = Config.GetValue("regression-test-languages", JArray.FromObject(new[] { "CSharp", "Python" }))
                 .Select(str => Parse.Enum<Language>(str.Value<string>()))
                 .ToHashSet();
@@ -105,10 +96,9 @@ namespace QuantConnect.Tests
                 where !type.IsAbstract                          // non-abstract
                 where type.GetConstructor(Array.Empty<Type>()) != null  // has default ctor
                 let instance = (IRegressionAlgorithmDefinition)Activator.CreateInstance(type)
-                let status = nonDefaultStatuses.GetValueOrDefault(type.Name, AlgorithmStatus.Completed)
                 where instance.CanRunLocally                   // open source has data to run this algorithm
                 from language in instance.Languages.Where(languages.Contains)
-                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, status, instance.DataPoints, instance.AlgorithmHistoryDataPoints)
+                select new AlgorithmStatisticsTestParameters(type.Name, instance.ExpectedStatistics, language, instance.AlgorithmStatus, instance.DataPoints, instance.AlgorithmHistoryDataPoints)
             )
             .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)
             // generate test cases from test parameters

@@ -2292,6 +2292,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             /// </summary>
             public int AlgorithmHistoryDataPoints => 0;
 
+            /// <summary>
+            /// Final status of the algorithm
+            /// </summary>
+            public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+
             public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
         }
 

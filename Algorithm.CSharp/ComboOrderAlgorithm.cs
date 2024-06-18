@@ -154,6 +154,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         public abstract int AlgorithmHistoryDataPoints { get; }
 
+        public abstract AlgorithmStatus AlgorithmStatus { get; }
+
         public abstract Dictionary<string, string> ExpectedStatistics { get; }
     }
 }
