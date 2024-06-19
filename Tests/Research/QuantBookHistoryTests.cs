@@ -565,5 +565,29 @@ def getHistory():
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
         }
+
+        [Test]
+        public void HistoryDataDoesnNotReturnDataLabelWithBaseDataCollectionTypesAndPeriods()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def getHistory():
+    qb = QuantBook()
+    symbol = qb.AddEquity(""AAPL"", Resolution.Daily).symbol
+    dataset_symbol = qb.AddData(FundamentalUniverse, symbol).symbol
+    history = qb.History(dataset_symbol, 4015, Resolution.Daily)
+    return history
+");
+                dynamic getHistory = testModule.GetAttr("getHistory");
+                var pyHistory = getHistory() as PyObject;
+                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
+                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                Assert.IsFalse(pyHistory.HasAttr("data"));
+            }
+        }
     }
 }
