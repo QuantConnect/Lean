@@ -328,7 +328,7 @@ namespace QuantConnect.Securities
                 Log.Trace("Ladder(): insufficient depth in strike prices, returning empty universe.");
                 return this.WhereContains( new List<Symbol>() );
             }
-            var higherStrikeContract = higherStrikeContracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + middleStrikeFromAtm)).First();
+            var higherStrikeContract = higherStrikeContracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + higherStrikeFromAtm)).First();
 
             return this.WhereContains(new List<Symbol> { lowerStrikeContract, middleStrikeContract, higherStrikeContract });
         }
