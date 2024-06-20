@@ -534,18 +534,18 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -20, -(1000000 - 20 * 10407) / (10407 + 252), true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -20, -(1000000 - 20 * 10407) / (10407 + 252) - 1, false),  // -20 to max short + 1
-            // Initial margin requirement|premium for BearPutLadder with quantities 1 and -1 are 10533|348 and 400|0 respectively
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 0, (1000000 - 0 * 10533) / (10533 + 348), true), // 0 to max long
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 0, (1000000 - 0 * 10533) / (10533 + 348) + 1, false), // 0 to max long + 1
+            // Initial margin requirement|premium for BearPutLadder with quantities 1 and -1 are 10533|346 and 400|0 respectively
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 0, (1000000 - 0 * 10533) / (10533 + 346), true), // 0 to max long
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 0, (1000000 - 0 * 10533) / (10533 + 346) + 1, false), // 0 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 0, -(1000000 + 0 * 400) / (400 + 0), true), // 0 to max short
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 0, -(1000000 + 0 * 400) / (400 + 0) - 1, false),    // 0 to max short + 1
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 20, (1000000 - 20 * 10533) / (10533 + 348), true),    // 20 to max long
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 20, (1000000 - 20 * 10533) / (10533 + 348) + 1, false),    // 20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 20, (1000000 - 20 * 10533) / (10533 + 346), true),    // 20 to max long
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 20, (1000000 - 20 * 10533) / (10533 + 346) + 1, false),    // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 20, -20, true), // 20 to 0
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 20, -(1000000 + 20 * 400) / (400 + 0), true), // 20 to max short
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 20, -(1000000 + 20 * 400) / (400 + 0) - 1, false),  // 20 to max short + 1
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -20, (1000000 + 20 * 10533) / (10533 + 348), true),   // -20 to max long
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -20, (1000000 + 20 * 10533) / (10533 + 348) + 1, false),   // -20 to max long + 1
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -20, (1000000 + 20 * 10533) / (10533 + 346), true),   // -20 to max long
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -20, (1000000 + 20 * 10533) / (10533 + 346) + 1, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -20, -(1000000 - 20 * 400) / (400 + 0), true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -20, -(1000000 - 20 * 400) / (400 + 0) - 1, false),  // -20 to max short + 1
@@ -564,21 +564,21 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -20, 20, true), // -20 to 0
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -20, -(1000000 - 20 * 400) / (400 + 0), true),    // -20 to max short
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -20, -(1000000 - 20 * 400) / (400 + 0) - 1, false),  // -20 to max short + 1
-            // Initial margin requirement|premium for BullPutLadder with quantities 1 and -1 are 400|0 and 10533|348 respectively
+            // Initial margin requirement|premium for BullPutLadder with quantities 1 and -1 are 400|0 and 10533|346 respectively
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 0, (1000000 - 0 * 400) / (400 + 0), true), // 0 to max long
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 0, (1000000 - 0 * 400) / (400 + 0) + 1, false), // 0 to max long + 1
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 0, -(1000000 + 0 * 10533) / (10533 + 348), true), // 0 to max short
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 0, -(1000000 + 0 * 10533) / (10533 + 348) - 1, false),    // 0 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 0, -(1000000 + 0 * 10533) / (10533 + 346), true), // 0 to max short
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 0, -(1000000 + 0 * 10533) / (10533 + 346) - 1, false),    // 0 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 20, (1000000 - 20 * 400) / (400 + 0), true),    // 20 to max long
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 20, (1000000 - 20 * 400) / (400 + 0) + 1, false),    // 20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 20, -20, true), // 20 to 0
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 20, -(1000000 + 20 * 10533) / (10533 + 348), true), // 20 to max short
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 20, -(1000000 + 20 * 10533) / (10533 + 348) - 1, false),  // 20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 20, -(1000000 + 20 * 10533) / (10533 + 346), true), // 20 to max short
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 20, -(1000000 + 20 * 10533) / (10533 + 346) - 1, false),  // 20 to max short + 1
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -20, (1000000 + 20 * 400) / (400 + 0), true),   // -20 to max long
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -20, (1000000 + 20 * 400) / (400 + 0) + 1, false),   // -20 to max long + 1
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -20, 20, true), // -20 to 0
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -20, -(1000000 - 20 * 10533) / (10533 + 348), true),    // -20 to max short
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -20, -(1000000 - 20 * 10533) / (10533 + 348) - 1, false),  // -20 to max short + 1
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -20, -(1000000 - 20 * 10533) / (10533 + 346), true),    // -20 to max short
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -20, -(1000000 - 20 * 10533) / (10533 + 346) - 1, false),  // -20 to max short + 1
         };
 
         [TestCaseSource(nameof(HasSufficientBuyingPowerForOrderTestCases))]
@@ -1252,15 +1252,15 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, -106590.4m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, -106590.4m, -10),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, -106590.4m - 4000m, -20),
-            // Initial margin requirement (including premium) for BearPutLadder with quantity 10 and -10 is 108807.6 and 4000 respectively
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 108807.6m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -108807.6m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -108807.6m, -10),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -108807.6m - 4000m, -20),
+            // Initial margin requirement (including premium) for BearPutLadder with quantity 10 and -10 is 108789.6 and 4000 respectively
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 108789.6m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -108789.6m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -108789.6m, -10),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -108789.6m - 4000m, -20),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, 4000m / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, -4000m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, -4000m, -10),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, -4000m - 108807.6m, -20),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, -4000m - 108789.6m, -20),
             // Initial margin requirement (including premium) for BullCallLadder with quantity 10 and -10 is 106590.4 and 4000 respectively
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, 106590.4m / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, -106590.4m / 10, -1),
@@ -1270,15 +1270,15 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -10, -4000m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -10, -4000m, -10),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -10, -4000m - 106590.4m, -20),
-            // Initial margin requirement (including premium) for BullPutLadder with quantity 10 and -10 is 4000 and 108807.6 respectively
+            // Initial margin requirement (including premium) for BullPutLadder with quantity 10 and -10 is 4000 and 108789.6 respectively
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, 4000m / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -4000m / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -4000m, -10),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -4000m - 108807.6m, -20),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 108807.6m / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -108807.6m / 10, -1),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -108807.6m, -10),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -108807.6m - 4000m, -20),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -4000m - 108789.6m, -20),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 108789.6m / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -108789.6m / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -108789.6m, -10),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -108789.6m - 4000m, -20),
         };
 
         [TestCaseSource(nameof(OrderQuantityForDeltaBuyingPowerTestCases))]
@@ -1675,15 +1675,15 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, 106590.4m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, -4000m, -20),
-            // Initial margin requirement (including premium) for BearPutLadder with quantity 10 and -10 is 108807.6 and 4000 respectively
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 108807.6m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 108807.6m * 9 / 10, -1),
+            // Initial margin requirement (including premium) for BearPutLadder with quantity 10 and -10 is 108789.6 and 4000 respectively
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 108789.6m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 108789.6m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -4000m, -20),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, 4000m * 11 / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, 4000m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, -108807.6m, -20),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, -108789.6m, -20),
             // Initial margin requirement (including premium) for BullCallLadder with quantity 10 and -10 is 4000 and 106590.4 respectively
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, 106590.4m * 11 / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, 106590.4m * 9 / 10, -1),
@@ -1693,13 +1693,13 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -10, 4000m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, -10, -106590.4m, -20),
-            // Initial margin requirement (including premium) for BullPutLadder with quantity 10 and -10 is 108807.6 and 4000 respectively
+            // Initial margin requirement (including premium) for BullPutLadder with quantity 10 and -10 is 108789.6 and 4000 respectively
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, 4000m * 11 / 10, +1),
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, 4000m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, 0m, -10),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -108807.6m, -20),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 108807.6m * 11 / 10, +1),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 108807.6m * 9 / 10, -1),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -108789.6m, -20),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 108789.6m * 11 / 10, +1),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 108789.6m * 9 / 10, -1),
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 0m, -10),
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -4000m, -20),
         };
@@ -2035,19 +2035,19 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, 10, -1, (1000000m - 4000m) + 4000m + 4000m),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, 10, -10, (1000000m - 4000m) + 4000m + 4000m),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, 10, -20, (1000000m - 4000m) + 4000m + 4000m),
-            new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, -1, 1000000m - 106590.4m),
+            new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, -1, 1000000m - 104070.4m),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, 1, (1000000m - 106590.4m) + 106590.4m + 106590.4m),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, 10, (1000000m - 106590.4m) + 106590.4m + 106590.4m),
             new TestCaseData(OptionStrategyDefinitions.BearCallLadder, -10, 20, (1000000m - 106590.4m) + 106590.4m + 106590.4m),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 1, 1000000m - 108807.6m),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -1, (1000000m - 108807.6m) + 108807.6m + 108807.6m),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -10, (1000000m - 108807.6m) + 108807.6m + 108807.6m),
-            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -20, (1000000m - 108807.6m) + 108807.6m + 108807.6m),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, 1, 1000000m - 105325.6m),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -1, (1000000m - 108789.6m) + 108789.6m + 108789.6m),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -10, (1000000m - 108789.6m) + 108789.6m + 108789.6m),
+            new TestCaseData(OptionStrategyDefinitions.BearPutLadder, 10, -20, (1000000m - 108789.6m) + 108789.6m + 108789.6m),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, -1, 1000000m - 4000m),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, 1, (1000000m - 4000m) + 4000m + 4000m),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, 10, (1000000m - 4000m) + 4000m + 4000m),
             new TestCaseData(OptionStrategyDefinitions.BearPutLadder, -10, 20, (1000000m - 4000m) + 4000m + 4000m),
-            new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, 1, 1000000m - 106590.4m),
+            new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, 1, 1000000m - 104070.4m),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, -1, (1000000m - 106590.4m) + 106590.4m + 106590.4m),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, -10, (1000000m - 106590.4m) + 106590.4m + 106590.4m),
             new TestCaseData(OptionStrategyDefinitions.BullCallLadder, 10, -20, (1000000m - 106590.4m) + 106590.4m + 106590.4m),
@@ -2059,10 +2059,10 @@ namespace QuantConnect.Tests.Common.Securities
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -1, (1000000m - 4000m) + 4000m + 4000m),
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -10, (1000000m - 4000m) + 4000m + 4000m),
             new TestCaseData(OptionStrategyDefinitions.BullPutLadder, 10, -20, (1000000m - 4000m) + 4000m + 4000m),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -1, 1000000m - 108807.6m),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 1, (1000000m - 108807.6m) + 108807.6m + 108807.6m),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 10, (1000000m - 108807.6m) + 108807.6m + 108807.6m),
-            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 20, (1000000m - 108807.6m) + 108807.6m + 108807.6m),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, -1, 1000000m - 105325.6m),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 1, (1000000m - 108789.6m) + 108789.6m + 108789.6m),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 10, (1000000m - 108789.6m) + 108789.6m + 108789.6m),
+            new TestCaseData(OptionStrategyDefinitions.BullPutLadder, -10, 20, (1000000m - 108789.6m) + 108789.6m + 108789.6m),
         };
 
         [TestCaseSource(nameof(PositionGroupBuyingPowerTestCases))]

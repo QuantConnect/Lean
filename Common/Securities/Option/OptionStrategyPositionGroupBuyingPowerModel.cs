@@ -276,8 +276,13 @@ namespace QuantConnect.Securities.Option
                 // Bear Put Ladder = Bear Put Spread of 2 lower strike prices (margin: 0) + Short Naked Put with the highest strike price
                 var shortNakedPut = parameters.PositionGroup.Positions.OrderBy(position => position.Symbol.ID.StrikePrice).First();
                 var shortNakedPutSecurity = (Option)parameters.Portfolio.Securities[shortNakedPut.Symbol];
-                var result = shortNakedPutSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    shortNakedPutSecurity, shortNakedPut.Quantity));
+                var undPrice = shortNakedPutSecurity.Underlying.Price;
+
+                var singleMargin = (shortNakedPutSecurity.Price + Math.Max(0.2m * undPrice - shortNakedPutSecurity.OutOfTheMoneyAmount(undPrice),
+                    0.1m * shortNakedPutSecurity.StrikePrice));
+                var multiplier = Math.Abs(shortNakedPut.Quantity) * shortNakedPutSecurity.ContractUnitOfTrade;
+                var result = singleMargin * multiplier;
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, shortNakedPutSecurity.QuoteCurrency.Symbol);
 
                 return new MaintenanceMargin(result);
             }
@@ -286,8 +291,13 @@ namespace QuantConnect.Securities.Option
                 // Bull Call Ladder = Bull Call Spread of 2 lower strike prices (margin: 0) + Short Naked Call with the highest strike price
                 var shortNakedCall = parameters.PositionGroup.Positions.OrderByDescending(position => position.Symbol.ID.StrikePrice).First();
                 var shortNakedCallSecurity = (Option)parameters.Portfolio.Securities[shortNakedCall.Symbol];
-                var result = shortNakedCallSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    shortNakedCallSecurity, shortNakedCall.Quantity));
+                var undPrice = shortNakedCallSecurity.Underlying.Price;
+
+                var singleMargin = (shortNakedCallSecurity.Price + Math.Max(0.2m * undPrice - shortNakedCallSecurity.OutOfTheMoneyAmount(undPrice), 
+                    0.1m * shortNakedCallSecurity.StrikePrice));
+                var multiplier = Math.Abs(shortNakedCall.Quantity) * shortNakedCallSecurity.ContractUnitOfTrade;
+                var result = singleMargin * multiplier;
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, shortNakedCallSecurity.QuoteCurrency.Symbol);
 
                 return new MaintenanceMargin(result);
             }
