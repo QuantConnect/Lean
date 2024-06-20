@@ -48,7 +48,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             var targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
             Assert.AreEqual(0, targets.Count);
 
-            algorithm.Securities.Add(Symbols.AAPL, GetSecurity(invested, absoluteHoldingsCost));
+            algorithm.Securities.Add(Symbols.AAPL, GetSecurity(Symbols.AAPL, invested, absoluteHoldingsCost));
             algorithm.Portfolio.InvalidateTotalPortfolioValue();
             targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10)}).ToList();
 
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
         {
             var algorithm = CreateAlgorithm(language, 0.1m);
             var targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
-            algorithm.Securities.Add(Symbols.AAPL, GetSecurity(true, -10001));
+            algorithm.Securities.Add(Symbols.AAPL, GetSecurity(Symbols.AAPL, true, -10001));
             algorithm.Portfolio.InvalidateTotalPortfolioValue();
             targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
 
@@ -78,9 +78,32 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             Assert.AreEqual(Symbols.AAPL, targets[0].Symbol);
             Assert.AreEqual(0, targets[0].Quantity);
 
-            algorithm.Securities.Add(Symbols.AAPL, GetSecurity(true, 10001));
+            algorithm.Securities.Add(Symbols.AAPL, GetSecurity(Symbols.AAPL, true, 10001));
             targets = algorithm.RiskManagement.ManageRisk(algorithm, new PortfolioTarget[] { new PortfolioTarget(Symbols.AAPL, 10) }).ToList();
             Assert.AreEqual(0, targets.Count);
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void ReturnsMoreThanOnePortfolioTarget(Language language)
+        {
+            var targetSymbols = new PortfolioTarget[] {
+                new PortfolioTarget(Symbols.AAPL, 10),
+                new PortfolioTarget(Symbols.SPY, 100),
+                new PortfolioTarget(Symbols.MSFT, 1000),
+                new PortfolioTarget(Symbols.GOOG, 10000),
+                new PortfolioTarget(Symbols.IBM, 100000)};
+
+            var algorithm = CreateAlgorithm(language, 0.1m);
+            var returnedTargets = algorithm.RiskManagement.ManageRisk(algorithm, targetSymbols).ToList();
+
+            targetSymbols.ToList().ForEach(x => algorithm.Securities.Add(x.Symbol, GetSecurity( x.Symbol, true, -x.Quantity)));
+            algorithm.Portfolio.InvalidateTotalPortfolioValue();
+            returnedTargets = algorithm.RiskManagement.ManageRisk(algorithm, targetSymbols).ToList();
+
+            Assert.AreEqual(targetSymbols.Length, returnedTargets.Count);
+            Assert.AreEqual(targetSymbols.Select(x => x.Symbol), returnedTargets.Select(x => x.Symbol));
+            Assert.IsTrue(returnedTargets.All(x => x.Quantity == 0));
         }
 
         private QCAlgorithm CreateAlgorithm(Language language, decimal maxDrawdownPercent)
@@ -107,11 +130,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
             return algorithm;
         }
 
-        private Security GetSecurity(bool invested, decimal absoluteHoldingsCost)
+        private Security GetSecurity(Symbol symbol, bool invested, decimal absoluteHoldingsCost)
         {
             // Add security
             var security = new Mock<Equity>(
-                Symbols.AAPL,
+                symbol,
                 SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
                 new Cash(Currencies.USD, 0, 1),
                 SymbolProperties.GetDefault(Currencies.USD),
