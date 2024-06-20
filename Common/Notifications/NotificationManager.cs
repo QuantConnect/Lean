@@ -138,7 +138,7 @@ namespace QuantConnect.Notifications
         /// Send a telegram message to the chat ID specified, supply token for custom bot.
         /// Note: Requires bot to have chat with user or be in the group specified by ID.
         /// </summary>
-        /// <param name="user">Chat or group ID to send message to</param>
+        /// <param name="id">Chat or group ID to send message to</param>
         /// <param name="message">Message to send</param>
         /// <param name="token">Bot token to use for this message</param>
         public bool Telegram(string id, string message, string token = null)
@@ -150,6 +150,31 @@ namespace QuantConnect.Notifications
 
             var telegram = new NotificationTelegram(id, message, token);
             Messages.Enqueue(telegram);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Send a file to the FTP server specified.
+        /// </summary>
+        /// <param name="hostname">
+        /// FTP server hostname.
+        /// It shouldn't have trailing slashes or "ftp://" (protocol) prefix.
+        /// </param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="password">The FTP server password</param>
+        /// <param name="fileName">The path to file on the FTP server</param>
+        /// <param name="contents">The contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public bool Ftp(string hostname, string username, string password, string fileName, string contents, int port = 21)
+        {
+            if (!Allow())
+            {
+                return false;
+            }
+
+            var ftp = new NotificationFtp(hostname, username, password, fileName, contents, port);
+            Messages.Enqueue(ftp);
 
             return true;
         }

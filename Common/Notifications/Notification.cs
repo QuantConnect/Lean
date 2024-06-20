@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using QuantConnect.Util;
 
@@ -194,6 +195,108 @@ namespace QuantConnect.Notifications
             Id = id;
             Message = message;
             Token = token;
+        }
+    }
+
+    /// <summary>
+    /// FTP notification data
+    /// </summary>
+    public class NotificationFtp : Notification
+    {
+        private static Regex InvalidHostnameRegex = new Regex(@"^[a-zA-Z0-9]+:\/\/.+$", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+
+        /// <summary>
+        /// The FTP server hostname.
+        /// </summary>
+        public string Hostname { get; }
+
+        /// <summary>
+        /// The FTP server port.
+        /// </summary>
+        public int Port { get; }
+
+        /// <summary>
+        /// The FTP server username.
+        /// </summary>
+        public string Username { get; }
+
+        /// <summary>
+        /// The FTP server password.
+        /// </summary>
+        public string Password { get; }
+
+        /// <summary>
+        /// The path to file on the FTP server.
+        /// </summary>
+        public string FileName { get; }
+
+        /// <summary>
+        /// The contents of the file to send.
+        /// </summary>
+        public string Contents { get; }
+
+        /// <summary>
+        /// Constructor for a notification to sent as a file to an FTP server
+        /// </summary>
+        /// <param name="hostname">
+        /// FTP server hostname.
+        /// It shouldn't have trailing slashes or "ftp://" (protocol) prefix.
+        /// </param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="password">The FTP server password</param>
+        /// <param name="fileName">The path to file on the FTP server</param>
+        /// <param name="contents">The contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public NotificationFtp(string hostname, string username, string password, string fileName, string contents, int port = 21)
+        {
+            if (!IsHostnameValid(hostname))
+            {
+                throw new ArgumentException(Messages.NotificationFtp.InvalidHostname(hostname));
+            }
+
+            Hostname = hostname;
+            Port = port;
+            Username = username;
+            Password = password;
+            FileName = fileName;
+            Contents = contents;
+        }
+
+        private static bool IsHostnameValid(string hostname)
+        {
+            try
+            {
+                if (InvalidHostnameRegex.IsMatch(hostname) || hostname.EndsWith("/", StringComparison.InvariantCulture))
+                {
+                    return false;
+                }
+            } catch
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Extension methods for <see cref="Notification"/>
+    /// </summary>
+    public static class NotificationExtensions
+    {
+        /// <summary>
+        /// Check if the notification can be sent (implements the <see cref="Notification.Send"/> method)
+        /// </summary>
+        /// <param name="notification">The notification</param>
+        /// <returns>Whether the notification can be sent</returns>
+        public static bool CanSend(this Notification notification)
+        {
+            var type = notification.GetType();
+            return type != typeof(NotificationEmail) &&
+                type != typeof(NotificationWeb) &&
+                type != typeof(NotificationSms) &&
+                type != typeof(NotificationTelegram) &&
+                type != typeof(NotificationFtp);
         }
     }
 }

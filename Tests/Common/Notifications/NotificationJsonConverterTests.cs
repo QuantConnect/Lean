@@ -94,6 +94,26 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Token, result.Token);
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void FtpRoundTrip(bool defaultPort)
+        {
+            var expected = defaultPort
+                ? new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}")
+                : new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}", 2121);
+
+            var serialized = JsonConvert.SerializeObject(expected);
+
+            var result = (NotificationFtp)JsonConvert.DeserializeObject<Notification>(serialized);
+
+            Assert.AreEqual(expected.Hostname, result.Hostname);
+            Assert.AreEqual(expected.Port, result.Port);
+            Assert.AreEqual(expected.Username, result.Username);
+            Assert.AreEqual(expected.Password, result.Password);
+            Assert.AreEqual(expected.FileName, result.FileName);
+            Assert.AreEqual(expected.Contents, result.Contents);
+        }
+
         [Test]
         public void CaseInsensitive()
         {
@@ -109,10 +129,15 @@ namespace QuantConnect.Tests.Common.Notifications
 			""address"": ""qc.com""
 		}, {
 			""address"": ""qc.com/1234""
+		},{
+			""hostname"": ""qc.com"",
+			""username"": ""username"",
+			""password"": ""password"",
+			""fileName"": ""path/to/file.csv""
 		}]";
             var result = JsonConvert.DeserializeObject<List<Notification>>(serialized);
 
-            Assert.AreEqual(4, result.Count);
+            Assert.AreEqual(5, result.Count);
 
             var email = result[0] as NotificationEmail;
             Assert.AreEqual("sdads", email.Subject);
@@ -128,6 +153,12 @@ namespace QuantConnect.Tests.Common.Notifications
 
             var web2 = result[3] as NotificationWeb;
             Assert.AreEqual("qc.com/1234", web2.Address);
+
+            var ftp = result[4] as NotificationFtp;
+            Assert.AreEqual("qc.com", ftp.Hostname);
+            Assert.AreEqual("username", ftp.Username);
+            Assert.AreEqual("password", ftp.Password);
+            Assert.AreEqual("path/to/file.csv", ftp.FileName);
         }
     }
 }

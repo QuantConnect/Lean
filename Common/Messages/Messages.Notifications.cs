@@ -38,6 +38,18 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Notifications.NotificationFtp"/> class and its consumers or related classes
+        /// </summary>
+        public static class NotificationFtp
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidHostname(string hostname)
+            {
+                return $"Invalid FTP hostname: {hostname}. It should not be prefixed with the protocol or contain trailing slashes";
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Notifications.NotificationJsonConverter"/> class and its consumers or related classes
         /// </summary>
         public static class NotificationJsonConverter

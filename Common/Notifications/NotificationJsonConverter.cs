@@ -80,6 +80,19 @@ namespace QuantConnect.Notifications
                 var botToken = jObject.GetValue("Token", StringComparison.InvariantCultureIgnoreCase);
                 return new NotificationTelegram(token.ToString(), message?.ToString(), botToken?.ToString());
             }
+            else if (jObject.TryGetValue("Hostname", StringComparison.InvariantCultureIgnoreCase, out token))
+            {
+                // This is an FTP notification
+                var hostname = token.ToString();
+                var port = jObject.GetValue("Port", StringComparison.InvariantCultureIgnoreCase)?.ToObject<int>();
+                var username = jObject.GetValue("Username", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var password = jObject.GetValue("Password", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var fileName = jObject.GetValue("FileName", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var contents = jObject.GetValue("Contents", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                return port != null
+                    ? new NotificationFtp(hostname, username, password, fileName, contents, port.Value)
+                    : new NotificationFtp(hostname, username, password, fileName, contents);
+            }
 
             throw new NotImplementedException(Messages.NotificationJsonConverter.UnexpectedJsonObject(jObject));
         }
