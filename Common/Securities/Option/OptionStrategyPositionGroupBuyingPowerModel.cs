@@ -293,8 +293,8 @@ namespace QuantConnect.Securities.Option
                 var shortNakedCallSecurity = (Option)parameters.Portfolio.Securities[shortNakedCall.Symbol];
                 var undPrice = shortNakedCallSecurity.Underlying.Price;
 
-                var singleMargin = (shortNakedCallSecurity.Price + Math.Max(0.2m * undPrice - shortNakedCallSecurity.OutOfTheMoneyAmount(undPrice), 
-                    0.1m * shortNakedCallSecurity.StrikePrice));
+                var singleMargin = (shortNakedCallSecurity.Price + Math.Max(
+                    0.2m * undPrice - shortNakedCallSecurity.OutOfTheMoneyAmount(undPrice), 0.1m * undPrice));
                 var multiplier = Math.Abs(shortNakedCall.Quantity) * shortNakedCallSecurity.ContractUnitOfTrade;
                 var result = singleMargin * multiplier;
                 var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, shortNakedCallSecurity.QuoteCurrency.Symbol);
