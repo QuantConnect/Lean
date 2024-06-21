@@ -29,6 +29,29 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(21, notification.Port);
         }
 
+        [Test]
+        public void PasswordIsIgnoredIfPrivateKeyIsPassedIn()
+        {
+            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}", privateKey: "abcdefghijkl");
+            Assert.AreEqual("abcdefghijkl", notification.PrivateKey);
+            Assert.IsNull(notification.Password);
+        }
+
+        [Test]
+        public void PassphraseIsIgnoredIfNoPrivateKeyIsPassedIn()
+        {
+            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}", passphrase: "abcdefghijkl");
+            Assert.IsNull(notification.PrivateKey);
+            Assert.IsNull(notification.Passphrase);
+            Assert.AreEqual("password", notification.Password);
+        }
+
+        [Test]
+        public void ThrowsIfCredentialsAreMissing()
+        {
+            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", string.Empty, "path/to/file.json", "{}"));
+        }
+
         // Protol as in a URI
         [TestCase(@"ftp://qc.com", false)]
         [TestCase(@"sftp://qc.com", false)]
@@ -40,7 +63,7 @@ namespace QuantConnect.Tests.Common.Notifications
         [TestCase(@"qc.com", true)]
         public void ConstructorThrowsOnInvalidHostname(string hostname, bool isValid)
         {
-            TestDelegate ctor = () => new NotificationFtp(hostname, string.Empty, string.Empty, string.Empty, string.Empty);
+            TestDelegate ctor = () => new NotificationFtp(hostname, "username", "password", "path/to/file.json", "{}");
 
             if (isValid)
             {

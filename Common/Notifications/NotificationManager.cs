@@ -166,14 +166,22 @@ namespace QuantConnect.Notifications
         /// <param name="fileName">The path to file on the FTP server</param>
         /// <param name="contents">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public bool Ftp(string hostname, string username, string password, string fileName, string contents, int port = 21)
+        /// <param name="privateKey">The private key to use for authentication</param>
+        /// <param name="passphrase">The passphrase for the private key</param>
+        /// <remarks>
+        /// If the private key is provided it will be used to send a SFTP notification, with the optional passphrase.
+        /// If no private key is provided, the notification will be sent as a FTP notification.
+        /// The password can be set to null or empty and will be ignored if a private key is provided.
+        /// </remarks>
+        public bool Ftp(string hostname, string username, string password, string fileName, string contents, int? port = null,
+            string privateKey = null, string passphrase = null)
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var ftp = new NotificationFtp(hostname, username, password, fileName, contents, port);
+            var ftp = new NotificationFtp(hostname, username, password, fileName, contents, port, privateKey, passphrase);
             Messages.Enqueue(ftp);
 
             return true;

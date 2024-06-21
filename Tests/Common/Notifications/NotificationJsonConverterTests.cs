@@ -94,24 +94,48 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Token, result.Token);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void FtpRoundTrip(bool defaultPort)
+        [Test]
+        public void FtpRoundTrip([Values] bool withPort, [Values] bool withPrivateKey, [Values] bool withPassphrase)
         {
-            var expected = defaultPort
-                ? new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}")
-                : new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}", 2121);
+            var expected = new NotificationFtp(
+                "qc.com",
+                "username",
+                "password",
+                "path/to/file.json",
+                "{}",
+                withPort ? 2121: null,
+                withPrivateKey ? "private key file contents" : null,
+                withPassphrase ? "private key passphrase" : null);
 
             var serialized = JsonConvert.SerializeObject(expected);
 
             var result = (NotificationFtp)JsonConvert.DeserializeObject<Notification>(serialized);
 
             Assert.AreEqual(expected.Hostname, result.Hostname);
-            Assert.AreEqual(expected.Port, result.Port);
             Assert.AreEqual(expected.Username, result.Username);
-            Assert.AreEqual(expected.Password, result.Password);
             Assert.AreEqual(expected.FileName, result.FileName);
             Assert.AreEqual(expected.Contents, result.Contents);
+
+            Assert.AreEqual(expected.Port, result.Port);
+            Assert.AreEqual(expected.PrivateKey, result.PrivateKey);
+
+            if (!withPrivateKey)
+            {
+                Assert.AreEqual(expected.Password, result.Password);
+            }
+            else
+            {
+                Assert.IsNull(result.Password);
+            }
+
+            if (withPassphrase && withPrivateKey)
+            {
+                Assert.AreEqual(expected.Passphrase, result.Passphrase);
+            }
+            else
+            {
+                Assert.IsNull(result.Passphrase);
+            }
         }
 
         [Test]
@@ -133,11 +157,22 @@ namespace QuantConnect.Tests.Common.Notifications
 			""hostname"": ""qc.com"",
 			""username"": ""username"",
 			""password"": ""password"",
-			""fileName"": ""path/to/file.csv""
+			""fileName"": ""path/to/file.csv"",
+			""contents"": ""abcde"",
+			""port"": 2222,
+			""privateKey"": ""privatekey"",
+			""passphrase"": ""abcde""
+		},{
+			""hostname"": ""qc.com"",
+			""username"": ""username"",
+			""password"": ""password"",
+			""fileName"": ""path/to/file.csv"",
+			""contents"": ""abcde"",
+			""port"": 2222
 		}]";
             var result = JsonConvert.DeserializeObject<List<Notification>>(serialized);
 
-            Assert.AreEqual(5, result.Count);
+            Assert.AreEqual(6, result.Count);
 
             var email = result[0] as NotificationEmail;
             Assert.AreEqual("sdads", email.Subject);
@@ -157,8 +192,22 @@ namespace QuantConnect.Tests.Common.Notifications
             var ftp = result[4] as NotificationFtp;
             Assert.AreEqual("qc.com", ftp.Hostname);
             Assert.AreEqual("username", ftp.Username);
-            Assert.AreEqual("password", ftp.Password);
+            Assert.IsNull(ftp.Password);
             Assert.AreEqual("path/to/file.csv", ftp.FileName);
+            Assert.AreEqual("abcde", ftp.Contents);
+            Assert.AreEqual(2222, ftp.Port);
+            Assert.AreEqual("privatekey", ftp.PrivateKey);
+            Assert.AreEqual("abcde", ftp.Passphrase);
+
+            var ftp2 = result[5] as NotificationFtp;
+            Assert.AreEqual("qc.com", ftp2.Hostname);
+            Assert.AreEqual("username", ftp2.Username);
+            Assert.AreEqual("password", ftp2.Password);
+            Assert.AreEqual("path/to/file.csv", ftp2.FileName);
+            Assert.AreEqual("abcde", ftp2.Contents);
+            Assert.AreEqual(2222, ftp2.Port);
+            Assert.IsNull(ftp2.PrivateKey);
+            Assert.IsNull(ftp2.Passphrase);
         }
     }
 }

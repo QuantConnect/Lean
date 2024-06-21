@@ -203,7 +203,9 @@ namespace QuantConnect.Notifications
     /// </summary>
     public class NotificationFtp : Notification
     {
-        private static Regex InvalidHostnameRegex = new Regex(@"^[a-zA-Z0-9]+:\/\/.+$", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+        private static readonly Regex InvalidHostnameRegex = new Regex(@"^[a-zA-Z0-9]+:\/\/.+$", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+
+        private const int DefaultPort = 21;
 
         /// <summary>
         /// The FTP server hostname.
@@ -223,7 +225,8 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// The FTP server password.
         /// </summary>
-        public string Password { get; }
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string? Password { get; }
 
         /// <summary>
         /// The path to file on the FTP server.
@@ -236,7 +239,19 @@ namespace QuantConnect.Notifications
         public string Contents { get; }
 
         /// <summary>
-        /// Constructor for a notification to sent as a file to an FTP server
+        /// The private key to use for authentication (optional).
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string? PrivateKey { get; }
+
+        /// <summary>
+        /// The passphrase for the private key (optional).
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string? Passphrase { get; }
+
+        /// <summary>
+        /// Constructor for a notification to sent as a file to an FTP server.
         /// </summary>
         /// <param name="hostname">
         /// FTP server hostname.
@@ -247,35 +262,59 @@ namespace QuantConnect.Notifications
         /// <param name="fileName">The path to file on the FTP server</param>
         /// <param name="contents">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        public NotificationFtp(string hostname, string username, string password, string fileName, string contents, int port = 21)
+        /// <param name="privateKey">The private key to use for authentication</param>
+        /// <param name="passphrase">The passphrase for the private key</param>
+        /// <remarks>
+        /// If the private key is provided it will be used to send a SFTP notification, with the optional passphrase.
+        /// If no private key is provided, the notification will be sent as a FTP notification.
+        /// The password can be set to null or empty and will be ignored if a private key is provided.
+        /// </remarks>
+        public NotificationFtp(string hostname, string username, string password, string fileName, string contents, int? port = null,
+            string privateKey = null, string passphrase = null)
         {
             if (!IsHostnameValid(hostname))
             {
-                throw new ArgumentException(Messages.NotificationFtp.InvalidHostname(hostname));
+                throw new ArgumentException(Messages.NotificationFtp.InvalidHostname(hostname), nameof(hostname));
+            }
+
+            var withPassword = !string.IsNullOrEmpty(password);
+            var withPrivateKey = !string.IsNullOrEmpty(privateKey);
+
+            if (!withPassword && !withPrivateKey)
+            {
+                throw new ArgumentException(Messages.NotificationFtp.MissingCredentials());
             }
 
             Hostname = hostname;
-            Port = port;
+            Port = port ?? DefaultPort;
             Username = username;
-            Password = password;
             FileName = fileName;
             Contents = contents;
+
+            if (withPrivateKey)
+            {
+                Password = null;
+                PrivateKey = privateKey;
+                Passphrase = passphrase;
+            }
+            else
+            {
+                Password = password;
+                PrivateKey = null;
+                Passphrase = null;
+            }
         }
 
         private static bool IsHostnameValid(string hostname)
         {
             try
             {
-                if (InvalidHostnameRegex.IsMatch(hostname) || hostname.EndsWith("/", StringComparison.InvariantCulture))
-                {
-                    return false;
-                }
-            } catch
+                return !InvalidHostnameRegex.IsMatch(hostname) && !hostname.EndsWith("/", StringComparison.InvariantCulture);
+            }
+            catch
             {
                 return false;
             }
-
-            return true;
         }
     }
 
