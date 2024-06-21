@@ -16,6 +16,7 @@
 using Python.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace QuantConnect.Python
 {
@@ -150,9 +151,8 @@ namespace QuantConnect.Python
         /// <returns>The returned valued converted to the given type</returns>
         public T InvokeMethod<T>(string methodName, params object[] args)
         {
-            using var _ = Py.GIL();
             var method = GetMethod(methodName);
-            return method.Invoke<T>(args);
+            return PythonRuntimeChecker.InvokeMethod<T>(method, methodName, args);
         }
 
         /// <summary>
@@ -165,6 +165,46 @@ namespace QuantConnect.Python
             using var _ = Py.GIL();
             var method = GetMethod(methodName);
             return method.Invoke(args);
+        }
+
+        /// <summary>
+        /// Invokes the specified method with the specified arguments and iterates over the returned values
+        /// </summary>
+        /// <param name="methodName">The name of the method</param>
+        /// <param name="args">The arguments to call the method with</param>
+        /// <returns>The returned valued converted to the given type</returns>
+        public IEnumerable<T> InvokeMethodAndEnumerate<T>(string methodName, params object[] args)
+        {
+            var method = GetMethod(methodName);
+            return PythonRuntimeChecker.InvokeMethodAndEnumerate<T>(method, methodName, args);
+        }
+
+        /// <summary>
+        /// Invokes the specified method with the specified arguments and out parameters
+        /// </summary>
+        /// <param name="methodName">The name of the method</param>
+        /// <param name="outParametersTypes">The types of the out parameters</param>
+        /// <param name="outParameters">The out parameters values</param>
+        /// <param name="args">The arguments to call the method with</param>
+        /// <returns>The returned valued converted to the given type</returns>
+        public T InvokeMethodWithOutParameters<T>(string methodName, Type[] outParametersTypes, out object[] outParameters, params object[] args)
+        {
+            var method = GetMethod(methodName);
+            return PythonRuntimeChecker.InvokeMethodAndGetOutParameters<T>(method, methodName, outParametersTypes, out outParameters, args);
+        }
+
+        /// <summary>
+        /// Invokes the specified method with the specified arguments and wraps the result
+        /// by calling the given function if the result is not a C# object
+        /// </summary>
+        /// <param name="methodName">The name of the method</param>
+        /// <param name="wrapResult">Method that wraps a Python object in the corresponding Python Wrapper</param>
+        /// <param name="args">The arguments to call the method with</param>
+        /// <returns>The returned value wrapped using the given method if the result is not a C# object</returns>
+        public T InvokeMethodAndWrapResult<T>(string methodName, Func<PyObject, T> wrapResult, params object[] args)
+        {
+            var method = GetMethod(methodName);
+            return PythonRuntimeChecker.InvokeMethodAndWrapResult(method, methodName, wrapResult, args);
         }
 
         private string GetPropertyName(string propertyName, bool isEvent = false)
@@ -267,6 +307,129 @@ namespace QuantConnect.Python
             using var _ = Py.GIL();
             // We only care about the Python object reference, not the underlying C# object reference for comparison
             return PythonReferenceComparer.Instance.Equals(_instance, other);
+        }
+
+        private class PythonRuntimeChecker
+        {
+            public static TResult InvokeMethod<TResult>(PyObject method, string pythonMethodName, params object[] args)
+            {
+                using var _ = Py.GIL();
+                using var result = method.Invoke(args);
+
+                // TODO: Cases to check:
+                // 1. returnType is void
+                // 2. returnType is iterable
+                // 3. Method has out parameters, return type must be a tuple
+                // 4. Return type needs to be wrapped. e.g. BrokerageModelPythonWrapper.GetBechmark
+
+                return (TResult)ConvertResult(result, typeof(TResult), pythonMethodName);
+            }
+
+            public static IEnumerable<TItem> InvokeMethodAndEnumerate<TItem>(PyObject method, string pythonMethodName, params object[] args)
+            {
+                using var _ = Py.GIL();
+                using var result = method.Invoke(args);
+
+                if (!result.IsIterable())
+                {
+                    throw new InvalidCastException($"Invalid return type from method '{pythonMethodName}'. " +
+                        $"Expected an iterable type of '{typeof(TItem)}' items but was '{result.GetPythonType().Name}'");
+                }
+
+                using var iterator = result.GetIterator();
+                foreach (PyObject item in iterator)
+                {
+                    TItem managedItem;
+
+                    try
+                    {
+                        managedItem = item.GetAndDispose<TItem>();
+                    }
+                    catch (InvalidCastException ex)
+                    {
+                        throw new InvalidCastException(
+                            $"Invalid return type from method '{pythonMethodName}'. Expected all the items in the iterator to be of type " +
+                            $"'{typeof(TItem)}' but found one of type '{item.GetPythonType().Name}'",
+                            ex);
+                    }
+
+                    yield return managedItem;
+                }
+            }
+
+            public static TResult InvokeMethodAndWrapResult<TResult>(PyObject method, string pythonMethodName, Func<PyObject, TResult> wrapResult,
+                params object[] args)
+            {
+                using var _ = Py.GIL();
+                var result = method.Invoke(args);
+
+                if (!result.TryConvert<TResult>(out var managedResult))
+                {
+                    return wrapResult(result);
+                }
+
+                result.Dispose();
+                return managedResult;
+            }
+
+            public static TResult InvokeMethodAndGetOutParameters<TResult>(PyObject method, string pythonMethodName, Type[] outParametersTypes,
+                out object[] outParameters, params object[] args)
+            {
+                using var _ = Py.GIL();
+                using var result = method.Invoke(args);
+
+                // Since pythonnet does not support out parameters, the methods return
+                // a tuple where the out parameter come after the other returned values
+                if (!PyTuple.IsTupleType(result))
+                {
+                    throw new InvalidCastException($"Invalid return type from method '{pythonMethodName}'. Expected a tuple type but was " +
+                        $"'{result.GetPythonType().Name}'. The tuple must contain the return value as the first item, " +
+                        $"with the remaining ones being the out parameters.");
+                }
+
+                if (result.Length() < outParametersTypes.Length + 1)
+                {
+                    throw new InvalidCastException($"Invalid return type from method '{pythonMethodName}'. Expected a tuple with at least " +
+                        $"'{outParametersTypes.Length + 1}' items but only '{result.Length()}' were returned. " +
+                        $"The tuple must contain the return value as the first item, with the remaining ones being the out parameters.");
+                }
+
+                var managedResult = ConvertResult(result[0], typeof(TResult), pythonMethodName);
+
+                outParameters = new object[outParametersTypes.Length];
+                var i = 0;
+                try
+                {
+                    for (; i < outParametersTypes.Length; i++)
+                    {
+                        outParameters[i] = result[i + 1].AsManagedObject(outParametersTypes[i]);
+                    }
+                }
+                catch (InvalidCastException exception)
+                {
+                    throw new InvalidCastException(
+                        $"Invalid out parameter type in method '{pythonMethodName}'. Out parameter in position {i} " +
+                        $"expected type is '{outParametersTypes[i]}' but was '{result[i + 1].GetPythonType().Name}'.",
+                        exception);
+                }
+
+                return (TResult)managedResult;
+            }
+
+            private static object ConvertResult(PyObject result, Type returnType, string pythonMethodName)
+            {
+                try
+                {
+                    return returnType == typeof(void) ? null : result.AsManagedObject(returnType);
+                }
+                catch (InvalidCastException e)
+                {
+                    throw new InvalidCastException(
+                        $"Invalid return type from method '{pythonMethodName}'. " +
+                        $"Expected a type convertible to '{returnType}' but was '{result.GetPythonType().Name}'",
+                        e);
+                }
+            }
         }
     }
 }

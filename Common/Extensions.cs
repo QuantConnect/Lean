@@ -633,8 +633,6 @@ namespace QuantConnect
                     return method;
                 }
 
-
-
                 return null;
             }
         }

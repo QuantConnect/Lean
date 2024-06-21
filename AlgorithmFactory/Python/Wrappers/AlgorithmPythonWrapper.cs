@@ -871,8 +871,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         {
             using (Py.GIL())
             {
-                var method = GetMethod(nameof(OnMarginCall));
-                var result = method.Invoke<PyObject>(requests);
+                var result = InvokeMethod(nameof(OnMarginCall), requests);
 
                 if (_onMarginCall != null)
                 {
