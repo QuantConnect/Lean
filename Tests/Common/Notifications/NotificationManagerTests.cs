@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void FtpAddsNotificationToMessagesWhenLiveModeIsTrue()
         {
-            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "password", "path/to/file.json", "{}"));
+            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "path/to/file.json", "{}", password: "password"));
             Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
             if (_liveMode)
             {
@@ -124,7 +124,7 @@ namespace QuantConnect.Tests.Common.Notifications
                         break;
 
                     case "ftp":
-                        result = _notify.Ftp("qc.com", "username", "password", "path/to/file.json", "{}");
+                        result = _notify.Ftp("qc.com", "username", "path/to/file.json", "{}", password: "password");
                         break;
 
                     default:

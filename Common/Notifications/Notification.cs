@@ -208,6 +208,11 @@ namespace QuantConnect.Notifications
         private const int DefaultPort = 21;
 
         /// <summary>
+        /// Whether to use SFTP or FTP.
+        /// </summary>
+        public bool Secure { get; }
+
+        /// <summary>
         /// The FTP server hostname.
         /// </summary>
         public string Hostname { get; }
@@ -255,22 +260,24 @@ namespace QuantConnect.Notifications
         /// </summary>
         /// <param name="hostname">
         /// FTP server hostname.
-        /// It shouldn't have trailing slashes or "ftp://" (protocol) prefix.
+        /// It shouldn't have trailing slashes or protocol (e.g. "ftp://") prefix.
         /// </param>
         /// <param name="username">The FTP server username</param>
-        /// <param name="password">The FTP server password</param>
         /// <param name="fileName">The path to file on the FTP server</param>
         /// <param name="contents">The contents of the file</param>
+        /// <param name="secure">Whether to use SFTP or FTP. Defaults to true</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
+        /// <param name="password">The FTP server password</param>
         /// <param name="privateKey">The private key to use for authentication</param>
         /// <param name="passphrase">The passphrase for the private key</param>
         /// <remarks>
-        /// If the private key is provided it will be used to send a SFTP notification, with the optional passphrase.
-        /// If no private key is provided, the notification will be sent as a FTP notification.
-        /// The password can be set to null or empty and will be ignored if a private key is provided.
+        /// If secure is true, the notification will be sent as a SFTP notification.
+        /// If secure and the private key is provided it will be used to send a SFTP notification, with the optional passphrase to decrypt it.
+        /// If not secure, the private key and passphrase will be ignored if provided.
+        /// If secure, the private key has priority over the password, which will be ignored.
         /// </remarks>
-        public NotificationFtp(string hostname, string username, string password, string fileName, string contents, int? port = null,
-            string privateKey = null, string passphrase = null)
+        public NotificationFtp(string hostname, string username, string fileName, string contents, bool secure = true, int? port = null,
+            string password = null, string privateKey = null, string passphrase = null)
         {
             if (!IsHostnameValid(hostname))
             {
@@ -285,13 +292,20 @@ namespace QuantConnect.Notifications
                 throw new ArgumentException(Messages.NotificationFtp.MissingCredentials());
             }
 
+            Secure = secure;
+
+            if (!Secure && !withPassword)
+            {
+                throw new ArgumentException(Messages.NotificationFtp.MissingPassword());
+            }
+
             Hostname = hostname;
             Port = port ?? DefaultPort;
             Username = username;
             FileName = fileName;
             Contents = contents;
 
-            if (withPrivateKey)
+            if (Secure && withPrivateKey)
             {
                 Password = null;
                 PrivateKey = privateKey;

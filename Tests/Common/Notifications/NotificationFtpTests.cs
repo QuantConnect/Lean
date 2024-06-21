@@ -25,14 +25,15 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void PortDefaultsTo21()
         {
-            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}");
+            var notification = new NotificationFtp("qc.com", "username", "path/to/file.json", "{}", password: "password");
             Assert.AreEqual(21, notification.Port);
         }
 
         [Test]
         public void PasswordIsIgnoredIfPrivateKeyIsPassedIn()
         {
-            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}", privateKey: "abcdefghijkl");
+            var notification = new NotificationFtp("qc.com", "username", "path/to/file.json", "{}",
+                password: "password", privateKey: "abcdefghijkl");
             Assert.AreEqual("abcdefghijkl", notification.PrivateKey);
             Assert.IsNull(notification.Password);
         }
@@ -40,7 +41,8 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void PassphraseIsIgnoredIfNoPrivateKeyIsPassedIn()
         {
-            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", "{}", passphrase: "abcdefghijkl");
+            var notification = new NotificationFtp("qc.com", "username", "path/to/file.json", "{}",
+                password: "password", passphrase: "abcdefghijkl");
             Assert.IsNull(notification.PrivateKey);
             Assert.IsNull(notification.Passphrase);
             Assert.AreEqual("password", notification.Password);
@@ -49,7 +51,14 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void ThrowsIfCredentialsAreMissing()
         {
-            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", string.Empty, "path/to/file.json", "{}"));
+            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", "path/to/file.json", "{}"));
+        }
+
+        [Test]
+        public void ThrowsIfPasswordIsMissingForUnsecureFtpNotification()
+        {
+            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", "path/to/file.json", "{}",
+                secure: false, privateKey: "private key"));
         }
 
         // Protol as in a URI
@@ -63,7 +72,7 @@ namespace QuantConnect.Tests.Common.Notifications
         [TestCase(@"qc.com", true)]
         public void ConstructorThrowsOnInvalidHostname(string hostname, bool isValid)
         {
-            TestDelegate ctor = () => new NotificationFtp(hostname, "username", "password", "path/to/file.json", "{}");
+            TestDelegate ctor = () => new NotificationFtp(hostname, "username", "path/to/file.json", "{}", password: "password");
 
             if (isValid)
             {

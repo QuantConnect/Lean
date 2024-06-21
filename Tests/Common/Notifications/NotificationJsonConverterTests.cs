@@ -95,17 +95,24 @@ namespace QuantConnect.Tests.Common.Notifications
         }
 
         [Test]
-        public void FtpRoundTrip([Values] bool withPort, [Values] bool withPrivateKey, [Values] bool withPassphrase)
+        public void FtpRoundTrip([Values] bool secure, [Values] bool withPort, [Values] bool withPassword,
+            [Values] bool withPrivateKey, [Values] bool withPassphrase)
         {
+            if ((!withPassword && !withPrivateKey) || (!secure && !withPassword))
+            {
+                Assert.Ignore("No credentials case: not a valid test case.");
+            }
+
             var expected = new NotificationFtp(
                 "qc.com",
                 "username",
-                "password",
                 "path/to/file.json",
                 "{}",
-                withPort ? 2121: null,
-                withPrivateKey ? "private key file contents" : null,
-                withPassphrase ? "private key passphrase" : null);
+                secure: secure,
+                port: withPort ? 2121: null,
+                password: withPassword ? "password" : null,
+                privateKey: withPrivateKey ? "private key file contents" : null,
+                passphrase: withPassphrase ? "private key passphrase" : null);
 
             var serialized = JsonConvert.SerializeObject(expected);
 
@@ -119,7 +126,7 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Port, result.Port);
             Assert.AreEqual(expected.PrivateKey, result.PrivateKey);
 
-            if (!withPrivateKey)
+            if (!secure || !withPrivateKey)
             {
                 Assert.AreEqual(expected.Password, result.Password);
             }
@@ -159,6 +166,7 @@ namespace QuantConnect.Tests.Common.Notifications
 			""password"": ""password"",
 			""fileName"": ""path/to/file.csv"",
 			""contents"": ""abcde"",
+			""secure"": ""true"",
 			""port"": 2222,
 			""privateKey"": ""privatekey"",
 			""passphrase"": ""abcde""
@@ -168,6 +176,7 @@ namespace QuantConnect.Tests.Common.Notifications
 			""password"": ""password"",
 			""fileName"": ""path/to/file.csv"",
 			""contents"": ""abcde"",
+			""secure"": ""false"",
 			""port"": 2222
 		}]";
             var result = JsonConvert.DeserializeObject<List<Notification>>(serialized);
@@ -195,6 +204,7 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.IsNull(ftp.Password);
             Assert.AreEqual("path/to/file.csv", ftp.FileName);
             Assert.AreEqual("abcde", ftp.Contents);
+            Assert.IsTrue(ftp.Secure);
             Assert.AreEqual(2222, ftp.Port);
             Assert.AreEqual("privatekey", ftp.PrivateKey);
             Assert.AreEqual("abcde", ftp.Passphrase);
@@ -205,6 +215,7 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual("password", ftp2.Password);
             Assert.AreEqual("path/to/file.csv", ftp2.FileName);
             Assert.AreEqual("abcde", ftp2.Contents);
+            Assert.IsFalse(ftp2.Secure);
             Assert.AreEqual(2222, ftp2.Port);
             Assert.IsNull(ftp2.PrivateKey);
             Assert.IsNull(ftp2.Passphrase);

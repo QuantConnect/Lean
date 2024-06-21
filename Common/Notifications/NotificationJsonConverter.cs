@@ -89,9 +89,10 @@ namespace QuantConnect.Notifications
                 var password = jObject.GetValue("Password", StringComparison.InvariantCultureIgnoreCase)?.ToString();
                 var fileName = jObject.GetValue("FileName", StringComparison.InvariantCultureIgnoreCase)?.ToString();
                 var contents = jObject.GetValue("Contents", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var secure = jObject.GetValue("Secure", StringComparison.InvariantCultureIgnoreCase)?.ToObject<bool>() ?? true;
                 var privateKey = jObject.GetValue("PrivateKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
                 var passphrase = jObject.GetValue("Passphrase", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                return new NotificationFtp(hostname, username, password, fileName, contents, port, privateKey, passphrase);
+                return new NotificationFtp(hostname, username, fileName, contents, secure, port, password, privateKey, passphrase);
             }
 
             throw new NotImplementedException(Messages.NotificationJsonConverter.UnexpectedJsonObject(jObject));
