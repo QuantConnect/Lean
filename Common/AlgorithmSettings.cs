@@ -139,7 +139,7 @@ namespace QuantConnect
         /// <summary>
         /// True if daily strict end times are enabled
         /// </summary>
-        public bool DailyStrictEndTimeEnabled { get; set; }
+        public bool DailyPreciseEndTime { get; set; }
 
         /// <summary>
         /// Gets the time span used to refresh the market hours and symbol properties databases

@@ -186,9 +186,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, request.StartTimeUtc, request.EndTimeUtc);
             if (_parallelHistoryRequestsEnabled)
             {
-                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider, false, AlgorithmSettings.DailyStrictEndTimeEnabled);
+                return SubscriptionUtils.CreateAndScheduleWorker(subscriptionRequest, reader, _factorFileProvider, false, AlgorithmSettings.DailyPreciseEndTime);
             }
-            return SubscriptionUtils.Create(subscriptionRequest, reader, AlgorithmSettings.DailyStrictEndTimeEnabled);
+            return SubscriptionUtils.Create(subscriptionRequest, reader, AlgorithmSettings.DailyPreciseEndTime);
         }
 
         /// <summary>

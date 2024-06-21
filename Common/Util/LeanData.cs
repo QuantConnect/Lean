@@ -1421,7 +1421,7 @@ namespace QuantConnect.Util
         /// </summary>
         public static bool UseDailyStrictEndTimes(IAlgorithmSettings settings, BaseDataRequest request, Symbol symbol, TimeSpan increment)
         {
-            return UseStrictEndTime(settings.DailyStrictEndTimeEnabled, symbol, increment, request.ExchangeHours);
+            return UseStrictEndTime(settings.DailyPreciseEndTime, symbol, increment, request.ExchangeHours);
         }
 
         /// <summary>

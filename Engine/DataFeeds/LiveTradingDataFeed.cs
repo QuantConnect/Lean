@@ -280,7 +280,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             enumerator = GetWarmupEnumerator(request, enumerator);
 
             var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, timeZoneOffsetProvider,
-                enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyStrictEndTimeEnabled);
+                enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyPreciseEndTime);
             subscription = new Subscription(request, subscriptionDataEnumerator, timeZoneOffsetProvider);
 
             return subscription;
@@ -413,7 +413,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // create the subscription
             var subscriptionDataEnumerator = new SubscriptionDataEnumerator(request.Configuration, request.Security.Exchange.Hours, tzOffsetProvider,
-                enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyStrictEndTimeEnabled);
+                enumerator, request.IsUniverseSubscription, _algorithm.Settings.DailyPreciseEndTime);
             subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
 
             return subscription;

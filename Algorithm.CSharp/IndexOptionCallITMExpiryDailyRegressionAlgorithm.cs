@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            Settings.DailyStrictEndTimeEnabled = true;
+            Settings.DailyPreciseEndTime = true;
             base.Initialize();
         }
 

@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddIndex("SPX", Resolution.Daily);
             AddEquity("SPY", FillForwardResolution);
 
-            Settings.DailyStrictEndTimeEnabled = true;
+            Settings.DailyPreciseEndTime = true;
         }
 
         /// <summary>

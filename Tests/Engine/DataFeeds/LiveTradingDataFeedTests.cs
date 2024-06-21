@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _manualTimeProvider.SetCurrentTimeUtc(_startDate.ConvertToUtc(TimeZones.NewYork));
 
             var symbol = Symbols.SPY;
-            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
+            _algorithm.Settings.DailyPreciseEndTime = strictEndTimes;
             _algorithm.SetBenchmark(x => 1);
 
             var dqh = new TestDataQueueHandler
@@ -138,7 +138,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void EmitsLeanAggregatedDailyData(bool strictEndTimes, bool warmup)
         {
             _startDate = new DateTime(2014, 3, 27, 10, 0, 0);
-            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
+            _algorithm.Settings.DailyPreciseEndTime = strictEndTimes;
             _algorithm.SetStartDate(_startDate);
             _manualTimeProvider.SetCurrentTimeUtc(_startDate.ConvertToUtc(TimeZones.NewYork));
             var endDate = _startDate.AddDays(1);
@@ -237,7 +237,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endDate = _startDate.AddDays(5);
 
             _algorithm.SetBenchmark(x => 1);
-            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
+            _algorithm.Settings.DailyPreciseEndTime = strictEndTimes;
 
             var feed = RunDataFeed();
 
@@ -827,7 +827,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var endDate = _startDate.AddDays(2);
             _algorithm.SetBenchmark(x => 1);
 
-            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
+            _algorithm.Settings.DailyPreciseEndTime = strictEndTimes;
             if (useWarmupResolution)
             {
                 _algorithm.SetWarmup(2, Resolution.Daily);
@@ -2235,7 +2235,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase(SecurityType.IndexOption, false)]
         public void AddChainUniverseCanNotAdvanceTime(SecurityType securityType, bool strictEndTimes)
         {
-            _algorithm.Settings.DailyStrictEndTimeEnabled = strictEndTimes;
+            _algorithm.Settings.DailyPreciseEndTime = strictEndTimes;
             _algorithm.UniverseSettings.Resolution = Resolution.Daily;
             _algorithm.Transactions.SetOrderProcessor(new FakeOrderProcessor());
             // this reproduces GH issue #5245 where time can not advance and will keep it's default value

@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="parameters">The parameters dto instance</param>
         public void Initialize(DataAggregatorInitializeParameters parameters)
         {
-            _dailyStrictEndTimeEnabled = parameters.AlgorithmSettings.DailyStrictEndTimeEnabled;
+            _dailyStrictEndTimeEnabled = parameters.AlgorithmSettings.DailyPreciseEndTime;
             Log.Trace($"AggregationManager.Initialize(): daily strict end times: {_dailyStrictEndTimeEnabled}");
         }
 

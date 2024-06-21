@@ -171,9 +171,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // for user defined universe we do not use a worker task, since calls to AddData can happen in any moment
                 // and we have to be able to inject selection data points into the enumerator
-                return SubscriptionUtils.Create(request, enumerator, _algorithm.Settings.DailyStrictEndTimeEnabled);
+                return SubscriptionUtils.Create(request, enumerator, _algorithm.Settings.DailyPreciseEndTime);
             }
-            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true, _algorithm.Settings.DailyStrictEndTimeEnabled);
+            return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true, _algorithm.Settings.DailyPreciseEndTime);
         }
 
         /// <summary>
