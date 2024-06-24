@@ -715,7 +715,7 @@ namespace QuantConnect.Brokerages
         /// <c>true</c> if the Lean order does not cross zero quantity; otherwise, <c>false</c>.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="leanOrder"/> is null.</exception>
-        protected bool IsPossibleUpdateCrossZeroOrder(Order leanOrder, out decimal quantity)
+        protected bool TryGetUpdateCrossZeroOrderQuantity(Order leanOrder, out decimal quantity)
         {
             if (leanOrder == null)
             {
