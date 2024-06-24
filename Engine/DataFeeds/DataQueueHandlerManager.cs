@@ -114,7 +114,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
 
                     var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(dataConfig.Symbol.ID.Market, dataConfig.Symbol, dataConfig.Symbol.SecurityType);
-                    if (LeanData.UseStrictEndTime(_algorithmSettings.DailyStrictEndTimeEnabled, dataConfig.Symbol, dataConfig.Increment, exchangeHours))
+                    if (LeanData.UseStrictEndTime(_algorithmSettings.DailyPreciseEndTime, dataConfig.Symbol, dataConfig.Increment, exchangeHours))
                     {
                         // before the first frontier enumerator we adjust the endtimes if required
                         enumerator = new StrictDailyEndTimesEnumerator(enumerator, exchangeHours);
