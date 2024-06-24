@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using QuantConnect.Util;
@@ -203,7 +204,7 @@ namespace QuantConnect.Notifications
     /// </summary>
     public class NotificationFtp : Notification
     {
-        private static readonly Regex HostnameProtocolRegex = new Regex(@"^[a-zA-Z0-9]+\:\/\/", RegexOptions.IgnoreCase | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+        private static readonly Regex HostnameProtocolRegex = new Regex(@"^[s]?ftp\:\/\/", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private const int DefaultPort = 21;
 
@@ -231,7 +232,7 @@ namespace QuantConnect.Notifications
         /// The FTP server password.
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? Password { get; private set; }
+        public string? Password { get; }
 
         /// <summary>
         /// The path to file on the FTP server.
@@ -241,39 +242,34 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// The contents of the file to send.
         /// </summary>
-        public string FileContent { get; }
+        public string FileContent { get; private set; }
 
         /// <summary>
         /// The public key to use for authentication (optional).
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? PublicKey { get; private set; }
+        public string? PublicKey { get; }
 
         /// <summary>
         /// The private key to use for authentication (optional).
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? PrivateKey { get; private set; }
+        public string? PrivateKey { get; }
 
         /// <summary>
         /// The passphrase for the private key (optional).
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? PrivateKeyPassphrase { get; private set; }
+        public string? PrivateKeyPassphrase { get; }
 
-        private NotificationFtp(string hostname, string username, string filePath, string encodedFileContent, bool secure, int? port)
+        private NotificationFtp(string hostname, string username, string filePath, byte[] fileContent, bool secure, int? port)
         {
             Hostname = NormalizeHostname(hostname);
             Port = port ?? DefaultPort;
             Username = username;
             FilePath = filePath;
-            FileContent = encodedFileContent;
+            FileContent = Convert.ToBase64String(fileContent);
             Secure = secure;
-        }
-
-        private NotificationFtp(string hostname, string username, string filePath, byte[] fileContent, bool secure, int? port)
-            : this(hostname, username, filePath, Convert.ToBase64String(fileContent), secure, port)
-        {
         }
 
         /// <summary>
@@ -290,7 +286,12 @@ namespace QuantConnect.Notifications
             bool secure = true, int? port = null)
             : this(hostname, username, filePath, fileContent, secure, port)
         {
-            SetPassword(password);
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentException(Messages.NotificationFtp.MissingPassword);
+            }
+
+            Password = password;
         }
 
         /// <summary>
@@ -308,39 +309,6 @@ namespace QuantConnect.Notifications
             string filePath, byte[] fileContent, int? port = null, string privateKeyPassphrase = null)
             : this(hostname, username, filePath, fileContent, true, port)
         {
-            SetKeys(publicKey, privateKey, privateKeyPassphrase);
-        }
-
-        /// <summary>
-        /// Constructor for Json deserialization: the file contents are already encoded
-        /// </summary>
-        internal NotificationFtp(string hostname, string username, string password, string filePath, string encodedFileContent,
-            bool secure = true, int? port = null)
-            : this(hostname, username, filePath, encodedFileContent, secure, port)
-        {
-            SetPassword(password);
-        }
-
-        /// <summary>
-        /// Constructor for Json deserialization: the file contents are already encoded
-        /// </summary>
-        internal NotificationFtp(string hostname, string username, string publicKey, string privateKey,
-            string filePath, string encodedFileContent, int? port = null, string privateKeyPassphrase = null)
-            : this(hostname, username, filePath, encodedFileContent, true, port)
-        {
-            SetKeys(publicKey, privateKey, privateKeyPassphrase);
-        }
-
-        private static string NormalizeHostname(string hostname)
-        {
-            // Remove trailing slashes
-            hostname = hostname.Trim().TrimEnd('/');
-            // Remove protocol if present
-            return HostnameProtocolRegex.Replace(hostname, "");
-        }
-
-        private void SetKeys(string publicKey, string privateKey, string privateKeyPassphrase)
-        {
             if (string.IsNullOrEmpty(publicKey) || string.IsNullOrEmpty(privateKey))
             {
                 throw new ArgumentException(Messages.NotificationFtp.MissingSSHKeys);
@@ -351,14 +319,67 @@ namespace QuantConnect.Notifications
             PrivateKeyPassphrase = privateKeyPassphrase;
         }
 
-        private void SetPassword(string password)
+        /// <summary>
+        /// Constructor for a notification to sent as a file to an FTP server using password authentication.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="password">The FTP server password</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The contents of the file</param>
+        /// <param name="secure">Whether to use SFTP or FTP. Defaults to true</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public NotificationFtp(string hostname, string username, string password, string filePath, string fileContent,
+            bool secure = true, int? port = null)
+            : this(hostname, username, password, filePath, Encoding.ASCII.GetBytes(fileContent), secure, port)
         {
-            if (string.IsNullOrEmpty(password))
-            {
-                throw new ArgumentException(Messages.NotificationFtp.MissingPassword);
-            }
+        }
 
-            Password = password;
+        /// <summary>
+        /// Constructor for a notification to sent as a file to an FTP server over SFTP using SSH keys.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="publicKey">The public SSH key to use for authentication</param>
+        /// <param name="privateKey">The private SSH key to use for authentication</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key</param>
+        public NotificationFtp(string hostname, string username, string publicKey, string privateKey,
+            string filePath, string fileContent, int? port = null, string privateKeyPassphrase = null)
+            : this(hostname, username, publicKey, privateKey, filePath, Encoding.ASCII.GetBytes(fileContent), port, privateKeyPassphrase)
+        {
+        }
+
+        private static string NormalizeHostname(string hostname)
+        {
+            // Remove trailing slashes
+            hostname = hostname.Trim().TrimEnd('/');
+            // Remove protocol if present
+            return HostnameProtocolRegex.Replace(hostname, "");
+        }
+
+        /// <summary>
+        /// Factory method for Json deserialization: the file contents are already encoded
+        /// </summary>
+        internal static NotificationFtp FromEncodedData(string hostname, string username, string password, string filePath, string encodedFileContent,
+            bool secure = true, int? port = null)
+        {
+            var notification = new NotificationFtp(hostname, username, password, filePath, Array.Empty<byte>(), secure, port);
+            notification.FileContent = encodedFileContent;
+            return notification;
+        }
+
+        /// <summary>
+        /// Factory method for Json deserialization: the file contents are already encoded
+        /// </summary>
+        internal static NotificationFtp FromEncodedData(string hostname, string username, string publicKey, string privateKey,
+            string filePath, string encodedFileContent, int? port = null, string privateKeyPassphrase = null)
+        {
+            var notification = new NotificationFtp(hostname, username, publicKey, privateKey, filePath, Array.Empty<byte>(), port, privateKeyPassphrase);
+            notification.FileContent = encodedFileContent;
+            return notification;
         }
     }
 

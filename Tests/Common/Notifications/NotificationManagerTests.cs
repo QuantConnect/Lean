@@ -96,6 +96,17 @@ namespace QuantConnect.Tests.Common.Notifications
         }
 
         [Test]
+        public void FtpAddsNotificationToMessagesWhenLiveModeIsTrueFromStringContents()
+        {
+            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "password", "path/to/file.json", "{}"));
+            Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
+            if (_liveMode)
+            {
+                Assert.IsInstanceOf<NotificationFtp>(_notify.Messages.Single());
+            }
+        }
+
+        [Test]
         [TestCase("email")]
         [TestCase("sms")]
         [TestCase("web")]
