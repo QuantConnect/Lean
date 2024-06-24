@@ -729,15 +729,15 @@ namespace QuantConnect.Brokerages
                 quantity = crossZeroOrderRequest.FirstPartCrossZeroOrder.OrderQuantity;
                 // If the quantities of the LeanOrder do not match, return false. Don't support.
                 if (crossZeroOrderRequest.LeanOrder.Quantity != leanOrder.Quantity)
-            {
-                return false;
-            }
+                {
+                    return false;
+                }
             }
             else
             {
                 // If it is not a CrossZeroOrder, use the original order quantity.
                 quantity = leanOrder.Quantity;
-            } 
+            }
             return true;
         }
 
