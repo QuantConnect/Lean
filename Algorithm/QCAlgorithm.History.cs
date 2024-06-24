@@ -1214,7 +1214,10 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private bool HistoryRequestValid(Symbol symbol)
         {
-            return symbol.SecurityType == SecurityType.Future || !symbol.IsCanonical();
+            return symbol.SecurityType == SecurityType.Future ||
+                symbol.SecurityType == SecurityType.Option ||
+                symbol.SecurityType == SecurityType.IndexOption ||
+                !symbol.IsCanonical();
         }
 
         /// <summary>
