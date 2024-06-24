@@ -59,7 +59,7 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             realTimeHandler.SetTime(DateTime.UtcNow);
             // wait for the internal thread to start
-            Thread.Sleep(500);
+            WaitUntilActive(realTimeHandler);
             var scheduledEvent = new ScheduledEvent("1", new []{ Time.EndOfTime }, (_, _) => { });
             var scheduledEvent2 = new ScheduledEvent("2", new []{ Time.EndOfTime }, (_, _) => { });
             Assert.DoesNotThrow(() =>
@@ -184,7 +184,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
 
             // wait for the internal thread to start
-            Thread.Sleep(500);
+            WaitUntilActive(realTimeHandler);
 
             realTimeHandler.SpdbRefreshed.Reset();
             realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
@@ -244,7 +244,7 @@ namespace QuantConnect.Tests.Engine.RealTime
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
 
             // wait for the internal thread to start
-            Thread.Sleep(500);
+            WaitUntilActive(realTimeHandler);
 
             realTimeHandler.SpdbRefreshed.Reset();
             realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
@@ -284,6 +284,14 @@ namespace QuantConnect.Tests.Engine.RealTime
                 SecurityType.IndexOption => Symbol.Create("SPX", securityType, Market.USA),
                 _ => throw new ArgumentOutOfRangeException(nameof(securityType), securityType, null)
             };
+        }
+
+        private static void WaitUntilActive(LiveTradingRealTimeHandler realTimeHandler)
+        {
+            while (!realTimeHandler.IsActive)
+            {
+                Thread.Sleep(5);
+            }
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
@@ -374,6 +382,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 }));
                 OnSecurityUpdated.Reset();
                 SetTime(DateTime.UtcNow);
+                WaitUntilActive(this);
                 OnSecurityUpdated.WaitOne();
                 Exit();
             }
