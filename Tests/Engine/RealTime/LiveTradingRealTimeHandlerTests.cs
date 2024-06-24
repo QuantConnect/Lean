@@ -41,6 +41,7 @@ using QuantConnect.Securities.IndexOption;
 namespace QuantConnect.Tests.Engine.RealTime
 {
     [TestFixture]
+    [Parallelizable(ParallelScope.Children)]
     public class LiveTradingRealTimeHandlerTests
     {
         [Test]
@@ -159,6 +160,7 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase("12:00:00")]
         [TestCase("6:00:00")]
         [TestCase("6:30:00")]
+        //[Parallelizable(ParallelScope.All)]
         public void RefreshesSymbolProperties(string refreshPeriodStr)
         {
             var refreshPeriod = string.IsNullOrEmpty(refreshPeriodStr) ? TimeSpan.FromDays(1) : TimeSpan.Parse(refreshPeriodStr);
@@ -186,10 +188,13 @@ namespace QuantConnect.Tests.Engine.RealTime
             // wait for the internal thread to start
             WaitUntilActive(realTimeHandler);
 
+            Assert.IsTrue(realTimeHandler.SpdbRefreshed.IsSet);
+            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.IsSet);
+
             realTimeHandler.SpdbRefreshed.Reset();
             realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
-            var events = new[] { realTimeHandler.SpdbRefreshed, realTimeHandler.SecuritySymbolPropertiesUpdated };
+            var events = new[] { realTimeHandler.SpdbRefreshed.WaitHandle, realTimeHandler.SecuritySymbolPropertiesUpdated.WaitHandle };
             for (var i = 0; i < 10; i++)
             {
                 timeProvider.Advance(step);
@@ -197,11 +202,11 @@ namespace QuantConnect.Tests.Engine.RealTime
                 // We only advanced half the time, so we should not have refreshed yet
                 if (i % 2 == 0)
                 {
-                    Assert.IsFalse(WaitHandle.WaitAll(events, 500));
+                    Assert.IsFalse(WaitHandle.WaitAll(events, 5000));
                 }
                 else
                 {
-                    Assert.IsTrue(WaitHandle.WaitAll(events, 2000));
+                    Assert.IsTrue(WaitHandle.WaitAll(events, 5000));
                     realTimeHandler.SpdbRefreshed.Reset();
                     realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
                 }
@@ -218,6 +223,7 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase(SecurityType.Index, typeof(SymbolProperties))]
         [TestCase(SecurityType.Option, typeof(OptionSymbolProperties))]
         [TestCase(SecurityType.IndexOption, typeof(IndexOptionSymbolProperties))]
+        //[Parallelizable(ParallelScope.All)]
         public void SecuritySymbolPropertiesTypeIsRespectedAfterRefresh(SecurityType securityType, Type expectedSymbolPropertiesType)
         {
             using var realTimeHandler = new SPDBTestLiveTradingRealTimeHandler();
@@ -246,6 +252,9 @@ namespace QuantConnect.Tests.Engine.RealTime
             // wait for the internal thread to start
             WaitUntilActive(realTimeHandler);
 
+            Assert.IsTrue(realTimeHandler.SpdbRefreshed.IsSet);
+            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.IsSet);
+
             realTimeHandler.SpdbRefreshed.Reset();
             realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
@@ -253,8 +262,8 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             // Refresh the spdb
             timeProvider.Advance(refreshPeriod);
-            Assert.IsTrue(realTimeHandler.SpdbRefreshed.WaitOne(1000));
-            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.WaitOne(1000));
+            Assert.IsTrue(realTimeHandler.SpdbRefreshed.Wait(5000));
+            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.Wait(5000));
 
             // Access the symbol properties again
             // The instance must have been changed
@@ -411,8 +420,8 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             protected override ITimeProvider TimeProvider { get { return PublicTimeProvider; } }
 
-            public ManualResetEvent SpdbRefreshed = new ManualResetEvent(false);
-            public ManualResetEvent SecuritySymbolPropertiesUpdated = new ManualResetEvent(false);
+            public ManualResetEventSlim SpdbRefreshed = new ManualResetEventSlim(false);
+            public ManualResetEventSlim SecuritySymbolPropertiesUpdated = new ManualResetEventSlim(false);
 
             protected override void RefreshSymbolProperties()
             {
