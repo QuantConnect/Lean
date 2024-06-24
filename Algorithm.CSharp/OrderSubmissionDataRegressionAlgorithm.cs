@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -40,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             Schedule.On(DateRules.EveryDay(), TimeRules.Noon, () =>
             {
-                Liquidate();
+                Liquidate(Securities.Keys.OrderBy(x => x.Value));
                 foreach (var ticker in new[] {"SPY", "EURUSD"})
                 {
                     PlaceTrade(ticker);

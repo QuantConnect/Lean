@@ -49,7 +49,7 @@ class BasicTemplateIndexDailyAlgorithm(QCAlgorithm):
             # SPX Index is not tradable, but we can trade an option
             self.MarketOrder(self.spx_option, 1)
         else:
-            self.Liquidate()
+            self.Liquidate(self.securities.keys())
 
         # Count how many slices we receive with SPX data in it to assert later
         if data.ContainsKey(self.spx):

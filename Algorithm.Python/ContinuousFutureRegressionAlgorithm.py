@@ -56,7 +56,7 @@ class ContinuousFutureRegressionAlgorithm(QCAlgorithm):
 
             self.log(f"{self.time}- {currently_mapped_security.get_last_data()}")
             if self.portfolio.invested:
-                self.liquidate()
+                self.liquidate(self.securities.keys())
             else:
                 # This works because we set this contract as tradable, even if it's a canonical security
                 self.buy(currently_mapped_security.symbol, 1)

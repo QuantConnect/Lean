@@ -104,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
                    // Insight.Price(_symbol, TimeSpan.FromDays(FastEmaPeriod), InsightDirection.Flat);
             // );
         
-            // Liquidate();
+            // Liquidate(Securities.Keys.OrderBy(x => x.Value));
 
             // plot both lines
             Plot("MACD", _macd, _macd.Signal);

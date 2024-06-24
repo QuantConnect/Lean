@@ -58,7 +58,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
         if self._changes is None: return
 
         # start fresh
-        self.liquidate()
+        self.liquidate(sorted(self.securities.keys()))
 
         percentage = 1 / slice.bars.count
         for trade_bar in slice.bars.values():

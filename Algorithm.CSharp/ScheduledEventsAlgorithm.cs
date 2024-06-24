@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -82,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Portfolio.TotalUnrealizedProfit < -1000)
                 {
                     Log("Liquidated due to unrealized losses at: " + Time);
-                    Liquidate();
+                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
                 }
             });
 

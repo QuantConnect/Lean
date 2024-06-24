@@ -19,6 +19,7 @@ using System.Globalization;
 using QuantConnect.Data;
 using QuantConnect.Util;
 using QuantConnect.Indicators;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -75,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 else if (_ratio < 1)
                 {
-                    Liquidate();
+                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
                 }
                 // plot all indicators
                 PlotIndicator("SMA", _smaIBM, _smaSPY);

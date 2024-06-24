@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
                         if (Portfolio[bestGrowth.Symbol].Quantity == 0)
                         {
                             Log("PREBUY>>LIQUIDATE>>");
-                            Liquidate();
+                            Liquidate(Securities.Keys.OrderBy(x => x.Value));
                         }
                         Log($">>BUY>>{bestGrowth.Symbol}@{(100 * bestGrowth.OneMonthPerformance).ToStringInvariant("00.00")}");
                         var qty = Portfolio.MarginRemaining / Securities[bestGrowth.Symbol].Close;
@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         // if no one has a good objective score then let's hold cash this month to be safe
                         Log(">>LIQUIDATE>>CASH");
-                        Liquidate();
+                        Liquidate(Securities.Keys.OrderBy(x => x.Value));
                     }
                 }
             }

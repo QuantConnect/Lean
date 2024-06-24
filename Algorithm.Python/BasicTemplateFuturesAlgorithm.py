@@ -59,7 +59,7 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
                 self.contract_symbol = front.symbol
                 self.market_order(front.symbol , 1)
         else:
-            self.liquidate()
+            self.liquidate(self.securities.keys())
 
     def on_end_of_algorithm(self):
         # Get the margin requirements

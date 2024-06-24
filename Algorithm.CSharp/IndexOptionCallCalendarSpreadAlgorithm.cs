@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Liquidate if the shorter term option is about to expire
             if (_firstExpiry < Time.AddDays(2) && _legs.All(x => slice.ContainsKey(x.Symbol)))
             {
-                Liquidate();
+                Liquidate(Securities.Keys.OrderBy(x => x.Value));
             }
             // Return if there is any opening position
             else if (_legs.Any(x => Portfolio[x.Symbol].Invested))

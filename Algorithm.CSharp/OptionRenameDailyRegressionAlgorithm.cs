@@ -106,7 +106,7 @@ namespace QuantConnect.Algorithm.CSharp
             else if (slice.Time.Day == 3) // Final day
             {
                 // selling positions
-                Liquidate();
+                Liquidate(Securities.Keys.OrderBy(x => x.Value));
 
                 // checks
                 OptionChain chain;

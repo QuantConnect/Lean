@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Time.Day == 2 && Time.Hour > 14 && Time.Minute > 0)
                 {
                     // selling positions
-                    Liquidate();
+                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
 
                     // checks
                     OptionChain chain;

@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (_changes == SecurityChanges.None) return;
 
             // start fresh
-            Liquidate();
+            Liquidate(Securities.Keys.OrderBy(x => x.Value));
 
             var percentage = 1m/slice.Bars.Count;
             foreach (var tradeBar in slice.Bars.Values)

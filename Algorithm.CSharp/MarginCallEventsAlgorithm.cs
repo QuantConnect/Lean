@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                Liquidate();
+                Liquidate(Securities.Keys.OrderBy(x => x.Value));
                 SetHoldings("SPY", 100);
             }
         }

@@ -102,7 +102,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"{Time}- {currentlyMappedSecurity.GetLastData()}");
                 if (Portfolio.Invested)
                 {
-                    Liquidate();
+                    Liquidate(Securities.Keys.OrderBy(x => x.Value));
                 }
                 else
                 {

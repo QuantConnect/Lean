@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data.Market;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -130,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
             else if (Time.Day % 21 == 0 && Portfolio.Invested)
             {
                 Plot("Trade Plot", "Sell", _lastPrice);
-                Liquidate();
+                Liquidate(Securities.Keys.OrderBy(x => x.Value));
             }
         }
     }

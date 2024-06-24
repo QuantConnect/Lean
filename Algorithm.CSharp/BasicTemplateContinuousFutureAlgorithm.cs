@@ -80,7 +80,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if(_fast < _slow)
             {
-                Liquidate();
+                
+                Liquidate(Securities.Keys.OrderBy(x => x.Value));
             }
 
             // We check exchange hours because the contract mapping can call OnData outside of regular hours.

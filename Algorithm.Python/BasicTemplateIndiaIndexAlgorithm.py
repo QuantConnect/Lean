@@ -62,7 +62,7 @@ class BasicTemplateIndiaIndexAlgorithm(QCAlgorithm):
             if not self.portfolio.invested:
                 self.market_ticket = self.market_order(self.nifty_etf, 1)
         else:
-            self.liquidate()
+            self.liquidate(self.securities.keys())
 
 
     def on_end_of_algorithm(self):

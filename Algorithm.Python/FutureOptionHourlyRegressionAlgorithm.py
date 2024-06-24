@@ -58,7 +58,7 @@ class FutureOptionHourlyRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Expected data only on hourly intervals; instead was {slice.time}")
 
     def schedule_callback_liquidate(self):
-        self.liquidate()
+        self.liquidate(self.securities.keys())
 
     def on_end_of_algorithm(self):
         if self.portfolio.invested:

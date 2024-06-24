@@ -49,7 +49,7 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
                 self._current_contract = self.securities[self._continuous_contract.mapped]
                 self.buy(self._current_contract.symbol, 1)
         elif self._fast.current.value < self._slow.current.value:
-            self.liquidate()
+            self.liquidate(self.securities.keys())
 
         # We check exchange hours because the contract mapping can call OnData outside of regular hours.
         if self._current_contract is not None and self._current_contract.symbol != self._continuous_contract.mapped and self._continuous_contract.exchange.exchange_open:

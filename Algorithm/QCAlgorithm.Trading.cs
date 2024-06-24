@@ -23,6 +23,7 @@ using QuantConnect.Securities.Option;
 using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Orders.TimeInForces;
+using Python.Runtime;
 
 namespace QuantConnect.Algorithm
 {
@@ -1197,6 +1198,85 @@ namespace QuantConnect.Algorithm
             return OrderResponse.Success(request);
         }
 
+        public List<OrderTicket> Liquidate(PyObject symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        {
+            using (Py.GIL())
+            {
+
+                return Liquidate(symbols.ConvertToSymbolEnumerable(), asynchronous, tag, orderProperties);
+            }
+        }
+
+        public List<OrderTicket> Liquidate(Symbol symbol, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        {
+            return Liquidate(Securities.ContainsKey(symbol) ? new[] { symbol } : Enumerable.Empty<Symbol>(), asynchronous, tag, orderProperties);
+        }
+
+        public List<OrderTicket> Liquidate (IEnumerable<Symbol> symbols, bool asynchronous = false, string tag = "Liquidated", IOrderProperties orderProperties = null)
+        {
+            var orderTickets = new List<OrderTicket>();
+            if (!Settings.LiquidateEnabled)
+            {
+                Debug("Liquidate() is currently disabled by settings. To re-enable please set 'Settings.LiquidateEnabled' to true");
+                return orderTickets;
+            }
+            
+            foreach (var symbolToLiquidate in symbols)
+            {
+                // get open orders
+                var orders = Transactions.GetOpenOrders(symbolToLiquidate);
+
+                // get quantity in portfolio
+                var quantity = Portfolio[symbolToLiquidate].Quantity;
+
+                // if there is only one open market order that would close the position, do nothing
+                if (orders.Count == 1 && quantity != 0 && orders[0].Quantity == -quantity && orders[0].Type == OrderType.Market)
+                    continue;
+
+                // cancel all open orders
+                var marketOrdersQuantity = 0m;
+                foreach (var order in orders)
+                {
+                    if (order.Type == OrderType.Market)
+                    {
+                        // pending market order
+                        var ticket = Transactions.GetOrderTicket(order.Id);
+                        if (ticket != null)
+                        {
+                            // get remaining quantity
+                            marketOrdersQuantity += ticket.Quantity - ticket.QuantityFilled;
+                        }
+                    }
+                    else
+                    {
+                        Transactions.CancelOrder(order.Id, tag);
+                    }
+                }
+
+                // Liquidate at market price
+                if (quantity != 0)
+                {
+                    // calculate quantity for closing market order
+                    var ticket = Order(symbolToLiquidate, -quantity - marketOrdersQuantity, tag: tag);
+                    orderTickets.Add(ticket);
+                }
+            }
+
+            // Wait for the order event to process, only if the exchange is open
+            if (!asynchronous)
+            {
+                foreach (var ticket in orderTickets)
+                {
+                    if (ticket.Status.IsOpen())
+                    {
+                        Transactions.WaitForOrder(ticket.OrderId);
+                    }
+                }
+            }
+
+            return orderTickets;
+        }
+
         /// <summary>
         /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
         /// </summary>
@@ -1205,7 +1285,8 @@ namespace QuantConnect.Algorithm
         /// <returns>Array of order ids for liquidated symbols</returns>
         /// <seealso cref="MarketOrder(QuantConnect.Symbol, decimal, bool, string, IOrderProperties)"/>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<int> Liquidate(Symbol symbolToLiquidate = null, string tag = "Liquidated")
+        [Obsolete]
+        public List<int> Liquidate(Symbol symbolToLiquidate, string tag)
         {
             var orderIdList = new List<int>();
             if (!Settings.LiquidateEnabled)

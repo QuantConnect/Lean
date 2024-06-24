@@ -43,4 +43,4 @@ class OpenInterestFuturesRegressionAlgorithm(QCAlgorithm):
             for symbol in data.keys():
                 self.market_order(symbol, 1)
         elif any(p.value.invested for p in self.portfolio):
-            self.liquidate()
+            self.liquidate(self.securities.keys())

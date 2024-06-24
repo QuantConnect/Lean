@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -86,7 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 // AAPL should now be released
                 // note: takes one extra loop because the order is executed on market open
-                Liquidate();
+                Liquidate(Securities.Keys.OrderBy(x => x.Value));
             }
             else if (_step == 3)
             {
