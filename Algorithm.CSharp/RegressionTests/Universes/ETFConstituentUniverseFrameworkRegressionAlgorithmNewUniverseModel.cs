@@ -30,5 +30,10 @@ namespace QuantConnect.Algorithm.CSharp
         public override Language[] Languages { get; } = { Language.CSharp };
 
         public override int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
     }
 }

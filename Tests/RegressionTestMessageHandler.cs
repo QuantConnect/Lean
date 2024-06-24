@@ -141,6 +141,10 @@ namespace QuantConnect.Tests
                         lines.Add(GetDataPointLine(line, _algorithmManager?.AlgorithmHistoryDataPoints.ToString()));
                     }
                 }
+                else if (line.Contains($"AlgorithmStatus AlgorithmStatus =>"))
+                {
+                    lines.Add(GetAlgorithmStatusLine(line, _algorithmManager?.State.ToString()));
+                }
                 else
                 {
                     lines.Add(line);
@@ -155,6 +159,13 @@ namespace QuantConnect.Tests
         {
             var dataParts = currentLine.Split(" ");
             dataParts[^1] = count + ";";
+            return string.Join(" ", dataParts);
+        }
+
+        private static string GetAlgorithmStatusLine(string currentLine, string algorithmStatus)
+        {
+            var dataParts = currentLine.Split(" ");
+            dataParts[^1] = "AlgorithmStatus." + algorithmStatus + ";";
             return string.Join(" ", dataParts);
         }
     }

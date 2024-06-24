@@ -66,6 +66,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public int AlgorithmHistoryDataPoints => 0;
 
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.RuntimeError;
+
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
     }
 }
