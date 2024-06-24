@@ -123,7 +123,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var value = Portfolio.CashBook.TotalValueInAccountCurrency;
                 if (expected != Math.Round(value, 5))
                 {
-                    throw new Exception($"Unexpected cash balance {value} expected {expected}");
+                    throw new RegressionTestException($"Unexpected cash balance {value} expected {expected}");
                 }
             }
         }
@@ -148,15 +148,15 @@ namespace QuantConnect.Algorithm.CSharp
             var expected = _initialPortfolioValue + holdings.NetProfit;
             if (expected != Portfolio.TotalPortfolioValue || expected != Portfolio.CashBook[Currencies.USD].Amount)
             {
-                throw new Exception($"Unexpected future profit {holdings.NetProfit}");
+                throw new RegressionTestException($"Unexpected future profit {holdings.NetProfit}");
             }
             if(holdings.SettledProfit != 0)
             {
-                throw new Exception($"Unexpected SettledProfit value {holdings.SettledProfit}");
+                throw new RegressionTestException($"Unexpected SettledProfit value {holdings.SettledProfit}");
             }
             if (holdings.UnrealizedProfit != 0)
             {
-                throw new Exception($"Unexpected UnrealizedProfit value {holdings.UnrealizedProfit}");
+                throw new RegressionTestException($"Unexpected UnrealizedProfit value {holdings.UnrealizedProfit}");
             }
 
             AssertCash(Time);

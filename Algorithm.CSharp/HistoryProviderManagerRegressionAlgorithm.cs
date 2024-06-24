@@ -51,11 +51,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (IsWarmingUp)
             {
-                throw new Exception("Warm up not complete");
+                throw new RegressionTestException("Warm up not complete");
             }
             if (!_onDataTriggered)
             {
-                throw new Exception("No data received is OnData method");
+                throw new RegressionTestException("No data received is OnData method");
             }
         }
 

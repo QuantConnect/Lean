@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _receivedOccurredEvent = true;
                 if (splits.Single().Value.Price != 645.5700m || splits.Single().Value.ReferencePrice != 645.5700m)
                 {
-                    throw new Exception("Did not receive expected price values");
+                    throw new RegressionTestException("Did not receive expected price values");
                 }
                 Debug($"{splits.Single().Value}");
             }
@@ -78,15 +78,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_receivedOccurredEvent)
             {
-                throw new Exception("Did not receive expected split event");
+                throw new RegressionTestException("Did not receive expected split event");
             }
             if (!_receivedWarningEvent)
             {
-                throw new Exception("Did not receive expected split warning event");
+                throw new RegressionTestException("Did not receive expected split warning event");
             }
             if (_dataCount != 14)
             {
-                throw new Exception($"Unexpected data count {_dataCount}. Expected 14");
+                throw new RegressionTestException($"Unexpected data count {_dataCount}. Expected 14");
             }
         }
 

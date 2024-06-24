@@ -59,13 +59,13 @@ namespace QuantConnect.Algorithm.CSharp
             const int expectedSliceCount = 390;
             if (history.Count != expectedSliceCount)
             {
-                throw new Exception($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
+                throw new RegressionTestException($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
             }
 
 
             if (history.Any(s => s.Bars.Count != 1 && s.QuoteBars.Count != 1))
             {
-                throw new Exception($"History not all slices have trades and quotes.");
+                throw new RegressionTestException($"History not all slices have trades and quotes.");
             }
 
             Schedule.On(DateRules.EveryDay(_symbol), TimeRules.AfterMarketOpen(_symbol, 0), () => { _canTrade = true; });
@@ -106,14 +106,14 @@ namespace QuantConnect.Algorithm.CSharp
                           subscriptions.Any(s => s.TickType == TickType.Trade) &&
                           subscriptions.Any(s => s.TickType == TickType.Quote)))
                     {
-                        throw new Exception($"Subscriptions were not correctly added for high resolution.");
+                        throw new RegressionTestException($"Subscriptions were not correctly added for high resolution.");
                     }
                 }
                 else
                 {
                     if (subscriptions.Single().TickType != TickType.Trade)
                     {
-                        throw new Exception($"Subscriptions were not correctly added for low resolution.");
+                        throw new RegressionTestException($"Subscriptions were not correctly added for low resolution.");
                     }
                 }
             }
@@ -127,7 +127,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var expectedFillPrice = orderEvent.Direction == OrderDirection.Buy ? Securities[_symbol].AskPrice : Securities[_symbol].BidPrice;
                 if (orderEvent.FillPrice != expectedFillPrice)
                 {
-                    throw new Exception($"Fill price is not the expected for OrderId {orderEvent.OrderId} at Algorithm Time {Time:s}." +
+                    throw new RegressionTestException($"Fill price is not the expected for OrderId {orderEvent.OrderId} at Algorithm Time {Time:s}." +
                                         $"\n\tExpected fill price: {expectedFillPrice}, Actual fill price: {orderEvent.FillPrice}");
                 }
             }
@@ -139,12 +139,12 @@ namespace QuantConnect.Algorithm.CSharp
             // + 5 daily bars, but those are pumped into OnData every minute 
             if (_tradeCounter <= 1955)
             {
-                throw new Exception($"Fail at trade bars count expected >= 1955, actual: {_tradeCounter}.");
+                throw new RegressionTestException($"Fail at trade bars count expected >= 1955, actual: {_tradeCounter}.");
             }
             // We expect 390 * 5 = 1950 quote bars. 
             if (_quoteCounter != 1950)
             {
-                throw new Exception($"Fail at trade bars count expected: 1950, actual: {_quoteCounter}.");
+                throw new RegressionTestException($"Fail at trade bars count expected: 1950, actual: {_quoteCounter}.");
             }
 
         }

@@ -208,12 +208,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!consolidatedHour)
             {
-                throw new Exception("Expected hourly consolidator to be fired.");
+                throw new RegressionTestException("Expected hourly consolidator to be fired.");
             }
 
             if (!consolidated45Minute)
             {
-                throw new Exception("Expected 45-minute consolidator to be fired.");
+                throw new RegressionTestException("Expected 45-minute consolidator to be fired.");
             }
         }
     }

@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (historyResults.Any(x => x.Count == 0 || x.Count != historyResults.First().Count))
             {
-                throw new Exception($"History results for {symbol} have different number of bars");
+                throw new RegressionTestException($"History results for {symbol} have different number of bars");
             }
 
             // Check that, for each history result, close prices at each time are different for these securities (AAPL and ES)
@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var closePrices = historyResults.Select(hr => hr[j].Bars.First().Value.Close).ToHashSet();
                 if (closePrices.Count != dataNormalizationModes.Length)
                 {
-                    throw new Exception($"History results for {symbol} have different close prices at the same time");
+                    throw new RegressionTestException($"History results for {symbol} have different close prices at the same time");
                 }
             }
         }

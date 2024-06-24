@@ -119,13 +119,13 @@ namespace QuantConnect.Algorithm.CSharp
                 // Check _customNotWarmUp indicator is ready when the number of samples is bigger than its period
                 if (_customNotWarmUp.IsReady != (_customNotWarmUp.Samples >= 60))
                 {
-                    throw new Exception("_customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter");
+                    throw new RegressionTestException("_customNotWarmUp indicator was expected to be ready when the number of samples were bigger that its WarmUpPeriod parameter");
                 }
 
                 // Check their values are the same when both are ready
                 if (diff > 1e-10m && _customNotWarmUp.IsReady && _customWarmUp.IsReady) 
                 {
-                    throw new Exception($"The values of the indicators are not the same. The difference is {diff}");
+                    throw new RegressionTestException($"The values of the indicators are not the same. The difference is {diff}");
                 }
             }
         }

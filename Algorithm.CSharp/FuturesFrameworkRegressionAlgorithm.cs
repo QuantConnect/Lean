@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (continuous.Price == Securities[(continuous as Future).Mapped].Price)
             {
                 // prices should never match because we are using the default backwards adjusted mode, they would match if we used raw mode
-                throw new Exception($"Unexpected continuous future price {continuous.Price}");
+                throw new RegressionTestException($"Unexpected continuous future price {continuous.Price}");
             }
         }
 
@@ -108,13 +108,13 @@ namespace QuantConnect.Algorithm.CSharp
                 // trade & quote for canonical + contract chain (universe data)
                 if (subscriptions.Count(x => x.Symbol.IsCanonical()) != canonicals.Count * 3)
                 {
-                    throw new Exception($"Unexpected canonical subscription count {subscriptions.Count(x => x.Symbol.IsCanonical())}");
+                    throw new RegressionTestException($"Unexpected canonical subscription count {subscriptions.Count(x => x.Symbol.IsCanonical())}");
                 }
 
                 // trade and quote for non canonicals
                 if (subscriptions.Count(x => !x.Symbol.IsCanonical()) != nonCanonicals.Count * 2)
                 {
-                    throw new Exception($"Unexpected non canonical subscription count {subscriptions.Count(x => !x.Symbol.IsCanonical())}");
+                    throw new RegressionTestException($"Unexpected non canonical subscription count {subscriptions.Count(x => !x.Symbol.IsCanonical())}");
                 }
             }
 
@@ -123,14 +123,14 @@ namespace QuantConnect.Algorithm.CSharp
             // an open interest subscription for each + trade and quote for the currently mapped continuous future
             if (internalSubscriptions.Count != (nonCanonicals.Count + canonicals.Count + canonicals.Count * 2))
             {
-                throw new Exception($"Unexpected internal subscription count {internalSubscriptions.Count}");
+                throw new RegressionTestException($"Unexpected internal subscription count {internalSubscriptions.Count}");
             }
 
             // we expect a single continuous universe at the time
             var universeSubscriptions = SubscriptionManager.Subscriptions.Count(x => x.Symbol.ID.Symbol.Contains("QC-UNIVERSE-CONTINUOUS"));
             if (universeSubscriptions != 1)
             {
-                throw new Exception($"Unexpected universe subscription count {universeSubscriptions}");
+                throw new RegressionTestException($"Unexpected universe subscription count {universeSubscriptions}");
             }
 
             // we expect a single canonical at the time
@@ -138,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Select(x => x.Symbol.Canonical).ToHashSet();
             if (canonicalSubscriptions.Count != 1)
             {
-                throw new Exception($"Unexpected universe subscription count {universeSubscriptions}");
+                throw new RegressionTestException($"Unexpected universe subscription count {universeSubscriptions}");
             }
         }
 
@@ -148,27 +148,27 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!canonical.Value)
                 {
-                    throw new Exception($"Canonical {canonical} was not added!");
+                    throw new RegressionTestException($"Canonical {canonical} was not added!");
                 }
             }
             foreach (var canonical in _removedCanonical)
             {
                 if (canonical.Key.ID.Symbol == "ES" && !canonical.Value || canonical.Key.ID.Symbol == "GC" && canonical.Value)
                 {
-                    throw new Exception($"Canonical {canonical} was not removed!");
+                    throw new RegressionTestException($"Canonical {canonical} was not removed!");
                 }
             }
             foreach (var canonical in _canonicalData)
             {
                 if (canonical.Value == null || !canonical.Value.IsReady)
                 {
-                    throw new Exception($"Canonical {canonical} emitted no data!");
+                    throw new RegressionTestException($"Canonical {canonical} emitted no data!");
                 }
             }
 
             if (SubscriptionManager.Subscriptions.Any(x => x.Symbol.ID.Symbol == "ES"))
             {
-                throw new Exception($"There should be no ES subscription!");
+                throw new RegressionTestException($"There should be no ES subscription!");
             }
         }
 

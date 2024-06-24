@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_expectedDataTimes.Dequeue() != Time)
             {
-                throw new Exception($"Unexpected data time {Time}!");
+                throw new RegressionTestException($"Unexpected data time {Time}!");
             }
 
             if (ActiveSecurities.ContainsKey("/ES"))
@@ -73,7 +73,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_expectedDataTimes.Count != 0)
             {
-                throw new Exception($"OnEndOfAlgorithm(): Unexpected data times!");
+                throw new RegressionTestException($"OnEndOfAlgorithm(): Unexpected data times!");
             }
         }
 

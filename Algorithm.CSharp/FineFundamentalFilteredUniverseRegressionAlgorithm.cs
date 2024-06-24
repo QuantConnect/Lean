@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (data.Keys.Single().Value != "AAPL")
                 {
-                    throw new Exception($"Unexpected symbol was added to the universe: {data.Keys.Single()}");
+                    throw new RegressionTestException($"Unexpected symbol was added to the universe: {data.Keys.Single()}");
                 }
                 SetHoldings(data.Keys.Single(), 1);
             }
