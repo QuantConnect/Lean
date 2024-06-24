@@ -58,13 +58,13 @@ namespace QuantConnect.Algorithm.CSharp
             var historicalData = History(universe, 1).ToList();
             if (historicalData.Count != 1)
             {
-                throw new Exception($"Unexpected history count {historicalData.Count}! Expected 1");
+                throw new RegressionTestException($"Unexpected history count {historicalData.Count}! Expected 1");
             }
             foreach (var universeDataCollection in historicalData)
             {
                 if (universeDataCollection.Data.Count < 200)
                 {
-                    throw new Exception($"Unexpected universe DataCollection count {universeDataCollection.Data.Count}! Expected > 200");
+                    throw new RegressionTestException($"Unexpected universe DataCollection count {universeDataCollection.Data.Count}! Expected > 200");
                 }
             }
         }

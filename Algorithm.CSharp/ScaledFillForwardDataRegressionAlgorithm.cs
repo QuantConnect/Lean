@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (!current.IsFillForward)
                     {
-                        throw new Exception($"Was expecting a first fill forward bar {Time}");
+                        throw new RegressionTestException($"Was expecting a first fill forward bar {Time}");
                     }
 
                     // trade on the first bar after a factor price scale change. +10 so we fill ASAP. Limit so it fills in extended market hours
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 else if (_lastRealBar.Close != current.Close)
                 {
-                    throw new Exception($"FillForwarded data point at {Time} was scaled. Actual: {current.Close}; Expected: {_lastRealBar.Close}");
+                    throw new RegressionTestException($"FillForwarded data point at {Time} was scaled. Actual: {current.Close}; Expected: {_lastRealBar.Close}");
                 }
             }
         }
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_lastRealBar == null)
             {
-                throw new Exception($"Not all expected data points were received.");
+                throw new RegressionTestException($"Not all expected data points were received.");
             }
         }
 

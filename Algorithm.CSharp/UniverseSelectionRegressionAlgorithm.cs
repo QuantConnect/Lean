@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (inactiveSymbols.Any())
             {
                 var symbols = string.Join(", ", inactiveSymbols);
-                throw new Exception($"Received data for non-active security: {symbols}.");
+                throw new RegressionTestException($"Received data for non-active security: {symbols}.");
             }
 
             if (Transactions.OrdersCount == 0)
@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (actual != expected)
             {
                 var symbol = security.Symbol;
-                throw new Exception($"{symbol}({symbol.ID}) expected {expected.ToStringInvariant()}, but received {actual.ToStringInvariant()}.");
+                throw new RegressionTestException($"{symbol}({symbol.ID}) expected {expected.ToStringInvariant()}, but received {actual.ToStringInvariant()}.");
             }
         }
 

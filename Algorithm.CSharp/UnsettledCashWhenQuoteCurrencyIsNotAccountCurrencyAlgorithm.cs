@@ -77,14 +77,14 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!Portfolio.UnsettledCashBook.TryGetValue(orderEvent.FillPriceCurrency, out var unsettledCash))
                 {
-                    throw new Exception($"Unsettled cash entry for {orderEvent.FillPriceCurrency} not found");
+                    throw new RegressionTestException($"Unsettled cash entry for {orderEvent.FillPriceCurrency} not found");
                 }
 
                 var expectedUnsettledCash = Math.Abs(orderEvent.FillPrice * orderEvent.FillQuantity);
                 var actualUnsettledCash = unsettledCash.Amount - _lastUnsettledCash;
                 if (actualUnsettledCash != expectedUnsettledCash)
                 {
-                    throw new Exception($"Expected unsettled cash to be {expectedUnsettledCash} but was {actualUnsettledCash}");
+                    throw new RegressionTestException($"Expected unsettled cash to be {expectedUnsettledCash} but was {actualUnsettledCash}");
                 }
 
                 _lastUnsettledCash = unsettledCash.Amount;
@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (unsettledCash.ConversionRate != cash.ConversionRate)
                 {
-                    throw new Exception($@"Unsettled cash conversion rate for {symbol} is {unsettledCash.ConversionRate} but should be {cash.ConversionRate}");
+                    throw new RegressionTestException($@"Unsettled cash conversion rate for {symbol} is {unsettledCash.ConversionRate} but should be {cash.ConversionRate}");
                 }
 
                 var accountCurrency = Portfolio.CashBook.AccountCurrency;
@@ -110,21 +110,21 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (unsettledCash.ConversionRate != 1)
                     {
-                        throw new Exception($@"Conversion rate for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be 1 but was {unsettledCash.ConversionRate}.");
+                        throw new RegressionTestException($@"Conversion rate for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be 1 but was {unsettledCash.ConversionRate}.");
                     }
 
                     if (unsettledCash.CurrencyConversion.GetType() != typeof(ConstantCurrencyConversion) ||
                         unsettledCash.CurrencyConversion.SourceCurrency != accountCurrency ||
                         unsettledCash.CurrencyConversion.DestinationCurrency != accountCurrency)
                     {
-                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be an identity conversion of type {nameof(ConstantCurrencyConversion)}");
+                        throw new RegressionTestException($@"Currency conversion for {unsettledCash.Symbol} (the account currency) in the UnsettledCashBook should be an identity conversion of type {nameof(ConstantCurrencyConversion)}");
                     }
                 }
                 else
                 {
                     if (unsettledCash.CurrencyConversion.GetType() != typeof(SecurityCurrencyConversion))
                     {
-                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} in the UnsettledCashBook should be of type {nameof(SecurityCurrencyConversion)}");
+                        throw new RegressionTestException($@"Currency conversion for {unsettledCash.Symbol} in the UnsettledCashBook should be of type {nameof(SecurityCurrencyConversion)}");
                     }
 
                     var sourceCurrency = unsettledCash.CurrencyConversion.SourceCurrency;
@@ -135,7 +135,7 @@ namespace QuantConnect.Algorithm.CSharp
                         (sourceCurrency == unsettledCash.Symbol && destinationCurrency == accountCurrency)
                         ))
                     {
-                        throw new Exception($@"Currency conversion for {unsettledCash.Symbol} in UnsettledCashBook is not correct. Source and destination currency should have been {accountCurrency} and {unsettledCash.Symbol} or vice versa but were {sourceCurrency} and {destinationCurrency}.");
+                        throw new RegressionTestException($@"Currency conversion for {unsettledCash.Symbol} in UnsettledCashBook is not correct. Source and destination currency should have been {accountCurrency} and {unsettledCash.Symbol} or vice versa but were {sourceCurrency} and {destinationCurrency}.");
                     }
                 }
             }

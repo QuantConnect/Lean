@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Sma.Samples <= _previousSampleCount)
             {
-                throw new Exception("Indicator was not updated!");
+                throw new RegressionTestException("Indicator was not updated!");
             }
             _previousSampleCount = Sma.Samples;
 
@@ -69,18 +69,18 @@ namespace QuantConnect.Algorithm.CSharp
                 expectedPeriod = ExpectedWarmupDataSpan;
                 if (trade != null && trade.IsFillForward || quote != null && quote.IsFillForward)
                 {
-                    throw new Exception("Unexpected fill forwarded data!");
+                    throw new RegressionTestException("Unexpected fill forwarded data!");
                 }
             }
 
             // let's assert the data's time are what we expect
             if (trade != null && trade.EndTime.Ticks % expectedPeriod.Ticks != 0)
             {
-                throw new Exception($"Unexpected data end time! {trade.EndTime}");
+                throw new RegressionTestException($"Unexpected data end time! {trade.EndTime}");
             }
             if (quote != null && quote.EndTime.Ticks % expectedPeriod.Ticks != 0)
             {
-                throw new Exception($"Unexpected data end time! {quote.EndTime}");
+                throw new RegressionTestException($"Unexpected data end time! {quote.EndTime}");
             }
 
             if (trade != null)
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _warmedUpTradeBars |= IsWarmingUp;
                 if (trade.Period != expectedPeriod)
                 {
-                    throw new Exception($"Unexpected period for trade data point {trade.Period} expected {expectedPeriod}. IsWarmingUp: {IsWarmingUp}");
+                    throw new RegressionTestException($"Unexpected period for trade data point {trade.Period} expected {expectedPeriod}. IsWarmingUp: {IsWarmingUp}");
                 }
             }
             if (quote != null)
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _warmedUpQuoteBars |= IsWarmingUp;
                 if (quote.Period != expectedPeriod)
                 {
-                    throw new Exception($"Unexpected period for quote data point {quote.Period} expected {expectedPeriod}. IsWarmingUp: {IsWarmingUp}");
+                    throw new RegressionTestException($"Unexpected period for quote data point {quote.Period} expected {expectedPeriod}. IsWarmingUp: {IsWarmingUp}");
                 }
             }
         }
@@ -105,19 +105,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_warmedUpTradeBars)
             {
-                throw new Exception("Did not assert data during warmup!");
+                throw new RegressionTestException("Did not assert data during warmup!");
             }
 
             if (ExpectedWarmupDataSpan == QuantConnect.Time.OneDay)
             {
                 if (_warmedUpQuoteBars)
                 {
-                    throw new Exception("We should of not gotten any quote bar during warmup for daily resolution!");
+                    throw new RegressionTestException("We should of not gotten any quote bar during warmup for daily resolution!");
                 }
             }
             else if (!_warmedUpQuoteBars)
             {
-                throw new Exception("Did not assert data during warmup!");
+                throw new RegressionTestException("Did not assert data during warmup!");
             }
         }
 
