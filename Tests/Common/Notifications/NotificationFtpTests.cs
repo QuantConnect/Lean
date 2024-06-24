@@ -13,75 +13,67 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Notifications;
+using System;
+using System.Text;
 
 namespace QuantConnect.Tests.Common.Notifications
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class NotificationFtpTests
     {
+        private byte[] _testContent = Encoding.ASCII.GetBytes("{}");
+
         [Test]
         public void PortDefaultsTo21()
         {
-            var notification = new NotificationFtp("qc.com", "username", "path/to/file.json", "{}", password: "password");
+            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", _testContent);
             Assert.AreEqual(21, notification.Port);
         }
 
-        [Test]
-        public void PasswordIsIgnoredIfPrivateKeyIsPassedIn()
+        [TestCase(null)]
+        [TestCase("")]
+        public void ThrowsOnMissingPassword(string password)
         {
-            var notification = new NotificationFtp("qc.com", "username", "path/to/file.json", "{}",
-                password: "password", privateKey: "abcdefghijkl");
-            Assert.AreEqual("abcdefghijkl", notification.PrivateKey);
-            Assert.IsNull(notification.Password);
+            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", password, "path/to/file.json", _testContent));
         }
 
-        [Test]
-        public void PassphraseIsIgnoredIfNoPrivateKeyIsPassedIn()
+        [TestCase(null, "privatekey")]
+        [TestCase("", "privatekey")]
+        [TestCase("publickey", null)]
+        [TestCase("publickey", "")]
+        public void ThrowsOnMissingSSHKeys(string publicKey, string privateKey)
         {
-            var notification = new NotificationFtp("qc.com", "username", "path/to/file.json", "{}",
-                password: "password", passphrase: "abcdefghijkl");
-            Assert.IsNull(notification.PrivateKey);
-            Assert.IsNull(notification.Passphrase);
-            Assert.AreEqual("password", notification.Password);
+            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", publicKey, privateKey, "path/to/file.json", _testContent));
         }
 
-        [Test]
-        public void ThrowsIfCredentialsAreMissing()
-        {
-            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", "path/to/file.json", "{}"));
-        }
-
-        [Test]
-        public void ThrowsIfPasswordIsMissingForUnsecureFtpNotification()
-        {
-            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", "path/to/file.json", "{}",
-                secure: false, privateKey: "private key"));
-        }
-
-        // Protol as in a URI
-        [TestCase(@"ftp://qc.com", false)]
-        [TestCase(@"sftp://qc.com", false)]
-        [TestCase(@"http://qc.com", false)]
-        [TestCase(@"https://qc.com", false)]
+        // Protocol as in a URI
+        [TestCase(@"ftp://qc.com")]
+        [TestCase(@"sftp://qc.com")]
+        [TestCase(@"http://qc.com")]
+        [TestCase(@"https://qc.com")]
         // Trailing slashes
-        [TestCase(@"qc.com/", false)]
-        [TestCase(@"qc.com//", false)]
-        [TestCase(@"qc.com", true)]
-        public void ConstructorThrowsOnInvalidHostname(string hostname, bool isValid)
+        [TestCase(@"qc.com/")]
+        [TestCase(@"qc.com//")]
+        [TestCase(@"qc.com")]
+        public void NormalizesHostname(string hostname)
         {
-            TestDelegate ctor = () => new NotificationFtp(hostname, "username", "path/to/file.json", "{}", password: "password");
+            var notification = new NotificationFtp(hostname, "username", "password", "path/to/file.json", _testContent);
+            Assert.AreEqual("qc.com", notification.Hostname);
+        }
 
-            if (isValid)
-            {
-                Assert.DoesNotThrow(ctor);
-            }
-            else
-            {
-                Assert.Throws<ArgumentException>(ctor);
-            }
+        [Test]
+        public void EncodesFileContent()
+        {
+            var contentStr = @"{""someKey"": ""this is a sample json file"", ""anotherKey"": 123456}";
+            var contentBytes = Encoding.ASCII.GetBytes(contentStr);
+            var notification = new NotificationFtp("qc.com", "username", "password", "path/to/file.json", contentBytes);
+
+            var decodedBytes = Convert.FromBase64String(notification.FileContent);
+            var decodedStr = Encoding.ASCII.GetString(decodedBytes);
+
+            Assert.AreEqual(contentStr, decodedStr);
         }
     }
 }

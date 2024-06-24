@@ -84,15 +84,21 @@ namespace QuantConnect.Notifications
             {
                 // This is an FTP notification
                 var hostname = token.ToString();
-                var port = jObject.GetValue("Port", StringComparison.InvariantCultureIgnoreCase)?.ToObject<int>();
+                var port = jObject.GetValue("Port", StringComparison.InvariantCultureIgnoreCase)?.ToObject<int?>();
                 var username = jObject.GetValue("Username", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var password = jObject.GetValue("Password", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var fileName = jObject.GetValue("FileName", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var contents = jObject.GetValue("Contents", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var secure = jObject.GetValue("Secure", StringComparison.InvariantCultureIgnoreCase)?.ToObject<bool>() ?? true;
+                var filePath = jObject.GetValue("FilePath", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var fileContent = jObject.GetValue("FileContent", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+
+                if (jObject.TryGetValue("Password", StringComparison.InvariantCultureIgnoreCase, out var password))
+                {
+                    var secure = jObject.GetValue("Secure", StringComparison.InvariantCultureIgnoreCase)?.ToObject<bool>() ?? true;
+                    return new NotificationFtp(hostname, username, password.ToString(), filePath, fileContent, secure, port);
+                }
+
+                var publicKey = jObject.GetValue("PublicKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
                 var privateKey = jObject.GetValue("PrivateKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var passphrase = jObject.GetValue("Passphrase", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                return new NotificationFtp(hostname, username, fileName, contents, secure, port, password, privateKey, passphrase);
+                var passphrase = jObject.GetValue("PrivateKeyPassphrase", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                return new NotificationFtp(hostname, username, publicKey, privateKey, filePath, fileContent, port, passphrase);
             }
 
             throw new NotImplementedException(Messages.NotificationJsonConverter.UnexpectedJsonObject(jObject));

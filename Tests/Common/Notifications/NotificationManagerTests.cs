@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Notifications;
@@ -86,7 +87,7 @@ namespace QuantConnect.Tests.Common.Notifications
         [Test]
         public void FtpAddsNotificationToMessagesWhenLiveModeIsTrue()
         {
-            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "path/to/file.json", "{}", password: "password"));
+            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "password", "path/to/file.json", Encoding.ASCII.GetBytes("{}")));
             Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
             if (_liveMode)
             {
@@ -124,7 +125,7 @@ namespace QuantConnect.Tests.Common.Notifications
                         break;
 
                     case "ftp":
-                        result = _notify.Ftp("qc.com", "username", "path/to/file.json", "{}", password: "password");
+                        result = _notify.Ftp("qc.com", "username", "password", "path/to/file.json", Encoding.ASCII.GetBytes("{}"));
                         break;
 
                     default:

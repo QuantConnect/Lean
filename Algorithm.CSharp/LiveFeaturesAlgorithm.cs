@@ -15,6 +15,7 @@
 
 using System;
 using System.Globalization;
+using System.Text;
 using Newtonsoft.Json;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -77,6 +78,12 @@ namespace QuantConnect.Algorithm.CSharp
                 Notify.Email("myemail@gmail.com", "Test", "Test Body", "test attachment");
                 Notify.Sms("+11233456789", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
                 Notify.Web("http://api.quantconnect.com", Time.ToStringInvariant("u") + ">> Test data packet posted from live BTC server.");
+                Notify.Telegram("id", Time.ToStringInvariant("u") + ">> Test message from live BTC server.");
+                var testFileContents = Encoding.ASCII.GetBytes(Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
+                Notify.Ftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt", testFileContents);
+                Notify.Sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt", testFileContents);
+                Notify.Sftp("ftp.quantconnect.com", "username", "publickey", "privatekey", "path/to/file.txt", testFileContents,
+                    privateKeyPassphrase: "optionalprivatekeypassphrase");
             }
         }
 

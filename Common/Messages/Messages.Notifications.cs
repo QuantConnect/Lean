@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using System;
 using System.Runtime.CompilerServices;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -43,21 +41,9 @@ namespace QuantConnect
         /// </summary>
         public static class NotificationFtp
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string InvalidHostname(string hostname)
-            {
-                return $"Invalid FTP hostname: {hostname}. It should not be prefixed with the protocol or contain trailing slashes";
-            }
+            public static string MissingSSHKeys = "FTP SSH keys missing for SFTP notification.";
 
-            public static string MissingCredentials()
-            {
-                return "FTP credentials are missing. Either a password or a private key are required.";
-            }
-
-            public static string MissingPassword()
-            {
-                return "FTP password is missing for unsecure FTP notification.";
-            }
+            public static string MissingPassword = "FTP password is missing for unsecure FTP notification.";
         }
 
         /// <summary>

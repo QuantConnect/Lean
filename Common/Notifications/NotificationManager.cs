@@ -155,35 +155,66 @@ namespace QuantConnect.Notifications
         }
 
         /// <summary>
-        /// Send a file to the FTP server specified.
+        /// Send a file to the FTP specified server using password authentication over unsecure FTP.
         /// </summary>
-        /// <param name="hostname">
-        /// FTP server hostname.
-        /// It shouldn't have trailing slashes or "ftp://" (protocol) prefix.
-        /// </param>
+        /// <param name="hostname">FTP server hostname</param>
         /// <param name="username">The FTP server username</param>
         /// <param name="password">The FTP server password</param>
-        /// <param name="fileName">The path to file on the FTP server</param>
-        /// <param name="contents">The contents of the file</param>
-        /// <param name="secure">Whether to use SFTP or FTP. Defaults to true</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        /// <param name="privateKey">The private key to use for authentication</param>
-        /// <param name="passphrase">The passphrase for the private key</param>
-        /// <remarks>
-        /// If secure is true, the notification will be sent as a SFTP notification.
-        /// If secure and the private key is provided it will be used to send a SFTP notification, with the optional passphrase to decrypt it.
-        /// If not secure, the private key and passphrase will be ignored if provided.
-        /// If secure, the private key has priority over the password, which will be ignored.
-        /// </remarks>
-        public bool Ftp(string hostname, string username, string fileName, string contents, bool secure = true, int? port = null,
-            string password = null, string privateKey = null, string passphrase = null)
+        public bool Ftp(string hostname, string username, string password, string filePath, byte[] fileContent, int? port = null)
+        {
+            return Ftp(hostname, username, password, filePath, fileContent, secure: false, port);
+        }
+
+        /// <summary>
+        /// Send a file to the FTP specified server using password authentication over SFTP.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="password">The FTP server password</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public bool Sftp(string hostname, string username, string password, string filePath, byte[] fileContent, int? port = null)
+        {
+            return Ftp(hostname, username, password, filePath, fileContent, secure: true, port);
+        }
+
+        /// <summary>
+        /// Send a file to the FTP specified server using password authentication over SFTP using SSH keys.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="publicKey">The public SSH key to use for authentication</param>
+        /// <param name="privateKey">The private SSH key to use for authentication</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key</param>
+        public bool Sftp(string hostname, string username, string publicKey, string privateKey, string filePath, byte[] fileContent,
+            int? port = null, string privateKeyPassphrase = null)
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var ftp = new NotificationFtp(hostname, username, fileName, contents, secure, port, password, privateKey, passphrase);
+            var ftp = new NotificationFtp(hostname, username, publicKey, privateKey, filePath, fileContent, port, privateKeyPassphrase);
+            Messages.Enqueue(ftp);
+
+            return true;
+        }
+
+        private bool Ftp(string hostname, string username, string password, string filePath, byte[] fileContent, bool secure = true, int? port = null)
+        {
+            if (!Allow())
+            {
+                return false;
+            }
+
+            var ftp = new NotificationFtp(hostname, username, password, filePath, fileContent, secure: secure, port);
             Messages.Enqueue(ftp);
 
             return true;
