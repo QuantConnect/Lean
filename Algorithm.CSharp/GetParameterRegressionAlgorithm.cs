@@ -46,17 +46,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (expected == null && actual != null)
             {
-                throw new Exception($"{call} should have returned null but returned {actual} ({actual.GetType()})");
+                throw new RegressionTestException($"{call} should have returned null but returned {actual} ({actual.GetType()})");
             }
 
             if (expected != null && actual == null)
             {
-                throw new Exception($"{call} should have returned {expected} ({expected.GetType()}) but returned null");
+                throw new RegressionTestException($"{call} should have returned {expected} ({expected.GetType()}) but returned null");
             }
 
             if (expected != null && actual != null && (expected.GetType() != actual.GetType() || !expected.Equals(actual)))
             {
-                throw new Exception($"{call} should have returned {expected} ({expected.GetType()}) but returned {actual} ({actual.GetType()})");
+                throw new RegressionTestException($"{call} should have returned {expected} ({expected.GetType()}) but returned {actual} ({actual.GetType()})");
             }
         }
 

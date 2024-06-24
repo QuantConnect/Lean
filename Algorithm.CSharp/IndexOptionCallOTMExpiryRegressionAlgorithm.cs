@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
             _expectedContract = QuantConnect.Symbol.CreateOption(_spx, Market.USA, OptionStyle.European, OptionRight.Call, 4250m, new DateTime(2021, 1, 15));
             if (_spxOption != _expectedContract)
             {
-                throw new Exception($"Contract {_expectedContract} was not found in the chain");
+                throw new RegressionTestException($"Contract {_expectedContract} was not found in the chain");
             }
 
             Schedule.On(DateRules.Tomorrow, TimeRules.AfterMarketOpen(_spx, 1), () =>
@@ -84,14 +84,14 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (delisting.Time != new DateTime(2021, 1, 15))
                     {
-                        throw new Exception($"Delisting warning issued at unexpected date: {delisting.Time}");
+                        throw new RegressionTestException($"Delisting warning issued at unexpected date: {delisting.Time}");
                     }
                 }
                 if (delisting.Type == DelistingType.Delisted)
                 {
                     if (delisting.Time != new DateTime(2021, 1, 16))
                     {
-                        throw new Exception($"Delisting happened at unexpected date: {delisting.Time}");
+                        throw new RegressionTestException($"Delisting happened at unexpected date: {delisting.Time}");
                     }
                 }
             }
@@ -107,13 +107,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Securities.ContainsKey(orderEvent.Symbol))
             {
-                throw new Exception($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
+                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
             }
 
             var security = Securities[orderEvent.Symbol];
             if (security.Symbol == _spx)
             {
-                throw new Exception("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
+                throw new RegressionTestException("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
             }
             if (security.Symbol == _expectedContract)
             {
@@ -121,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else
             {
-                throw new Exception($"Received order event for unknown Symbol: {orderEvent.Symbol}");
+                throw new RegressionTestException($"Received order event for unknown Symbol: {orderEvent.Symbol}");
             }
 
             Log($"{orderEvent}");
@@ -131,19 +131,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Direction == OrderDirection.Buy && option.Holdings.Quantity != 1)
             {
-                throw new Exception($"No holdings were created for option contract {option.Symbol}");
+                throw new RegressionTestException($"No holdings were created for option contract {option.Symbol}");
             }
             if (orderEvent.Direction == OrderDirection.Sell && option.Holdings.Quantity != 0)
             {
-                throw new Exception("Holdings were found after a filled option exercise");
+                throw new RegressionTestException("Holdings were found after a filled option exercise");
             }
             if (orderEvent.Direction == OrderDirection.Sell && !orderEvent.Message.Contains("OTM"))
             {
-                throw new Exception("Contract did not expire OTM");
+                throw new RegressionTestException("Contract did not expire OTM");
             }
             if (orderEvent.Message.Contains("Exercise"))
             {
-                throw new Exception("Exercised option, even though it expires OTM");
+                throw new RegressionTestException("Exercised option, even though it expires OTM");
             }
             _optionOrders++;
         }
@@ -151,17 +151,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Ran at the end of the algorithm to ensure the algorithm has no holdings
         /// </summary>
-        /// <exception cref="Exception">The algorithm has holdings</exception>
+        /// <exception cref="RegressionTestException">The algorithm has holdings</exception>
         public override void OnEndOfAlgorithm()
         {
             if (Portfolio.Invested)
             {
-                throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+                throw new RegressionTestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
 
             if (_optionOrders != 2)
             {
-                throw new Exception("Option orders were not as expected!");
+                throw new RegressionTestException("Option orders were not as expected!");
             }
         }
 

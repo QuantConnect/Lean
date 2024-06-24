@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
                         contract.Greeks.Vega == 0 && 
                         contract.Greeks.Rho == 0)))
             {
-                throw new Exception("All Greeks are zero - Pricing Model is not ready!");
+                throw new RegressionTestException("All Greeks are zero - Pricing Model is not ready!");
             }
         }
 

@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Portfolio.UnsettledCash == 0)
                 {
-                    throw new Exception($"Expected unsettled cash to be non-zero at {Time}");
+                    throw new RegressionTestException($"Expected unsettled cash to be non-zero at {Time}");
                 }
             });
 
@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Portfolio.UnsettledCash != 0)
                 {
-                    throw new Exception($"Expected unsettled cash to be zero at {Time}");
+                    throw new RegressionTestException($"Expected unsettled cash to be zero at {Time}");
                 }
             });
         }
@@ -77,17 +77,17 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Transactions.OrdersCount != 2)
             {
-                throw new Exception($"Expected 2 orders, found {Transactions.OrdersCount}");
+                throw new RegressionTestException($"Expected 2 orders, found {Transactions.OrdersCount}");
             }
 
             if (Portfolio.Invested)
             {
-                throw new Exception("Expected no holdings at end of algorithm");
+                throw new RegressionTestException("Expected no holdings at end of algorithm");
             }
 
             if (Portfolio.UnsettledCash != 0)
             {
-                throw new Exception($"Expected no unsettled cash at end of algorithm, found {Portfolio.UnsettledCash}");
+                throw new RegressionTestException($"Expected no unsettled cash at end of algorithm, found {Portfolio.UnsettledCash}");
             }
         }
 

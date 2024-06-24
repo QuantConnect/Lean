@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (Portfolio.TotalHoldingsValue / Portfolio.TotalPortfolioValue < 10)
                     {
-                        throw new Exception("Expected to be trading using the futures margin leverage");
+                        throw new RegressionTestException("Expected to be trading using the futures margin leverage");
                     }
                 }
             }

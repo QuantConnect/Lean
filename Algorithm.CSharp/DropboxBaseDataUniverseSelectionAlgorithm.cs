@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             var historicalSelectionData = History(universe, 3).ToList();
             if (historicalSelectionData.Count != 3)
             {
-                throw new Exception($"Unexpected universe data count {historicalSelectionData.Count}");
+                throw new RegressionTestException($"Unexpected universe data count {historicalSelectionData.Count}");
             }
 
             foreach (var universeData in historicalSelectionData)
@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var stockDataSource = (StockDataSource)universeData.Single();
                 if (stockDataSource.Symbols.Count != 5)
                 {
-                    throw new Exception($"Unexpected universe data receieved");
+                    throw new RegressionTestException($"Unexpected universe data receieved");
                 }
             }
         }

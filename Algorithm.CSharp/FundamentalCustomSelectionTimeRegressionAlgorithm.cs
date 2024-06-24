@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             _specificDateSelection++;
             if (Time != new DateTime(2014, 05, 9))
             {
-                throw new Exception($"SelectionFunction_SpecificDate unexpected selection: {Time}");
+                throw new RegressionTestException($"SelectionFunction_SpecificDate unexpected selection: {Time}");
             }
             return new[] { _symbol };
         }
@@ -70,13 +70,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate)
                 {
-                    throw new Exception($"Month Start unexpected initial selection: {Time}");
+                    throw new RegressionTestException($"Month Start unexpected initial selection: {Time}");
                 }
             }
             else if (Time != new DateTime(2014, 4, 1)
                 && Time != new DateTime(2014, 5, 1))
             {
-                throw new Exception($"Month Start unexpected selection: {Time}");
+                throw new RegressionTestException($"Month Start unexpected selection: {Time}");
             }
             return new[] { _symbol };
         }
@@ -87,13 +87,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Time != StartDate)
                 {
-                    throw new Exception($"Month End unexpected initial selection: {Time}");
+                    throw new RegressionTestException($"Month End unexpected initial selection: {Time}");
                 }
             }
             else if (Time != new DateTime(2014, 3, 31)
                 && Time != new DateTime(2014, 4, 30))
             {
-                throw new Exception($"Month End unexpected selection: {Time}");
+                throw new RegressionTestException($"Month End unexpected selection: {Time}");
             }
             return new[] { _symbol };
         }
@@ -115,15 +115,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_monthEndSelection != 3)
             {
-                throw new Exception($"Month End unexpected selection count: {_monthEndSelection}");
+                throw new RegressionTestException($"Month End unexpected selection count: {_monthEndSelection}");
             }
             if (_monthStartSelection != 3)
             {
-                throw new Exception($"Month start unexpected selection count: {_monthStartSelection}");
+                throw new RegressionTestException($"Month start unexpected selection count: {_monthStartSelection}");
             }
             if (_specificDateSelection != 1)
             {
-                throw new Exception($"Specific date unexpected selection count: {_specificDateSelection}");
+                throw new RegressionTestException($"Specific date unexpected selection count: {_specificDateSelection}");
             }
         }
 

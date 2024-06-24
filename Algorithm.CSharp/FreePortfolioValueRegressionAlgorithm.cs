@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             var freePortfolioValue = Portfolio.TotalPortfolioValue - Portfolio.TotalPortfolioValueLessFreeBuffer;
             if (freePortfolioValue != Portfolio.TotalPortfolioValue * Settings.FreePortfolioValuePercentage)
             {
-                throw new Exception($"Unexpected FreePortfolioValue value: {freePortfolioValue}");
+                throw new RegressionTestException($"Unexpected FreePortfolioValue value: {freePortfolioValue}");
             }
         }
 

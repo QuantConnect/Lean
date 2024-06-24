@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!expectedContracts.Contains(esOption))
                 {
-                    throw new Exception($"Contract {esOption} was not found in the chain");
+                    throw new RegressionTestException($"Contract {esOption} was not found in the chain");
                 }
             }
 
@@ -90,12 +90,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Ran at the end of the algorithm to ensure the algorithm has no holdings
         /// </summary>
-        /// <exception cref="Exception">The algorithm has holdings</exception>
+        /// <exception cref="RegressionTestException">The algorithm has holdings</exception>
         public override void OnEndOfAlgorithm()
         {
             if (Portfolio.Invested)
             {
-                throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+                throw new RegressionTestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
         }
 

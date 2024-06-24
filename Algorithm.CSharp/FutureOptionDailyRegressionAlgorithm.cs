@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (DcOption != expectedContract)
             {
-                throw new Exception($"Contract {DcOption} was not the expected contract {expectedContract}");
+                throw new RegressionTestException($"Contract {DcOption} was not the expected contract {expectedContract}");
             }
 
             ScheduleBuySell();
@@ -92,17 +92,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Ran at the end of the algorithm to ensure the algorithm has no holdings
         /// </summary>
-        /// <exception cref="Exception">The algorithm has holdings</exception>
+        /// <exception cref="RegressionTestException">The algorithm has holdings</exception>
         public override void OnEndOfAlgorithm()
         {
             if (Portfolio.Invested)
             {
-                throw new Exception($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
+                throw new RegressionTestException($"Expected no holdings at end of algorithm, but are invested in: {string.Join(", ", Portfolio.Keys)}");
             }
 
             if (Ticket.Status != OrderStatus.Filled)
             {
-                throw new Exception("Future option order failed to fill correctly");
+                throw new RegressionTestException("Future option order failed to fill correctly");
             }
         }
 

@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (point.Value.IsFillForward)
                 {
-                    throw new Exception("We requested no fill forwarding!");
+                    throw new RegressionTestException("We requested no fill forwarding!");
                 }
             }
 
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (contract.Expiry.Date < Time.Date)
                     {
-                        throw new Exception($"Received expired contract {contract} expired: {contract.Expiry} current time: {Time}");
+                        throw new RegressionTestException($"Received expired contract {contract} expired: {contract.Expiry} current time: {Time}");
                     }
                 }
             }
@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_receivedData)
             {
-                throw new Exception("No Futures chains were received in this regression");
+                throw new RegressionTestException("No Futures chains were received in this regression");
             }
         }
 

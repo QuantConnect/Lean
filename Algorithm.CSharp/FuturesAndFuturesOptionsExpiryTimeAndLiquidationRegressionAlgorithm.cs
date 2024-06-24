@@ -73,21 +73,21 @@ namespace QuantConnect.Algorithm.CSharp
                 if (delisting.Type == DelistingType.Warning &&
                     delisting.Time != _expectedExpiryWarningTime)
                 {
-                    throw new Exception($"Expiry warning with time {delisting.Time} but is expected to be {_expectedExpiryWarningTime}");
+                    throw new RegressionTestException($"Expiry warning with time {delisting.Time} but is expected to be {_expectedExpiryWarningTime}");
                 }
                 if (delisting.Type == DelistingType.Warning && delisting.Time != Time.Date)
                 {
-                    throw new Exception($"Delisting warning received at an unexpected date: {Time} - expected {delisting.Time}");
+                    throw new RegressionTestException($"Delisting warning received at an unexpected date: {Time} - expected {delisting.Time}");
                 }
                 if (delisting.Type == DelistingType.Delisted &&
                     delisting.Time != _expectedExpiryDelistingTime)
                 {
-                    throw new Exception($"Delisting occurred at unexpected time: {delisting.Time} - expected: {_expectedExpiryDelistingTime}");
+                    throw new RegressionTestException($"Delisting occurred at unexpected time: {delisting.Time} - expected: {_expectedExpiryDelistingTime}");
                 }
                 if (delisting.Type == DelistingType.Delisted &&
                     delisting.Time != Time.Date)
                 {
-                    throw new Exception($"Delisting notice received at an unexpected date: {Time} - expected {delisting.Time}");
+                    throw new RegressionTestException($"Delisting notice received at an unexpected date: {Time} - expected {delisting.Time}");
                 }
             }
 
@@ -106,23 +106,23 @@ namespace QuantConnect.Algorithm.CSharp
                     || marginModel.MaintenanceIntradayMarginRequirement == 0
                     || marginModel.MaintenanceOvernightMarginRequirement == 0)
                 {
-                    throw new Exception("Unexpected margin requirements");
+                    throw new RegressionTestException("Unexpected margin requirements");
                 }
 
                 if (marginModel.GetInitialMarginRequirement(optionContract, 1) == 0)
                 {
-                    throw new Exception("Unexpected Initial Margin requirement");
+                    throw new RegressionTestException("Unexpected Initial Margin requirement");
                 }
                 if (marginModel.GetMaintenanceMargin(optionContract) != 0)
                 {
-                    throw new Exception("Unexpected Maintenance Margin requirement");
+                    throw new RegressionTestException("Unexpected Maintenance Margin requirement");
                 }
 
                 MarketOrder(_esFutureOption, 1);
 
                 if (marginModel.GetMaintenanceMargin(optionContract) == 0)
                 {
-                    throw new Exception("Unexpected Maintenance Margin requirement");
+                    throw new RegressionTestException("Unexpected Maintenance Margin requirement");
                 }
             }
         }
@@ -141,11 +141,11 @@ namespace QuantConnect.Algorithm.CSharp
             _liquidated++;
             if (orderEvent.Symbol.SecurityType == SecurityType.FutureOption && _expectedLiquidationTime != Time)
             {
-                throw new Exception($"Expected to liquidate option {orderEvent.Symbol} at {_expectedLiquidationTime}, instead liquidated at {Time}");
+                throw new RegressionTestException($"Expected to liquidate option {orderEvent.Symbol} at {_expectedLiquidationTime}, instead liquidated at {Time}");
             }
             if (orderEvent.Symbol.SecurityType == SecurityType.Future && _expectedLiquidationTime.AddMinutes(-1) != Time && _expectedLiquidationTime != Time)
             {
-                throw new Exception($"Expected to liquidate future {orderEvent.Symbol} at {_expectedLiquidationTime} (+1 minute), instead liquidated at {Time}");
+                throw new RegressionTestException($"Expected to liquidate future {orderEvent.Symbol} at {_expectedLiquidationTime} (+1 minute), instead liquidated at {Time}");
             }
         }
 
@@ -153,15 +153,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_invested)
             {
-                throw new Exception("Never invested in ES futures and FOPs");
+                throw new RegressionTestException("Never invested in ES futures and FOPs");
             }
             if (_delistingsReceived != 4)
             {
-                throw new Exception($"Expected 4 delisting events received, found: {_delistingsReceived}");
+                throw new RegressionTestException($"Expected 4 delisting events received, found: {_delistingsReceived}");
             }
             if (_liquidated != 2)
             {
-                throw new Exception($"Expected 3 liquidation events, found {_liquidated}");
+                throw new RegressionTestException($"Expected 3 liquidation events, found {_liquidated}");
             }
         }
 

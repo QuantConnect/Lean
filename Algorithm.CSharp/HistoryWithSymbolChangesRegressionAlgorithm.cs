@@ -42,19 +42,19 @@ namespace QuantConnect.Algorithm.CSharp
             const int expectedSliceCount = 3926;
             if (history.Count != expectedSliceCount)
             {
-                throw new Exception($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
+                throw new RegressionTestException($"History slices - expected: {expectedSliceCount}, actual: {history.Count}");
             }
 
             var totalBars = history.Count(slice => slice.Bars.Count > 0 && slice.Bars.ContainsKey(symbol));
             if (totalBars != expectedSliceCount)
             {
-                throw new Exception($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
+                throw new RegressionTestException($"History bars - expected: {expectedSliceCount}, actual: {totalBars}");
             }
 
             var firstBar = history.First().Bars.GetValue(symbol);
             if (firstBar.EndTime != new DateTime(1998, 3, 3) || firstBar.Close != 24.88039125m)
             {
-                throw new Exception("First History bar - unexpected data received");
+                throw new RegressionTestException("First History bar - unexpected data received");
             }
         }
 
