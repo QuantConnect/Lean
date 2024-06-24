@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio[_equity].Quantity != 0)
             {
-                throw new Exception("Regression equity holdings should be zero after exercise.");
+                throw new RegressionTestException("Regression equity holdings should be zero after exercise.");
             }
         }
 

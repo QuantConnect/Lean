@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_optionCount != 45)
             {
-                throw new Exception($"Unexpected option count {_optionCount}, expected 45");
+                throw new RegressionTestException($"Unexpected option count {_optionCount}, expected 45");
             }
         }
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             // why 50? we select 15 option contracts, which add trade/quote/openInterest = 45 + SPY & underlying trade/quote + universe subscription => 50
             if (SubscriptionManager.Subscriptions.Count() > 50)
             {
-                throw new Exception("Subscriptions aren't getting removed as expected!");
+                throw new RegressionTestException("Subscriptions aren't getting removed as expected!");
             }
 
             return $"{Time} | UniverseCount {UniverseManager.Count}. " +

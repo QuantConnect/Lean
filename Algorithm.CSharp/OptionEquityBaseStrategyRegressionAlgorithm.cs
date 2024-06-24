@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Count(group => ((OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel).ToString() == name
                     && (!quantity.HasValue || Math.Abs(group.Quantity) == quantity)) != 1)
             {
-                throw new Exception($"Option strategy: '{name}' was not found!");
+                throw new RegressionTestException($"Option strategy: '{name}' was not found!");
             }
         }
 
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (Portfolio.Positions.Groups.Where(group => group.BuyingPowerModel is SecurityPositionGroupBuyingPowerModel)
                 .Count(group => group.Positions.Any(position => position.Symbol == symbol && position.Quantity == quantity)) != 1)
             {
-                throw new Exception($"Default groupd for symbol '{symbol}' and quantity '{quantity}' was not found!");
+                throw new RegressionTestException($"Default groupd for symbol '{symbol}' and quantity '{quantity}' was not found!");
             }
         }
 

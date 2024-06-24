@@ -51,12 +51,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!ReferenceEquals(spyCfd.Exchange.Hours, equityMarketHoursEntry.ExchangeHours))
             {
-                throw new Exception("Expected the SPY CFD market hours to be the same as the underlying equity market hours.");
+                throw new RegressionTestException("Expected the SPY CFD market hours to be the same as the underlying equity market hours.");
             }
 
             if (!ReferenceEquals(spyCfd.SymbolProperties, equitySymbolProperties))
             {
-                throw new Exception("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.");
+                throw new RegressionTestException("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.");
             }
 
             // We can also do it for a specific ticker:
@@ -71,12 +71,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!ReferenceEquals(audUsdCfd.Exchange.Hours, audUsdForexMarketHoursEntry.ExchangeHours))
             {
-                throw new Exception("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.");
+                throw new RegressionTestException("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.");
             }
 
             if (!ReferenceEquals(audUsdCfd.SymbolProperties, audUsdForexSymbolProperties))
             {
-                throw new Exception("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.");
+                throw new RegressionTestException("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.");
             }
         }
 

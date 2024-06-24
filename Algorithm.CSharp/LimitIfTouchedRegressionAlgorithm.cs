@@ -105,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (orderEvent.ToString() != expected)
                 {
-                    throw new Exception($"orderEvent {orderEvent.Id} differed from {expected}. Actual {orderEvent}");
+                    throw new RegressionTestException($"orderEvent {orderEvent.Id} differed from {expected}. Actual {orderEvent}");
                 }
             }
         }

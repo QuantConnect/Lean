@@ -52,20 +52,20 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (positionGroup.Positions.Count() != 1)
             {
-                throw new Exception($"Expected position group to have 1 position. Actual: {positionGroup.Positions.Count()}");
+                throw new RegressionTestException($"Expected position group to have 1 position. Actual: {positionGroup.Positions.Count()}");
             }
 
             var optionPosition = positionGroup.Positions.Single(x => x.Symbol.SecurityType == SecurityType.Option);
             if (optionPosition.Symbol.ID.OptionRight != OptionRight.Put)
             {
-                throw new Exception($"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}");
+                throw new RegressionTestException($"Expected option position to be a put. Actual: {optionPosition.Symbol.ID.OptionRight}");
             }
 
             var expectedOptionPositionQuantity = -2;
 
             if (optionPosition.Quantity != expectedOptionPositionQuantity)
             {
-                throw new Exception($@"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}");
+                throw new RegressionTestException($@"Expected option position quantity to be {expectedOptionPositionQuantity}. Actual: {optionPosition.Quantity}");
             }
         }
 

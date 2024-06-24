@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (ticket.Status != OrderStatus.Filled)
                     {
-                        throw new Exception($"There should be no restriction on buying {ticket.Quantity} of {ticket.Symbol} with BuyingPowerModel.Null");
+                        throw new RegressionTestException($"There should be no restriction on buying {ticket.Quantity} of {ticket.Symbol} with BuyingPowerModel.Null");
                     }
                 }
             }
@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Portfolio.TotalMarginUsed != 0)
             {
-                throw new Exception("The TotalMarginUsed should be zero to avoid margin calls.");
+                throw new RegressionTestException("The TotalMarginUsed should be zero to avoid margin calls.");
             }
         }
 

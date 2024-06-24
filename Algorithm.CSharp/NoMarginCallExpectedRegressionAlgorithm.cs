@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_marginCall != 0)
             {
-                throw new Exception($"We expected NO margin call to happen, {_marginCall} occurred");
+                throw new RegressionTestException($"We expected NO margin call to happen, {_marginCall} occurred");
             }
         }
 

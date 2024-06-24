@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (_validOrderTicket.Status == OrderStatus.Invalid)
                 {
-                    throw new Exception("MOC order placed at the last minute was expected to be valid.");
+                    throw new RegressionTestException("MOC order placed at the last minute was expected to be valid.");
                 }
             }
 
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_invalidOrderTicket.Status != OrderStatus.Invalid ||
                     _invalidOrderTicket.SubmitRequest.Response.ErrorCode != OrderResponseErrorCode.MarketOnCloseOrderTooLate)
                 {
-                    throw new Exception(
+                    throw new RegressionTestException(
                         "MOC order placed after the latest allowed submission time was not rejected or the reason was not the submission time");
                 }
             }
@@ -92,18 +92,18 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_validOrderTicket == null)
             {
-                throw new Exception("Valid MOC order was not placed");
+                throw new RegressionTestException("Valid MOC order was not placed");
             }
 
             // Verify that our good order filled
             if (_validOrderTicket.Status != OrderStatus.Filled)
             {
-                throw new Exception("MOC order failed to fill");
+                throw new RegressionTestException("MOC order failed to fill");
             }
 
             if (_invalidOrderTicket == null)
             {
-                throw new Exception("Invalid MOC order was not placed");
+                throw new RegressionTestException("Invalid MOC order was not placed");
             }
         }
 

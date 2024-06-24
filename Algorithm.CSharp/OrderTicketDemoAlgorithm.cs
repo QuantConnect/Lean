@@ -513,30 +513,30 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (orderEvent.Quantity == 0)
             {
-                throw new Exception("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
+                throw new RegressionTestException("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
             }
             if (orderEvent.Quantity != order.Quantity)
             {
-                throw new Exception("OrderEvent quantity should hold the current order Quantity");
+                throw new RegressionTestException("OrderEvent quantity should hold the current order Quantity");
             }
             if (order is LimitOrder && orderEvent.LimitPrice == 0
                 || order is StopLimitOrder && orderEvent.LimitPrice == 0)
             {
-                throw new Exception("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder");
+                throw new RegressionTestException("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder");
             }
             if (order is StopMarketOrder && orderEvent.StopPrice == 0)
             {
-                throw new Exception("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder");
+                throw new RegressionTestException("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder");
             }
 
             // We can access the order ticket from the order event
             if (orderEvent.Ticket == null)
             {
-                throw new Exception("OrderEvent Ticket was not set");
+                throw new RegressionTestException("OrderEvent Ticket was not set");
             }
             if (orderEvent.OrderId != orderEvent.Ticket.OrderId)
             {
-                throw new Exception("OrderEvent.OrderId and orderEvent.Ticket.OrderId do not match");
+                throw new RegressionTestException("OrderEvent.OrderId and orderEvent.Ticket.OrderId do not match");
             }
         }
 
@@ -574,15 +574,15 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (filledOrders.Count() != 9 || orderTickets.Count() != 12)
             {
-                throw new Exception($"There were expected 9 filled orders and 12 order tickets");
+                throw new RegressionTestException($"There were expected 9 filled orders and 12 order tickets");
             }
             if (openOrders.Count != 0 || openOrderTickets.Any())
             {
-                throw new Exception($"No open orders or tickets were expected");
+                throw new RegressionTestException($"No open orders or tickets were expected");
             }
             if (remainingOpenOrders != 0m)
             {
-                throw new Exception($"No remaining quantity to be filled from open orders was expected");
+                throw new RegressionTestException($"No remaining quantity to be filled from open orders was expected");
             }
 
             var symbolOpenOrders = Transactions.GetOpenOrders(symbol).Count;
@@ -591,11 +591,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (symbolOpenOrders != 0 || symbolOpenOrdersTickets != 0)
             {
-                throw new Exception($"No open orders or tickets were expected");
+                throw new RegressionTestException($"No open orders or tickets were expected");
             }
             if (symbolOpenOrdersRemainingQuantity != 0)
             {
-                throw new Exception($"No remaining quantity to be filled from open orders was expected");
+                throw new RegressionTestException($"No remaining quantity to be filled from open orders was expected");
             }
 
             var defaultOrders = Transactions.GetOrders();
@@ -606,15 +606,15 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (defaultOrders.Count() != 12 || defaultOrderTickets.Count() != 12)
             {
-                throw new Exception($"There were expected 12 orders and 12 order tickets");
+                throw new RegressionTestException($"There were expected 12 orders and 12 order tickets");
             }
             if (defaultOpenOrders.Count != 0 || defaultOpenOrderTickets.Any())
             {
-                throw new Exception($"No open orders or tickets were expected");
+                throw new RegressionTestException($"No open orders or tickets were expected");
             }
             if (defaultOpenOrdersRemaining != 0m)
             {
-                throw new Exception($"No remaining quantity to be filled from open orders was expected");
+                throw new RegressionTestException($"No remaining quantity to be filled from open orders was expected");
             }
         }
 
