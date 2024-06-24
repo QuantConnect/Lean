@@ -24,13 +24,21 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class FuncTextWriterTests
     {
+        StreamWriter standardOut;
+
         [SetUp]
         public void Setup()
         {
             // clear any existing output
-            using var standardOut = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+            standardOut = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
             Console.SetError(standardOut);
             Console.SetOut(standardOut);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            standardOut.DisposeSafely();
         }
         
         [Test]

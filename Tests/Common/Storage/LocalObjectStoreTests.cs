@@ -35,6 +35,7 @@ namespace QuantConnect.Tests.Common.Storage
         private static readonly string TestStorageRoot = $"{Directory.GetCurrentDirectory()}/{nameof(LocalObjectStoreTests)}";
         private static readonly string StorageRootConfigurationValue = Config.Get("object-store-root");
 
+        private TestLocalObjectStore _testLocalObjectStore;
         private ObjectStore _store;
         private ILogHandler _logHandler;
 
@@ -43,8 +44,8 @@ namespace QuantConnect.Tests.Common.Storage
         {
             Config.Set("object-store-root", TestStorageRoot);
 
-            using var testLocalObjectStore = new TestLocalObjectStore();
-            _store = new ObjectStore(testLocalObjectStore);
+            _testLocalObjectStore = new TestLocalObjectStore();
+            _store = new ObjectStore(_testLocalObjectStore);
             _store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 });
 
             // Store initial Log Handler
@@ -55,6 +56,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void Cleanup()
         {
             _store.DisposeSafely();
+            _testLocalObjectStore.DisposeSafely();
             Config.Set("object-store-root", StorageRootConfigurationValue);
             try
             {
