@@ -41,6 +41,7 @@ using QuantConnect.Securities.IndexOption;
 namespace QuantConnect.Tests.Engine.RealTime
 {
     [TestFixture]
+    [Parallelizable(ParallelScope.Children)]
     public class LiveTradingRealTimeHandlerTests
     {
         [Test]
@@ -59,7 +60,7 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             realTimeHandler.SetTime(DateTime.UtcNow);
             // wait for the internal thread to start
-            Thread.Sleep(500);
+            WaitUntilActive(realTimeHandler);
             var scheduledEvent = new ScheduledEvent("1", new []{ Time.EndOfTime }, (_, _) => { });
             var scheduledEvent2 = new ScheduledEvent("2", new []{ Time.EndOfTime }, (_, _) => { });
             Assert.DoesNotThrow(() =>
@@ -179,13 +180,20 @@ namespace QuantConnect.Tests.Engine.RealTime
                 new BacktestingResultHandler(),
                 null,
                 new TestTimeLimitManager());
-            realTimeHandler.SpdbRefreshed.Reset();
-            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
             algorithm.SetFinishedWarmingUp();
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
 
-            var events = new[] { realTimeHandler.SpdbRefreshed, realTimeHandler.SecuritySymbolPropertiesUpdated };
+            // wait for the internal thread to start
+            WaitUntilActive(realTimeHandler);
+
+            Assert.IsTrue(realTimeHandler.SpdbRefreshed.IsSet);
+            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.IsSet);
+
+            realTimeHandler.SpdbRefreshed.Reset();
+            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
+
+            var events = new[] { realTimeHandler.SpdbRefreshed.WaitHandle, realTimeHandler.SecuritySymbolPropertiesUpdated.WaitHandle };
             for (var i = 0; i < 10; i++)
             {
                 timeProvider.Advance(step);
@@ -193,11 +201,11 @@ namespace QuantConnect.Tests.Engine.RealTime
                 // We only advanced half the time, so we should not have refreshed yet
                 if (i % 2 == 0)
                 {
-                    Assert.IsFalse(WaitHandle.WaitAll(events, 500));
+                    Assert.IsFalse(WaitHandle.WaitAll(events, 5000));
                 }
                 else
                 {
-                    Assert.IsTrue(WaitHandle.WaitAll(events, 2000));
+                    Assert.IsTrue(WaitHandle.WaitAll(events, 5000));
                     realTimeHandler.SpdbRefreshed.Reset();
                     realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
                 }
@@ -235,18 +243,25 @@ namespace QuantConnect.Tests.Engine.RealTime
                 new BacktestingResultHandler(),
                 null,
                 new TestTimeLimitManager());
-            realTimeHandler.SpdbRefreshed.Reset();
-            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
             algorithm.SetFinishedWarmingUp();
             realTimeHandler.SetTime(timeProvider.GetUtcNow());
+
+            // wait for the internal thread to start
+            WaitUntilActive(realTimeHandler);
+
+            Assert.IsTrue(realTimeHandler.SpdbRefreshed.IsSet);
+            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.IsSet);
+
+            realTimeHandler.SpdbRefreshed.Reset();
+            realTimeHandler.SecuritySymbolPropertiesUpdated.Reset();
 
             var previousSymbolProperties = security.SymbolProperties;
 
             // Refresh the spdb
             timeProvider.Advance(refreshPeriod);
-            Assert.IsTrue(realTimeHandler.SpdbRefreshed.WaitOne(1000));
-            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.WaitOne(1000));
+            Assert.IsTrue(realTimeHandler.SpdbRefreshed.Wait(5000));
+            Assert.IsTrue(realTimeHandler.SecuritySymbolPropertiesUpdated.Wait(5000));
 
             // Access the symbol properties again
             // The instance must have been changed
@@ -276,6 +291,14 @@ namespace QuantConnect.Tests.Engine.RealTime
                 SecurityType.IndexOption => Symbol.Create("SPX", securityType, Market.USA),
                 _ => throw new ArgumentOutOfRangeException(nameof(securityType), securityType, null)
             };
+        }
+
+        private static void WaitUntilActive(LiveTradingRealTimeHandler realTimeHandler)
+        {
+            while (!realTimeHandler.IsActive)
+            {
+                Thread.Sleep(5);
+            }
         }
 
         private class TestTimeLimitManager : IIsolatorLimitResultProvider
@@ -366,6 +389,7 @@ namespace QuantConnect.Tests.Engine.RealTime
                 }));
                 OnSecurityUpdated.Reset();
                 SetTime(DateTime.UtcNow);
+                WaitUntilActive(this);
                 OnSecurityUpdated.WaitOne();
                 Exit();
             }
@@ -387,23 +411,28 @@ namespace QuantConnect.Tests.Engine.RealTime
 
         private class SPDBTestLiveTradingRealTimeHandler : LiveTradingRealTimeHandler, IDisposable
         {
+            private bool _disposed;
             private int _securitiesUpdated;
 
             public ManualTimeProvider PublicTimeProvider = new ManualTimeProvider();
 
             protected override ITimeProvider TimeProvider { get { return PublicTimeProvider; } }
 
-            public ManualResetEvent SpdbRefreshed { get; } = new ManualResetEvent(false);
-            public ManualResetEvent SecuritySymbolPropertiesUpdated = new ManualResetEvent(false);
+            public ManualResetEventSlim SpdbRefreshed = new ManualResetEventSlim(false);
+            public ManualResetEventSlim SecuritySymbolPropertiesUpdated = new ManualResetEventSlim(false);
 
             protected override void RefreshSymbolProperties()
             {
+                if (_disposed) return;
+
                 base.RefreshSymbolProperties();
                 SpdbRefreshed.Set();
             }
 
             protected override void UpdateSymbolProperties(Security security)
             {
+                if (_disposed) return;
+
                 base.UpdateSymbolProperties(security);
                 Algorithm.Log($"{Algorithm.Securities.Count}");
 
@@ -416,8 +445,11 @@ namespace QuantConnect.Tests.Engine.RealTime
 
             public void Dispose()
             {
+                if (_disposed) return;
+                Exit();
                 SpdbRefreshed.Dispose();
                 SecuritySymbolPropertiesUpdated.Dispose();
+                _disposed = true;
             }
         }
 
