@@ -160,7 +160,6 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase("12:00:00")]
         [TestCase("6:00:00")]
         [TestCase("6:30:00")]
-        //[Parallelizable(ParallelScope.All)]
         public void RefreshesSymbolProperties(string refreshPeriodStr)
         {
             var refreshPeriod = string.IsNullOrEmpty(refreshPeriodStr) ? TimeSpan.FromDays(1) : TimeSpan.Parse(refreshPeriodStr);
@@ -223,7 +222,6 @@ namespace QuantConnect.Tests.Engine.RealTime
         [TestCase(SecurityType.Index, typeof(SymbolProperties))]
         [TestCase(SecurityType.Option, typeof(OptionSymbolProperties))]
         [TestCase(SecurityType.IndexOption, typeof(IndexOptionSymbolProperties))]
-        //[Parallelizable(ParallelScope.All)]
         public void SecuritySymbolPropertiesTypeIsRespectedAfterRefresh(SecurityType securityType, Type expectedSymbolPropertiesType)
         {
             using var realTimeHandler = new SPDBTestLiveTradingRealTimeHandler();
