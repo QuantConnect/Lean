@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (ticket.Status != OrderStatus.Invalid)
                 {
-                    throw new Exception("Expected order to always be invalid because there is no data yet!");
+                    throw new RegressionTestException("Expected order to always be invalid because there is no data yet!");
                 }
             }
             else

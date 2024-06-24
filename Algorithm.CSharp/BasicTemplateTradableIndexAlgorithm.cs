@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_ticket.Status.IsFill())
             {
-                throw new Exception("Index is tradable.");
+                throw new RegressionTestException("Index is tradable.");
             }
         }
 

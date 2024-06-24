@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_ticket == null || _ticket.Status != OrderStatus.Filled)
             {
-                throw new Exception("Order ticket was not placed or filled!");
+                throw new RegressionTestException("Order ticket was not placed or filled!");
             }
         }
 

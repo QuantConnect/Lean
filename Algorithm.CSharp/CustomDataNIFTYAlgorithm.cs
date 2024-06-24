@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
             }
-            catch (Exception err)
+            catch (RegressionTestException err)
             {
                 Debug("Error: " + err.Message);
             }

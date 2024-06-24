@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"LTC conversion rate: {Portfolio.CashBook["LTC"].ConversionRate}");
                 Log($"ETH conversion rate: {Portfolio.CashBook["ETH"].ConversionRate}");
 
-                throw new Exception("Conversion rate is 0");
+                throw new RegressionTestException("Conversion rate is 0");
             }
             if (Time.Hour == 1 && Time.Minute == 0)
             {

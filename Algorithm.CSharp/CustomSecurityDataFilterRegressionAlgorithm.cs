@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetHoldings("SPY", 0.2);
             if (_dataPoints > 5)
             {
-                throw new Exception($"There should not be more than 5 data points, but there were {_dataPoints}");
+                throw new RegressionTestException($"There should not be more than 5 data points, but there were {_dataPoints}");
             }
         }
 

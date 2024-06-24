@@ -53,12 +53,12 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_quoteTickConsolidatorCalled)
             {
-                throw new Exception("QuoteTickConsolidationHandler was not called");
+                throw new RegressionTestException("QuoteTickConsolidationHandler was not called");
             }
 
             if (!_tradeTickConsolidatorCalled)
             {
-                throw new Exception("TradeTickConsolidationHandler was not called");
+                throw new RegressionTestException("TradeTickConsolidationHandler was not called");
             }
         }
 

@@ -66,16 +66,16 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (data.Count != 2)
             {
-                throw new Exception($"Unexpected data count: {data.Count}");
+                throw new RegressionTestException($"Unexpected data count: {data.Count}");
             }
             if (ActiveSecurities.Count != 2)
             {
-                throw new Exception($"Unexpected ActiveSecurities count: {ActiveSecurities.Count}");
+                throw new RegressionTestException($"Unexpected ActiveSecurities count: {ActiveSecurities.Count}");
             }
             // the price obtained by the previous coarse selection should be the same as the current price
             if (_historyCoarseSpyPrice != 0 && _historyCoarseSpyPrice != Securities[_spy].Price)
             {
-                throw new Exception($"Unexpected SPY price: {_historyCoarseSpyPrice}");
+                throw new RegressionTestException($"Unexpected SPY price: {_historyCoarseSpyPrice}");
             }
             _historyCoarseSpyPrice = 0;
             if (!Portfolio.Invested)

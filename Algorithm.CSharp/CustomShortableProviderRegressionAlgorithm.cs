@@ -55,22 +55,22 @@ namespace QuantConnect.Algorithm.CSharp
             var transactions = Transactions.OrdersCount;
             if (transactions != 1)
             {
-                throw new Exception($"Algorithm should have just 1 order, but was {transactions}");
+                throw new RegressionTestException($"Algorithm should have just 1 order, but was {transactions}");
             }
             var orderQuantity = Transactions.GetOrderById(_orderId).Quantity;
             if (orderQuantity != -1001)
             {
-                throw new Exception($"Quantity of order {_orderId} should be -1001, but was {orderQuantity}");
+                throw new RegressionTestException($"Quantity of order {_orderId} should be -1001, but was {orderQuantity}");
             }
             var feeRate = _spy.ShortableProvider.FeeRate(_spy.Symbol, Time);
             if (feeRate != 0.0025m)
             {
-                throw new Exception($"Fee rate should be 0.0025, but was {feeRate}");
+                throw new RegressionTestException($"Fee rate should be 0.0025, but was {feeRate}");
             }
             var rebateRate = _spy.ShortableProvider.RebateRate(_spy.Symbol, Time);
             if (rebateRate != 0.0507m)
             {
-                throw new Exception($"Fee rate should be 0.0507, but was {rebateRate}");
+                throw new RegressionTestException($"Fee rate should be 0.0507, but was {rebateRate}");
             }
         }
 
