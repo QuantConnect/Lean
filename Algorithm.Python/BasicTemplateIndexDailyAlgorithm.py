@@ -15,7 +15,7 @@ import datetime
 from AlgorithmImports import *
 
 class BasicTemplateIndexDailyAlgorithm(QCAlgorithm):
-    
+
     def initialize(self) -> None:
         self.set_start_date(2021, 1, 1)
         self.set_end_date(2021, 1, 18)
@@ -42,7 +42,7 @@ class BasicTemplateIndexDailyAlgorithm(QCAlgorithm):
         self.ExpectedBarCount = 10
         self.BarCounter = 0
 
-        self.settings.daily_strict_end_time_enabled = True
+        self.settings.daily_precise_end_time = True
 
     def on_data(self, data: Slice):
         if not self.Portfolio.Invested:
