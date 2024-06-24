@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             base.OnOrderEvent(orderEvent);
             if (orderEvent.Status == OrderStatus.Filled && orderEvent.OrderFee.Value.Amount != (orderEvent.AbsoluteFillQuantity * 0.65m))
             {
-                throw new Exception($"The fee for each order should be {orderEvent.AbsoluteFillQuantity * 0.65m} USD, but for order {orderEvent.OrderId} was {orderEvent.OrderFee}");
+                throw new RegressionTestException($"The fee for each order should be {orderEvent.AbsoluteFillQuantity * 0.65m} USD, but for order {orderEvent.OrderId} was {orderEvent.OrderFee}");
             }
         }
 

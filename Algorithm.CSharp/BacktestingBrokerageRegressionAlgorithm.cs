@@ -151,12 +151,12 @@ namespace QuantConnect.Algorithm.CSharp
                 case OrderStatus.PartiallyFilled:
                     if (order.LastFillTime == null)
                     {
-                        throw new Exception("LastFillTime should not be null");
+                        throw new RegressionTestException("LastFillTime should not be null");
                     }
 
                     if (order.Quantity / 2 != orderEvent.FillQuantity)
                     {
-                        throw new Exception("Order size should be half");
+                        throw new RegressionTestException("Order size should be half");
                     }
                     break;
 
@@ -164,7 +164,7 @@ namespace QuantConnect.Algorithm.CSharp
                 case OrderStatus.Filled:
                     if (order.SecurityType == SecurityType.Equity && order.CreatedTime == order.LastFillTime)
                     {
-                        throw new Exception("Order should not finish during the CreatedTime bar");
+                        throw new RegressionTestException("Order should not finish during the CreatedTime bar");
                     }
                     break;
 
@@ -182,12 +182,12 @@ namespace QuantConnect.Algorithm.CSharp
             // If the option price isn't the same as the strike price, its incorrect
             if (order.Price != _optionStrikePrice)
             {
-                throw new Exception("OptionExercise order price should be strike price!!");
+                throw new RegressionTestException("OptionExercise order price should be strike price!!");
             }
 
             if (orderEvent.Quantity != -1)
             {
-                throw new Exception("OrderEvent Quantity should be -1");
+                throw new RegressionTestException("OrderEvent Quantity should be -1");
             }
         }
 
@@ -198,14 +198,14 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.ContainsKey(_optionBuy.Symbol) || !Portfolio.ContainsKey(_optionBuy.Symbol.Underlying) || !Portfolio.ContainsKey(_equityBuy.Symbol))
             {
-                throw new Exception("Portfolio does not contain the Symbols we purchased");
+                throw new RegressionTestException("Portfolio does not contain the Symbols we purchased");
             }
 
             //Check option holding, should not be invested since it expired, profit should be -400
             var optionHolding = Portfolio[_optionBuy.Symbol];
             if (optionHolding.Invested || optionHolding.Profit != -400)
             {
-                throw new Exception("Options holding does not match expected outcome");
+                throw new RegressionTestException("Options holding does not match expected outcome");
             }
 
             //Check the option underlying symbol since we should have bought it at exercise
@@ -213,7 +213,7 @@ namespace QuantConnect.Algorithm.CSharp
             var optionExerciseHolding = Portfolio[_optionBuy.Symbol.Underlying];
             if (!optionExerciseHolding.Invested || optionExerciseHolding.Quantity != 100 || optionExerciseHolding.AveragePrice != _optionBuy.Symbol.ID.StrikePrice)
             {
-                throw new Exception("Equity holding for exercised option does not match expected outcome");
+                throw new RegressionTestException("Equity holding for exercised option does not match expected outcome");
             }
 
             //Check equity holding, should be invested, profit should be
@@ -221,7 +221,7 @@ namespace QuantConnect.Algorithm.CSharp
             var equityHolding = Portfolio[_equityBuy.Symbol];
             if (!equityHolding.Invested || equityHolding.Quantity != 52 || equityHolding.AveragePrice != _equityBuy.AverageFillPrice)
             {
-                throw new Exception("Equity holding does not match expected outcome");
+                throw new RegressionTestException("Equity holding does not match expected outcome");
             }
         }
 

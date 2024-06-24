@@ -92,7 +92,7 @@ namespace QuantConnect.Algorithm.CSharp
             Debug(orderEvent.ToString());
             if (orderEvent.Symbol.ID.Symbol != "SPXW")
             {
-                throw new Exception("Unexpected order event symbol!");
+                throw new RegressionTestException("Unexpected order event symbol!");
             }
         }
 

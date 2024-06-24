@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
                 || insightsCollection.Insights.Count(insight => insight.Symbol == _spy) != 1
                 || insightsCollection.Insights.Count(insight => insight.Symbol == _ibm) != 1)
             {
-                throw new Exception("Unexpected insights were emitted");
+                throw new RegressionTestException("Unexpected insights were emitted");
             }
         }
 

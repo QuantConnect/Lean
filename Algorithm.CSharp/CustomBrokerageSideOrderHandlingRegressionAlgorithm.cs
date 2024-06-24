@@ -44,17 +44,17 @@ namespace QuantConnect.Algorithm.CSharp
             // The security should have been added
             if (!Securities.ContainsKey(_spy))
             {
-                throw new Exception("Expected security to have been added");
+                throw new RegressionTestException("Expected security to have been added");
             }
 
             if (Transactions.OrdersCount == 0)
             {
-                throw new Exception("Expected orders to be added from brokerage side");
+                throw new RegressionTestException("Expected orders to be added from brokerage side");
             }
 
             if (Portfolio.Positions.Groups.Count != 1)
             {
-                throw new Exception("Expected only one position");
+                throw new RegressionTestException("Expected only one position");
             }
         }
 
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var order = eventArgs.Order;
                 if (string.IsNullOrEmpty(order.Tag) || !int.TryParse(order.Tag, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
                 {
-                    throw new Exception("Expected all new brokerage-side orders to have a valid tag");
+                    throw new RegressionTestException("Expected all new brokerage-side orders to have a valid tag");
                 }
 
                 // We will only process orders with even tags

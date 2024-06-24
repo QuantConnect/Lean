@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!_reAdded && slice.ContainsKey(_contract) && slice.ContainsKey(_contract.Underlying))
                 {
-                    throw new Exception("Getting data for removed option and underlying!");
+                    throw new RegressionTestException("Getting data for removed option and underlying!");
                 }
 
                 if (!Portfolio.Invested && _reAdded)
@@ -95,11 +95,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_hasRemoved)
             {
-                throw new Exception("We did not remove the option contract!");
+                throw new RegressionTestException("We did not remove the option contract!");
             }
             if (!_reAdded)
             {
-                throw new Exception("We did not re add the option contract!");
+                throw new RegressionTestException("We did not re add the option contract!");
             }
         }
 

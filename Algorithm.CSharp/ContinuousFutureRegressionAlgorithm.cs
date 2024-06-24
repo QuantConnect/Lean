@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (data.Bars.Count > 0 || data.QuoteBars.Count > 0)
                 {
-                    throw new Exception($"We are getting data during closed market!");
+                    throw new RegressionTestException($"We are getting data during closed market!");
                 }
             }
 
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (data.Keys.Count != 1)
             {
-                throw new Exception($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
+                throw new RegressionTestException($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
             }
 
             foreach (var changedEvent in data.SymbolChangedEvents.Values)
@@ -82,7 +82,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (_currentMappedSymbol == _continuousContract.Mapped)
                     {
-                        throw new Exception($"Continuous contract current symbol did not change! {_continuousContract.Mapped}");
+                        throw new RegressionTestException($"Continuous contract current symbol did not change! {_continuousContract.Mapped}");
                     }
 
                     var currentExpiration = changedEvent.Symbol.Underlying.ID.Date;
@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (currentExpiration != frontMonthExpiration.Date)
                     {
-                        throw new Exception($"Unexpected current mapped contract expiration {currentExpiration}" +
+                        throw new RegressionTestException($"Unexpected current mapped contract expiration {currentExpiration}" +
                             $" @ {Time} it should be AT front month expiration {frontMonthExpiration}");
                     }
                 }
@@ -115,7 +115,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var response = History(new[] { _continuousContract.Symbol }, 60 * 24 * 90);
                     if (!response.Any())
                     {
-                        throw new Exception("Unexpected empty history response");
+                        throw new RegressionTestException("Unexpected empty history response");
                     }
                 }
             }
@@ -137,7 +137,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (changes.AddedSecurities.Any(security => security.Symbol != _continuousContract.Symbol)
                 || changes.RemovedSecurities.Any(security => security.Symbol != _continuousContract.Symbol))
             {
-                throw new Exception($"We got an unexpected security changes {changes}");
+                throw new RegressionTestException($"We got an unexpected security changes {changes}");
             }
         }
 
@@ -146,13 +146,13 @@ namespace QuantConnect.Algorithm.CSharp
             var expectedMappingCounts = 2;
             if (_mappings.Count != expectedMappingCounts)
             {
-                throw new Exception($"Unexpected symbol changed events: {_mappings.Count}, was expecting {expectedMappingCounts}");
+                throw new RegressionTestException($"Unexpected symbol changed events: {_mappings.Count}, was expecting {expectedMappingCounts}");
             }
 
             var securities = Securities.Total.Where(sec => !sec.IsTradable && !sec.Symbol.IsCanonical() && sec.Symbol.SecurityType == SecurityType.Future).ToList();
             if (securities.Count != 1)
             {
-                throw new Exception($"We should have a single non tradable future contract security! found: {securities.Count}");
+                throw new RegressionTestException($"We should have a single non tradable future contract security! found: {securities.Count}");
             }
         }
 

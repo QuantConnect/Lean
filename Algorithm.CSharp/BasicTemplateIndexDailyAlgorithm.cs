@@ -79,15 +79,15 @@ namespace QuantConnect.Algorithm.CSharp
                 var history = History(symbol, 10).ToList();
                 if (history.Count != 10)
                 {
-                    throw new Exception($"Unexpected history count: {history.Count}");
+                    throw new RegressionTestException($"Unexpected history count: {history.Count}");
                 }
                 if (history.Any(x => x.Time.TimeOfDay != new TimeSpan(8, 30, 0)))
                 {
-                    throw new Exception($"Unexpected history data start time");
+                    throw new RegressionTestException($"Unexpected history data start time");
                 }
                 if (history.Any(x => x.EndTime.TimeOfDay != new TimeSpan(15, 15, 0)))
                 {
-                    throw new Exception($"Unexpected history data end time");
+                    throw new RegressionTestException($"Unexpected history data end time");
                 }
             }
         }

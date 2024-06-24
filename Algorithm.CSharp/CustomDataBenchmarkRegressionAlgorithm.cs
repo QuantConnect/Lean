@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             var securityBenchmark = (SecurityBenchmark)Benchmark;
             if (securityBenchmark.Security.Price == 0)
             {
-                throw new Exception("Security benchmark price was not expected to be zero");
+                throw new RegressionTestException("Security benchmark price was not expected to be zero");
             }
         }
 

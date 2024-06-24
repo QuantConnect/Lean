@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
             var sma = SMA(_spy, 10);
             if (!sma.IsReady)
             {
-                throw new Exception("Expected SMA to be warmed up");
+                throw new RegressionTestException("Expected SMA to be warmed up");
             }
 
             // Test case 2
@@ -50,12 +50,12 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (indicator.IsReady)
             {
-                throw new Exception("Expected CustomIndicator Not to be warmed up");
+                throw new RegressionTestException("Expected CustomIndicator Not to be warmed up");
             }
             WarmUpIndicator(_spy, indicator);
             if (!indicator.IsReady)
             {
-                throw new Exception("Expected CustomIndicator to be warmed up");
+                throw new RegressionTestException("Expected CustomIndicator to be warmed up");
             }
         }
 
@@ -72,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // we expect 1 consolidator per indicator
                 if (subscription.Consolidators.Count != 2)
                 {
-                    throw new Exception($"Unexpected consolidator count for subscription: {subscription.Consolidators.Count}");
+                    throw new RegressionTestException($"Unexpected consolidator count for subscription: {subscription.Consolidators.Count}");
                 }
                 SetHoldings(_spy, 1);
             }
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (_previous != null && input.EndTime == _previous.EndTime)
                 {
-                    throw new Exception($"Unexpected indicator double data point call: {_previous}");
+                    throw new RegressionTestException($"Unexpected indicator double data point call: {_previous}");
                 }
                 _previous = input;
                 return base.ComputeNextValue(window, input);

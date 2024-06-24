@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!allOptionsWereChangedOnMarketOpen)
             {
-                throw new Exception("Expected options filter to be run only on market open");
+                throw new RegressionTestException("Expected options filter to be run only on market open");
             }
         }
 

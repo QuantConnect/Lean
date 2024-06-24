@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             // ES has an expiration on december but because we are using 'contractDepthOffset: 1' we expect to use the next contract
             if (_continuousContract.Mapped.ID.Date.Month != 3)
             {
-                throw new Exception($"Unexpected mapped continuous contract future {_continuousContract.Mapped}");
+                throw new RegressionTestException($"Unexpected mapped continuous contract future {_continuousContract.Mapped}");
             }
 
             if (IsWarmingUp)
@@ -67,20 +67,20 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!_continuousContract.HasData)
                 {
-                    throw new Exception($"ContinuousContract did not get any data during warmup!");
+                    throw new RegressionTestException($"ContinuousContract did not get any data during warmup!");
                 }
 
                 var backMonthExpiration =   data.Keys.Single().Underlying.ID.Date;
                 var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContract.Symbol)(Time.AddMonths(1));
                 if (backMonthExpiration <= frontMonthExpiration.Date)
                 {
-                    throw new Exception($"Unexpected current mapped contract expiration {backMonthExpiration}" +
+                    throw new RegressionTestException($"Unexpected current mapped contract expiration {backMonthExpiration}" +
                         $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}");
                 }
             }
             if (data.Keys.Count != 1)
             {
-                throw new Exception($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
+                throw new RegressionTestException($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
             }
 
             if (!Portfolio.Invested && !IsWarmingUp)
@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!_warmedUp)
             {
-                throw new Exception("Algorithm didn't warm up!");
+                throw new RegressionTestException("Algorithm didn't warm up!");
             }
         }
 
@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (changes.AddedSecurities.Any(security => security.Symbol != _continuousContract.Symbol)
                 || changes.RemovedSecurities.Any(security => security.Symbol != _continuousContract.Symbol))
             {
-                throw new Exception($"We got an unexpected security changes {changes}");
+                throw new RegressionTestException($"We got an unexpected security changes {changes}");
             }
         }
 
