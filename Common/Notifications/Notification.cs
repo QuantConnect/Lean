@@ -364,7 +364,7 @@ namespace QuantConnect.Notifications
         /// Factory method for Json deserialization: the file contents are already encoded
         /// </summary>
         internal static NotificationFtp FromEncodedData(string hostname, string username, string password, string filePath, string encodedFileContent,
-            bool secure = true, int? port = null)
+            bool secure, int? port)
         {
             var notification = new NotificationFtp(hostname, username, password, filePath, Array.Empty<byte>(), secure, port);
             notification.FileContent = encodedFileContent;
@@ -375,7 +375,7 @@ namespace QuantConnect.Notifications
         /// Factory method for Json deserialization: the file contents are already encoded
         /// </summary>
         internal static NotificationFtp FromEncodedData(string hostname, string username, string publicKey, string privateKey,
-            string filePath, string encodedFileContent, int? port = null, string privateKeyPassphrase = null)
+            string filePath, string encodedFileContent, int? port, string privateKeyPassphrase)
         {
             var notification = new NotificationFtp(hostname, username, publicKey, privateKey, filePath, Array.Empty<byte>(), port, privateKeyPassphrase);
             notification.FileContent = encodedFileContent;

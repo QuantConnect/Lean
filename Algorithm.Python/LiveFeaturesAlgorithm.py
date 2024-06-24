@@ -35,13 +35,13 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
 
         ##Equity Data for US Markets
         self.add_security(SecurityType.EQUITY, 'IBM', Resolution.SECOND)
-        
+
         ##FOREX Data for Weekends: 24/6
         self.add_security(SecurityType.FOREX, 'EURUSD', Resolution.MINUTE)
 
         ##Custom/Bitcoin Live Data: 24/7
         self.add_data(Bitcoin, 'BTC', Resolution.SECOND, TimeZones.UTC)
-        
+
         ##if the algorithm is connected to the brokerage
         self.is_connected = True
 
@@ -58,7 +58,13 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
             self.notify.email("myemail@gmail.com", "Test", "Test Body", "test attachment")
             self.notify.sms("+11233456789", str(data.time) + ">> Test message from live BTC server.")
             self.notify.web("http://api.quantconnect.com", str(data.time) + ">> Test data packet posted from live BTC server.")
-
+            self.notify.ftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
+                            str(data.time) + ">> Test file from live BTC server.")
+            self.notify.sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
+                             str(data.time) + ">> Test file from live BTC server.")
+            self.notify.sftp("ftp.quantconnect.com", "username", "publickey", "privatekey", "path/to/file.txt",
+                             str(data.time) + ">> Test file from live BTC server.",
+                             privateKeyPassphrase="optionalprivatekeypassphrase")
 
     ### Raises the data event
     def on_data(self, data):
@@ -67,7 +73,7 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
             self.market_order('IBM',quantity)
             self.debug('Purchased IBM on ' + str(self.time.strftime("%m/%d/%Y")))
             self.notify.email("myemail@gmail.com", "Test", "Test Body", "test attachment")
-            
+
     # Brokerage message event handler. This method is called for all types of brokerage messages.
     def on_brokerage_message(self, message_event):
         self.debug(f"Brokerage meesage received - {message_event.to_string()}")
@@ -88,7 +94,7 @@ class Bitcoin(PythonData):
     def get_source(self, config, date, is_live_mode):
         if is_live_mode:
             return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
-        
+
         return  SubscriptionDataSource("https://www.quandl.com/api/v3/datasets/BCHARTS/BITSTAMPUSD.csv?order=asc", SubscriptionTransportMedium.REMOTE_FILE)
 
 
