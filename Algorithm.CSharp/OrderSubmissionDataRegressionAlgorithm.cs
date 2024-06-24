@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             var data = order.OrderSubmissionData;
             if (data == null || data.AskPrice == 0 || data.BidPrice == 0 || data.LastPrice == 0)
             {
-                throw new Exception("Invalid Order Submission data detected");
+                throw new RegressionTestException("Invalid Order Submission data detected");
             }
 
             if (_orderSubmissionData.ContainsKey(ticker))
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var previous = _orderSubmissionData[ticker];
                 if (previous.AskPrice == data.AskPrice || previous.BidPrice == data.BidPrice || previous.LastPrice == data.LastPrice)
                 {
-                    throw new Exception("Order Submission data didn't change");
+                    throw new RegressionTestException("Order Submission data didn't change");
                 }
             }
             _orderSubmissionData[ticker] = data;

@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_impliedVolatility == 0m || _delta == 0m || _gamma == 0m || _vega == 0m || _theta == 0m || _rho == 0m)
             {
-                throw new Exception("Expected IV/greeks calculated");
+                throw new RegressionTestException("Expected IV/greeks calculated");
             }
             Debug(@$"Implied Volatility: {_impliedVolatility},
 Delta: {_delta},

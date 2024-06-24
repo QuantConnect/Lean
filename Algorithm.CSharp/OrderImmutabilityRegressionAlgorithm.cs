@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (_originalOrder.Time != UtcTime)
                 {
                     Error("Order Time should be UtcTime!");
-                    throw new Exception("Order Time should be UtcTime!");
+                    throw new RegressionTestException("Order Time should be UtcTime!");
                 }
             }
         }
@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderV1 == orderV2)
             {
                 Error("Orders should be clones, hence not equal!");
-                throw new Exception("Orders should be clones, hence not equal!");
+                throw new RegressionTestException("Orders should be clones, hence not equal!");
             }
 
             // Try and manipulate orderV2 using the only external accessor BrokerID, since we
@@ -101,7 +101,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderV2.BrokerId.SequenceEqual(orderV3.BrokerId))
             {
                 Error("Broker IDs should not be the same!");
-                throw new Exception("Broker IDs should not be the same!");
+                throw new RegressionTestException("Broker IDs should not be the same!");
             }
 
             //Try and manipulate the orderV1 using UpdateOrderRequest
@@ -114,13 +114,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (orderV4.Quantity == orderV1.Quantity)
             {
                 Error("Order quantity should not be the same!");
-                throw new Exception("Order quantity should not be the same!");
+                throw new RegressionTestException("Order quantity should not be the same!");
             }
 
             if (orderV4.Tag == orderV1.Tag)
             {
                 Error("Order tag should not be the same!");
-                throw new Exception("Order tag should not be the same!");
+                throw new RegressionTestException("Order tag should not be the same!");
             }
         }
 
@@ -136,13 +136,13 @@ namespace QuantConnect.Algorithm.CSharp
             if (updatedOrder.Quantity == _originalOrder.Quantity)
             {
                 Error("Quantities should have been updated!");
-                throw new Exception("Quantities should have been updated!");
+                throw new RegressionTestException("Quantities should have been updated!");
             }
 
             if (updatedOrder.Tag == _originalOrder.Tag)
             {
                 Error("Tag should have been updated!");
-                throw new Exception("Tag should have been updated!");
+                throw new RegressionTestException("Tag should have been updated!");
             }
         }
 

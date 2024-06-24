@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // the check in the OnEndOfAlgorithm method to be accurate.
                 if (orderEvent.Quantity != OriginalQuantity)
                 {
-                    throw new Exception($"Expected order quantity to be {OriginalQuantity} but was {orderEvent.Quantity}");
+                    throw new RegressionTestException($"Expected order quantity to be {OriginalQuantity} but was {orderEvent.Quantity}");
                 }
             }
         }
@@ -66,34 +66,34 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                throw new Exception("Portfolio should be invested");
+                throw new RegressionTestException("Portfolio should be invested");
             }
 
             if (_onMarginCallCount != 1)
             {
-                throw new Exception($"OnMarginCall was called {_onMarginCallCount} times, expected 1");
+                throw new RegressionTestException($"OnMarginCall was called {_onMarginCallCount} times, expected 1");
             }
 
             if (_onMarginCallWarningCount == 0)
             {
-                throw new Exception("OnMarginCallWarning was not called");
+                throw new RegressionTestException("OnMarginCallWarning was not called");
             }
 
             var orders = Transactions.GetOrders().ToList();
             if (orders.Count != ExpectedOrdersCount)
             {
-                throw new Exception($"Expected {ExpectedOrdersCount} orders, found {orders.Count}");
+                throw new RegressionTestException($"Expected {ExpectedOrdersCount} orders, found {orders.Count}");
             }
 
             if (orders.Any(order => !order.Status.IsFill()))
             {
-                throw new Exception("All orders should be filled");
+                throw new RegressionTestException("All orders should be filled");
             }
 
             var finalStrategyQuantity = Portfolio.Positions.Groups.First().Quantity;
             if (Math.Abs(OriginalQuantity) <= Math.Abs(finalStrategyQuantity))
             {
-                throw new Exception($@"Strategy position group quantity should have been decreased from the original quantity {OriginalQuantity
+                throw new RegressionTestException($@"Strategy position group quantity should have been decreased from the original quantity {OriginalQuantity
                     }, but was {finalStrategyQuantity}");
             }
         }

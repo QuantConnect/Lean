@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             var spy = Securities["SPY"];
             if (!spy.IsTradable || spy.Price == 0)
             {
-                throw new Exception("'SPY' should always be tradable and have a price even if removed by the custom universe!");
+                throw new RegressionTestException("'SPY' should always be tradable and have a price even if removed by the custom universe!");
             }
         }
 

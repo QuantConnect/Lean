@@ -53,11 +53,11 @@ namespace QuantConnect.Algorithm.CSharp
             var config = SubscriptionManager.Subscriptions.ToList();
             if (config.All(dataConfig => dataConfig.Symbol != "AAPL"))
             {
-                throw new Exception("Was expecting configurations for AAPL");
+                throw new RegressionTestException("Was expecting configurations for AAPL");
             }
             if (config.All(dataConfig => dataConfig.Symbol.SecurityType != SecurityType.Option))
             {
-                throw new Exception($"Was expecting configurations for {_aaplOption}");
+                throw new RegressionTestException($"Was expecting configurations for {_aaplOption}");
             }
         }
 

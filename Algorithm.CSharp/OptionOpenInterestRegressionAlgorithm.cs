@@ -65,23 +65,23 @@ namespace QuantConnect.Algorithm.CSharp
                             var history = History<OpenInterest>(contract.Symbol, TimeSpan.FromDays(1)).ToList();
                             if (history.Count == 0)
                             {
-                                throw new Exception("Regression test failed: open interest history request is empty");
+                                throw new RegressionTestException("Regression test failed: open interest history request is empty");
                             }
 
                             var security = Securities[contract.Symbol];
                             var openInterestCache = security.Cache.GetData<OpenInterest>();
                             if (openInterestCache == null)
                             {
-                                throw new Exception("Regression test failed: current open interest isn't in the security cache");
+                                throw new RegressionTestException("Regression test failed: current open interest isn't in the security cache");
                             }
 
                             if (slice.Time.Date == new DateTime(2014, 06, 05) && (contract.OpenInterest != 50 || security.OpenInterest != 50))
                             {
-                                throw new Exception("Regression test failed: current open interest was not correctly loaded and is not equal to 50");
+                                throw new RegressionTestException("Regression test failed: current open interest was not correctly loaded and is not equal to 50");
                             }
                             if (slice.Time.Date == new DateTime(2014, 06, 06) && (contract.OpenInterest != 70 || security.OpenInterest != 70))
                             {
-                                throw new Exception("Regression test failed: current open interest was not correctly loaded and is not equal to 70");
+                                throw new RegressionTestException("Regression test failed: current open interest was not correctly loaded and is not equal to 70");
                             }
                             if (slice.Time.Date == new DateTime(2014, 06, 06))
                             {

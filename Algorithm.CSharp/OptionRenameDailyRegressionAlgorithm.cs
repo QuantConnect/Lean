@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (dividend.ReferencePrice != 32.6m || dividend.Distribution != 3.82m)
                 {
-                    throw new Exception($"{Time} - Invalid dividend {dividend}");
+                    throw new RegressionTestException($"{Time} - Invalid dividend {dividend}");
                 }
             }
             if (!Portfolio.Invested)
@@ -88,17 +88,17 @@ namespace QuantConnect.Algorithm.CSharp
                         // Check
                         if (slice.Time != new DateTime(2013, 6, 28))
                         {
-                            throw new Exception(@"Received first contract at {slice.Time}; Expected at 6/28/2013 12AM.");
+                            throw new RegressionTestException(@"Received first contract at {slice.Time}; Expected at 6/28/2013 12AM.");
                         }
 
                         if (contract.AskPrice != 1.15m)
                         {
-                            throw new Exception("Current ask price was not loaded from NWSA backtest file and is not $1.1");
+                            throw new RegressionTestException("Current ask price was not loaded from NWSA backtest file and is not $1.1");
                         }
 
                         if (contract.UnderlyingSymbol.Value != "NWSA")
                         {
-                            throw new Exception("Contract underlying symbol was not NWSA as expected");
+                            throw new RegressionTestException("Contract underlying symbol was not NWSA as expected");
                         }
                     }
                 }
@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (chain.Underlying.Symbol.Value != "FOXA")
                     {
-                        throw new Exception("Chain underlying symbol was not FOXA as expected");
+                        throw new RegressionTestException("Chain underlying symbol was not FOXA as expected");
                     }
 
                     var contract =
@@ -124,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     if (contract.BidPrice != 0.05m)
                     {
-                        throw new Exception("Current bid price was not loaded from FOXA file and is not $0.05");
+                        throw new RegressionTestException("Current bid price was not loaded from FOXA file and is not $0.05");
                     }
                 }
             }

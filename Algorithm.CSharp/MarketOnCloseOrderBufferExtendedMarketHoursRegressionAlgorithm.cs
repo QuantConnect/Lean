@@ -82,25 +82,25 @@ namespace QuantConnect.Algorithm.CSharp
             // Verify that our good order filled
             if (_validOrderTicket.Status != OrderStatus.Filled)
             {
-                throw new Exception("Valid order failed to fill");
+                throw new RegressionTestException("Valid order failed to fill");
             }
 
             // Verify our order was marked invalid
             if (_invalidOrderTicket.Status != OrderStatus.Invalid)
             {
-                throw new Exception("Invalid order was not rejected");
+                throw new RegressionTestException("Invalid order was not rejected");
             }
 
             // Verify that our second good order filled
             if (_validOrderTicketExtendedMarketHours.Status != OrderStatus.Filled)
             {
-                throw new Exception("Valid order during extended market hours failed to fill");
+                throw new RegressionTestException("Valid order during extended market hours failed to fill");
             }
 
             // Verify that our third good order filled
             if (_validOrderTicketAtMidnight.Status != OrderStatus.Filled)
             {
-                throw new Exception("Valid order at midnight failed to fill");
+                throw new RegressionTestException("Valid order at midnight failed to fill");
             }
         }
 
