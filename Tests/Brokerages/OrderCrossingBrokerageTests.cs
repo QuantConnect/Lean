@@ -469,12 +469,6 @@ namespace QuantConnect.Tests.Brokerages
                 return LeanOrderByZeroCrossBrokerageOrderId.Count;
             }
 
-            /// <inheritdoc cref="Brokerage.OrderCrossesZero"/>
-            public static bool GetOrderCrossesZero(decimal holdingQuantity, decimal orderQuantity)
-            {
-                return OrderCrossesZero(holdingQuantity, orderQuantity);
-            }
-
             public override bool PlaceOrder(Order order)
             {
                 // For testing purposes only: Adds the specified order to the order provider.
