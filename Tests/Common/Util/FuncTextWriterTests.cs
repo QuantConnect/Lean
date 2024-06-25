@@ -24,21 +24,15 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class FuncTextWriterTests
     {
-        StreamWriter standardOut;
-
         [SetUp]
         public void Setup()
         {
             // clear any existing output
-            standardOut = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+            #pragma warning disable CA2000
+            var standardOut = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+            #pragma warning restore CA2000
             Console.SetError(standardOut);
             Console.SetOut(standardOut);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            standardOut.DisposeSafely();
         }
         
         [Test]
