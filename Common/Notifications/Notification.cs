@@ -204,7 +204,7 @@ namespace QuantConnect.Notifications
     /// </summary>
     public class NotificationFtp : Notification
     {
-        private static readonly Regex HostnameProtocolRegex = new Regex(@"^[s]?ftp\:\/\/", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex HostnameProtocolRegex = new(@"^[s]?ftp\:\/\/", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private const int DefaultPort = 21;
 
@@ -236,7 +236,7 @@ namespace QuantConnect.Notifications
         /// The FTP server password.
         /// </summary>
         [JsonProperty("password", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? Password { get; }
+        public string Password { get; }
 
         /// <summary>
         /// The path to file on the FTP server.
@@ -254,13 +254,13 @@ namespace QuantConnect.Notifications
         /// The private key to use for authentication (optional).
         /// </summary>
         [JsonProperty("privateKey", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? PrivateKey { get; }
+        public string PrivateKey { get; }
 
         /// <summary>
         /// The passphrase for the private key (optional).
         /// </summary>
         [JsonProperty("passphrase", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? PrivateKeyPassphrase { get; }
+        public string PrivateKeyPassphrase { get; }
 
         private NotificationFtp(string hostname, string username, string filePath, byte[] fileContent, bool secure, int? port)
         {
@@ -315,7 +315,7 @@ namespace QuantConnect.Notifications
             }
 
             PrivateKey = privateKey;
-            PrivateKeyPassphrase = string.IsNullOrEmpty(privateKeyPassphrase) ? null : privateKeyPassphrase;
+            PrivateKeyPassphrase = privateKeyPassphrase;
         }
 
         /// <summary>
@@ -394,6 +394,11 @@ namespace QuantConnect.Notifications
         /// <returns>Whether the notification can be sent</returns>
         public static bool CanSend(this Notification notification)
         {
+            if (notification == null)
+            {
+                return false;
+            }
+
             var type = notification.GetType();
             return type != typeof(NotificationEmail) &&
                 type != typeof(NotificationWeb) &&
