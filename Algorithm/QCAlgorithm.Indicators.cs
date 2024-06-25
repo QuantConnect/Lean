@@ -171,7 +171,7 @@ namespace QuantConnect.Algorithm
         /// <param name="type">The type of moving average used when computing the fast and slow term. Defaults to simple moving average.</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         [DocumentationAttribute(Indicators)]
-        public AwesomeOscillator AO(Symbol symbol, int slowPeriod, int fastPeriod, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        public AwesomeOscillator AO(Symbol symbol, int fastPeriod, int slowPeriod, MovingAverageType type, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"AO({fastPeriod},{slowPeriod},{type})", resolution);
             var awesomeOscillator = new AwesomeOscillator(name, fastPeriod, slowPeriod, type);
