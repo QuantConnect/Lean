@@ -812,7 +812,9 @@ namespace QuantConnect.Tests.Common.Orders
         private static Order DeserializeOrder<T>(string json) where T : Order
         {
             var converter = new OrderJsonConverter();
-            using var reader = new JsonTextReader(new StringReader(json));
+            # pragma warning disable CA2000
+            var reader = new JsonTextReader(new StringReader(json));
+            #pragma warning restore CA2000
             var jsonSerializer = new JsonSerializer();
             jsonSerializer.Converters.Add(converter);
             var actual = jsonSerializer.Deserialize<Order>(reader);

@@ -409,7 +409,7 @@ namespace QuantConnect.Tests.Engine.Setup
                     && (Math.Abs(group.Quantity) == 1)) != 1)
             {
                 factory.Dispose();
-                throw new ArgumentException($"Option strategy: '{OptionStrategyDefinitions.CoveredCall.Name}' was not found!");
+                throw new RegressionTestException($"Option strategy: '{OptionStrategyDefinitions.CoveredCall.Name}' was not found!");
             }
         }
 

@@ -134,7 +134,6 @@ namespace QuantConnect.Tests.Algorithm
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
             var dataPermissionManager = new DataPermissionManager();
-            using var defaultDataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(
                 new MockDataFeed(),
                 new UniverseSelection(
@@ -147,7 +146,7 @@ namespace QuantConnect.Tests.Algorithm
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCacheProvider(algorithm.Portfolio)),
                     dataPermissionManager,
-                    defaultDataProvider),
+                    TestGlobals.DataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,

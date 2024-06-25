@@ -93,7 +93,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             algorithm.SetDateTime(referenceTimeUtc);
 
             var transactionHandler = new BacktestingTransactionHandler();
-            using var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            # pragma warning disable CA2000
+            var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            #pragma warning restore CA2000
             transactionHandler.Initialize(algorithm, backtestingBrokerage, new TestResultHandler(Console.WriteLine));
 
             algorithm.Transactions.SetOrderProcessor(transactionHandler);
