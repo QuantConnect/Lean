@@ -115,7 +115,8 @@ namespace QuantConnect.Brokerages
         {
             message = null;
 
-            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity))
+            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) 
+                && request.Quantity != null && request.Quantity != order.Quantity)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
                     Messages.DefaultBrokerageModel.UnsupportedCrossZeroOrderUpdate(this));
