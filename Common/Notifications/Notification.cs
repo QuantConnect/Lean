@@ -211,55 +211,61 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Whether to use SFTP or FTP.
         /// </summary>
+        [JsonProperty("secure")]
         public bool Secure { get; }
 
         /// <summary>
         /// The FTP server hostname.
         /// </summary>
+        [JsonProperty("host")]
         public string Hostname { get; }
 
         /// <summary>
         /// The FTP server port.
         /// </summary>
+        [JsonProperty("port")]
         public int Port { get; }
 
         /// <summary>
         /// The FTP server username.
         /// </summary>
+        [JsonProperty("username")]
         public string Username { get; }
 
         /// <summary>
         /// The FTP server password.
         /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty("password", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? Password { get; }
 
         /// <summary>
         /// The path to file on the FTP server.
         /// </summary>
+        [JsonProperty("fileDestinationPath")]
         public string FilePath { get; }
 
         /// <summary>
         /// The contents of the file to send.
         /// </summary>
+        [JsonProperty("fileContent")]
         public string FileContent { get; private set; }
 
         /// <summary>
         /// The public key to use for authentication (optional).
         /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty("publicKey", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? PublicKey { get; }
 
         /// <summary>
         /// The private key to use for authentication (optional).
         /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty("privateKey", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? PrivateKey { get; }
 
         /// <summary>
         /// The passphrase for the private key (optional).
         /// </summary>
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonProperty("passphrase", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string? PrivateKeyPassphrase { get; }
 
         private NotificationFtp(string hostname, string username, string filePath, byte[] fileContent, bool secure, int? port)

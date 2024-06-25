@@ -174,28 +174,28 @@ namespace QuantConnect.Tests.Common.Notifications
 		}, {
 			""address"": ""qc.com/1234""
 		},{
-			""hostname"": ""qc.com"",
+			""host"": ""qc.com"",
 			""username"": ""username"",
 			""password"": ""password"",
-			""filePath"": ""path/to/file.csv"",
+			""fileDestinationPath"": ""path/to/file.csv"",
 			""fileContent"": ""abcde"",
 			""secure"": ""true"",
 			""port"": 2222
 		},{
-			""hostname"": ""qc.com"",
+			""host"": ""qc.com"",
 			""username"": ""username"",
 			""password"": ""password"",
-			""filePath"": ""path/to/file.csv"",
+			""fileDestinationPath"": ""path/to/file.csv"",
 			""filecontent"": ""abcde"",
 			""secure"": ""false"",
 			""port"": 2222
 		},{
-			""hostname"": ""qc.com"",
+			""host"": ""qc.com"",
 			""username"": ""username"",
             ""publickey"": ""publickey"",
             ""privatekey"": ""privatekey"",
-            ""privatekeyPassphrase"": ""privatekeyPassphrase"",
-			""filePath"": ""path/to/file.csv"",
+            ""passphrase"": ""privatekeyPassphrase"",
+			""fileDestinationPath"": ""path/to/file.csv"",
 			""filecontent"": ""abcde"",
 			""secure"": ""false"",
 			""port"": 2222

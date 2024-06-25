@@ -80,24 +80,24 @@ namespace QuantConnect.Notifications
                 var botToken = jObject.GetValue("Token", StringComparison.InvariantCultureIgnoreCase);
                 return new NotificationTelegram(token.ToString(), message?.ToString(), botToken?.ToString());
             }
-            else if (jObject.TryGetValue("Hostname", StringComparison.InvariantCultureIgnoreCase, out token))
+            else if (jObject.TryGetValue("host", StringComparison.InvariantCultureIgnoreCase, out token))
             {
                 // This is an FTP notification
                 var hostname = token.ToString();
-                var port = jObject.GetValue("Port", StringComparison.InvariantCultureIgnoreCase)?.ToObject<int?>();
-                var username = jObject.GetValue("Username", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var filePath = jObject.GetValue("FilePath", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var fileContent = jObject.GetValue("FileContent", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var port = jObject.GetValue("port", StringComparison.InvariantCultureIgnoreCase)?.ToObject<int?>();
+                var username = jObject.GetValue("username", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var filePath = jObject.GetValue("fileDestinationPath", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var fileContent = jObject.GetValue("fileContent", StringComparison.InvariantCultureIgnoreCase)?.ToString();
 
-                if (jObject.TryGetValue("Password", StringComparison.InvariantCultureIgnoreCase, out var password))
+                if (jObject.TryGetValue("password", StringComparison.InvariantCultureIgnoreCase, out var password))
                 {
-                    var secure = jObject.GetValue("Secure", StringComparison.InvariantCultureIgnoreCase)?.ToObject<bool>() ?? true;
+                    var secure = jObject.GetValue("secure", StringComparison.InvariantCultureIgnoreCase)?.ToObject<bool>() ?? true;
                     return NotificationFtp.FromEncodedData(hostname, username, password.ToString(), filePath, fileContent, secure, port);
                 }
 
-                var publicKey = jObject.GetValue("PublicKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var privateKey = jObject.GetValue("PrivateKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                var passphrase = jObject.GetValue("PrivateKeyPassphrase", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var publicKey = jObject.GetValue("publicKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var privateKey = jObject.GetValue("privateKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var passphrase = jObject.GetValue("passphrase", StringComparison.InvariantCultureIgnoreCase)?.ToString();
                 return NotificationFtp.FromEncodedData(hostname, username, publicKey, privateKey, filePath, fileContent, port, passphrase);
             }
 
