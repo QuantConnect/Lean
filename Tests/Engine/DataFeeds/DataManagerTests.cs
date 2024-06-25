@@ -55,12 +55,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void ReturnsExistingConfig()
         {
             var dataPermissionManager = new DataPermissionManager();
-            using var defaultDataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(new NullDataFeed(),
                 new UniverseSelection(_algorithm,
                     _securityService,
                     dataPermissionManager,
-                    defaultDataProvider),
+                    TestGlobals.DataProvider),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
@@ -102,12 +101,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPermissionManager = new DataPermissionManager();
             var dataFeed = new TestDataFeed();
-            using var defaultDataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(dataFeed,
                 new UniverseSelection(_algorithm,
                     _securityService,
                     dataPermissionManager,
-                    defaultDataProvider),
+                    TestGlobals.DataProvider),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
@@ -161,12 +159,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPermissionManager = new DataPermissionManager();
             var dataFeed = new TestDataFeed();
-            using var data = new DefaultDataProvider();
             var dataManager = new DataManager(dataFeed,
                 new UniverseSelection(_algorithm,
                     _securityService,
                     dataPermissionManager,
-                    data),
+                    TestGlobals.DataProvider),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,
@@ -228,12 +225,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var dataPermissionManager = new DataPermissionManager();
             var dataFeed = new TestDataFeed();
-            using var defeaultDataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(dataFeed,
                 new UniverseSelection(_algorithm,
                     _securityService,
                     dataPermissionManager,
-                    defeaultDataProvider),
+                    TestGlobals.DataProvider),
                 _algorithm,
                 _algorithm.TimeKeeper,
                 MarketHoursDatabase.AlwaysOpen,

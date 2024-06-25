@@ -54,8 +54,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void CachedDataIsReturnedAsClone()
         {
-            using var defaultDataProvider = new DefaultDataProvider();
-            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(defaultDataProvider);
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
             var reader = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider,
                 _config,
@@ -135,8 +134,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void DataIsCachedCorrectly()
         {
-            using var defaultDataProvider = new DefaultDataProvider();
-            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(defaultDataProvider);
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
             var reader = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider,
                 _config,
@@ -168,8 +166,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [Test]
         public void RespectsInitialDate()
         {
-            using var defaultDataProvider = new DefaultDataProvider();
-            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(defaultDataProvider);
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
             var reader = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider,
                 _config,
@@ -228,8 +225,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true,
                 true,
                 false);
-            using var defaultDataProvider = new DefaultDataProvider();
-            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(defaultDataProvider, isDataEphemeral: false);
+            using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider, isDataEphemeral: false);
             var reader = new TextSubscriptionDataSourceReader(
                 singleEntryDataCacheProvider,
                 _config,

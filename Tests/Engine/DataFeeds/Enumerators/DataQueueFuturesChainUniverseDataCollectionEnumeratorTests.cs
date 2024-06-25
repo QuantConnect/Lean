@@ -114,7 +114,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             var future = algo.AddFuture(canonicalSymbol.Value);
 
             var universeSettings = new UniverseSettings(resolution, 0, true, false, TimeSpan.Zero);
-            using var universe = new FuturesChainUniverse(future, universeSettings);
+#pragma warning disable CA2000
+            var universe = new FuturesChainUniverse(future, universeSettings);
+#pragma warning restore CA2000
             return new SubscriptionRequest(true, universe, future, config, startTime, Time.EndOfTime);
         }
 

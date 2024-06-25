@@ -35,8 +35,8 @@ namespace QuantConnect.Tests.Indicators
         {
             #pragma warning disable CS0618
             var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
-            return indicator;
             #pragma warning restore CS0618
+            return indicator;
         }
 
         [Test]
@@ -79,8 +79,8 @@ namespace QuantConnect.Tests.Indicators
         {
             #pragma warning disable CS0618
             Symbol = "SPX 2T";
-            base.WorksWithLowValues();
             #pragma warning restore CS0618
+            base.WorksWithLowValues();
         }
 
         [Test]

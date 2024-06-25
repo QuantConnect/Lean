@@ -30,11 +30,19 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     public class IndexSubscriptionDataSourceReaderTests
     {
         private DateTime _initialDate;
+        private TestDataCacheProvider _dataCacheProvider;
 
         [SetUp]
         public void SetUp()
         {
             _initialDate = new DateTime(2018, 1, 1);
+            _dataCacheProvider = new TestDataCacheProvider();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _dataCacheProvider.DisposeSafely();
         }
 
         [Test]
@@ -50,9 +58,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     true,
                     false);
 
-            using var dataCacheProvider = new TestDataCacheProvider();
             Assert.Throws<ArgumentException>(() => new IndexSubscriptionDataSourceReader(
-                dataCacheProvider,
+                _dataCacheProvider,
                 config,
                 _initialDate,
                 false,
@@ -73,16 +80,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 true,
                 false);
 
-            using var dataCacheProvider = new TestDataCacheProvider();
             var reader = new IndexSubscriptionDataSourceReader(
-                dataCacheProvider,
+                _dataCacheProvider,
                 config,
                 _initialDate,
                 false,
                 TestGlobals.DataProvider,
                 null);
             var source = (new TradeBar()).GetSource(config, _initialDate, false);
-            dataCacheProvider.Data = "20000101 00:00,2,2,2,2,2";
+            _dataCacheProvider.Data = "20000101 00:00,2,2,2,2,2";
             var dataBars = reader.Read(source).First();
 
             Assert.IsNotNull(dataBars);

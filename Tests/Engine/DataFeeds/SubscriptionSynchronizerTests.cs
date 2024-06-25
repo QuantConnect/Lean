@@ -62,9 +62,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new SecurityCacheProvider(algorithm.Portfolio));
             algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
-            using var defaultDataProvider = new DefaultDataProvider();
             var dataManager = new DataManager(feed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager, defaultDataProvider),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, TestGlobals.DataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,

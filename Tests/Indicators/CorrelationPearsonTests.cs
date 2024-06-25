@@ -36,8 +36,8 @@ namespace QuantConnect.Tests.Indicators
         {
             #pragma warning disable CS0618
             var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);
-            return indicator;
             #pragma warning restore CS0618
+            return indicator;
         }
 
         [Test]

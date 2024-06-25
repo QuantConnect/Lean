@@ -167,7 +167,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             option.Underlying = underlying;
 
             var universeSettings = new UniverseSettings(resolution, 0, true, false, TimeSpan.Zero);
-            using var universe = new OptionChainUniverse(option, universeSettings);
+# pragma warning disable CA2000
+            var universe = new OptionChainUniverse(option, universeSettings);
+#pragma warning restore CA2000
             return new SubscriptionRequest(true, universe, option, config, startTime, Time.EndOfTime);
         }
 

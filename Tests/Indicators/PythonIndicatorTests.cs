@@ -329,8 +329,8 @@ class BadCustomIndicator(PythonIndicator):
 
                 #pragma warning disable CS0618
                 var exception = Assert.Throws<ArgumentException>(() => algorithm.RegisterIndicator(spy, PyIndicator, Consolidator));
-                Assert.That(exception.Message, Is.EqualTo(expectedMessage));
                 #pragma warning restore CS0618
+                Assert.That(exception.Message, Is.EqualTo(expectedMessage));
             }
         }
 
