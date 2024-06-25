@@ -13,15 +13,17 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Orders.CrossZero
+using QuantConnect.Orders;
+
+namespace QuantConnect.Brokerages.CrossZero
 {
     /// <summary>
-    /// Represents a request to cross zero order.
+    /// Represents a request for a cross zero order.
     /// </summary>
-    public class CrossZeroOrderRequest
+    public interface ICrossZeroOrderRequest
     {
         /// <summary>
-        /// Gets the lean order.
+        /// Gets the original lean order.
         /// </summary>
         public Order LeanOrder { get; }
 
@@ -36,9 +38,9 @@ namespace QuantConnect.Orders.CrossZero
         public decimal OrderQuantity { get; }
 
         /// <summary>
-        /// Gets or sets the first part of CrossZeroOrder. (optional)
+        /// Gets the absolute quantity of the order.
         /// </summary>
-        public CrossZeroOrderRequest FirstPartCrossZeroOrder { get; set; }
+        public decimal AbsoluteOrderQuantity { get; }
 
         /// <summary>
         /// Gets the current holding quantity of the order's symbol.
@@ -46,18 +48,11 @@ namespace QuantConnect.Orders.CrossZero
         public decimal OrderQuantityHolding { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CrossZeroOrderRequest"/> struct.
+        /// Gets the position of the order.
         /// </summary>
-        /// <param name="leanOrder">The lean order.</param>
-        /// <param name="orderType">The type of the order.</param>
-        /// <param name="orderQuantity">The quantity of the order.</param>
-        /// <param name="orderQuantityHolding">The current holding quantity of the order's symbol.</param>
-        public CrossZeroOrderRequest(Order leanOrder, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding)
-        {
-            LeanOrder = leanOrder;
-            OrderType = orderType;
-            OrderQuantity = orderQuantity;
-            OrderQuantityHolding = orderQuantityHolding;
-        }
+        /// <value>
+        /// The position of the order, which depends on the <see cref="OrderQuantityHolding"/>.
+        /// </value>
+        public OrderPosition OrderPosition { get; }
     }
 }

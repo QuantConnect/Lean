@@ -26,7 +26,7 @@ using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
-using QuantConnect.Orders.CrossZero;
+using QuantConnect.Brokerages.CrossZero;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages
@@ -497,7 +497,7 @@ namespace QuantConnect.Tests.Brokerages
             /// <returns>
             /// A <see cref="CrossZeroOrderResponse"/> containing the result of placing the order.
             /// </returns>
-            protected override CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithoutLeanEvent)
+            protected override CrossZeroOrderResponse PlaceCrossZeroOrder(ICrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithoutLeanEvent)
             {
                 Log.Trace($"{nameof(PhonyBrokerage)}.{nameof(PlaceCrossZeroOrder)}");
 

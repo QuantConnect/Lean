@@ -26,7 +26,7 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using QuantConnect.Orders.CrossZero;
+using QuantConnect.Brokerages.CrossZero;
 
 namespace QuantConnect.Brokerages
 {
@@ -573,13 +573,23 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// A dictionary to store the relationship between brokerage crossing orders and Lean orer id.
         /// </summary>
-        private readonly ConcurrentDictionary<int, CrossZeroOrderRequest> _leanOrderByBrokerageCrossingOrders = new ConcurrentDictionary<int, CrossZeroOrderRequest>();
+        private readonly ConcurrentDictionary<int, ICrossZeroOrderRequest> _leanOrderByBrokerageCrossingOrders = new();
 
         /// <summary>
         /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
         /// ensuring thread safety when accessing the order collection.
         /// </summary>
         private object _lockCrossZeroObject = new();
+
+        /// <summary>
+        /// A thread-safe dictionary that maps brokerage order IDs to their corresponding Order objects.
+        /// </summary>
+        /// <remarks>
+        /// This ConcurrentDictionary is used to maintain a mapping between Zero Cross brokerage order IDs and Lean Order objects. 
+        /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot 
+        /// be assigned a new instance after initialization.
+        /// </remarks>
+        protected ConcurrentDictionary<string, Order> LeanOrderByZeroCrossBrokerageOrderId { get; } = new();
 
         /// <summary>
         /// Determines if executing the specified order will cross the zero holdings threshold.
@@ -615,16 +625,6 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// A thread-safe dictionary that maps brokerage order IDs to their corresponding Order objects.
-        /// </summary>
-        /// <remarks>
-        /// This ConcurrentDictionary is used to maintain a mapping between Zero Cross brokerage order IDs and Lean Order objects. 
-        /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot 
-        /// be assigned a new instance after initialization.
-        /// </remarks>
-        protected ConcurrentDictionary<string, Order> LeanOrderByZeroCrossBrokerageOrderId { get; } = new();
-
-        /// <summary>
         /// Places an order that crosses zero (transitions from a short position to a long position or vice versa) and returns the response.
         /// This method should be overridden in a derived class to implement brokerage-specific logic for placing such orders.
         /// </summary>
@@ -639,7 +639,7 @@ namespace QuantConnect.Brokerages
         /// <exception cref="NotImplementedException">
         /// Thrown if the method is not overridden in a derived class.
         /// </exception>
-        protected virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
+        protected virtual CrossZeroOrderResponse PlaceCrossZeroOrder(ICrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
         {
             throw new NotImplementedException($"{nameof(PlaceCrossZeroOrder)} method should be overridden in the derived class to handle brokerage-specific logic.");
         }
@@ -674,13 +674,14 @@ namespace QuantConnect.Brokerages
                 var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
 
                 // Note: original quantity - already sell
-                var firstOrderPartRequest = new CrossZeroOrderRequest(order, order.Type, firstOrderQuantity, holdingQuantity);
+                var firstOrderPartRequest = new CrossZeroFirstOrderRequest(order, order.Type, firstOrderQuantity, holdingQuantity,
+                    GetOrderPosition(order.Direction, holdingQuantity));
 
                 // we actually can't place this order until the closingOrder is filled
                 // create another order for the rest, but we'll convert the order type to not be a stop
                 // but a market or a limit order                
-                var secondOrderPartRequest = new CrossZeroOrderRequest(order, ConvertStopCrossingOrderType(order.Type), secondOrderQuantity, 0m)
-                { FirstPartCrossZeroOrder = firstOrderPartRequest };
+                var secondOrderPartRequest = new CrossZeroSecondOrderRequest(order, order.Type, secondOrderQuantity, 0m,
+                    GetOrderPosition(order.Direction, 0m), firstOrderPartRequest);
 
                 _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
 
@@ -726,7 +727,7 @@ namespace QuantConnect.Brokerages
             if (_leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var crossZeroOrderRequest))
             {
                 // If it is a CrossZeroOrder, use the first part of the quantity for the update.
-                quantity = crossZeroOrderRequest.FirstPartCrossZeroOrder.OrderQuantity;
+                quantity = (crossZeroOrderRequest as CrossZeroSecondOrderRequest).FirstPartCrossZeroOrder.OrderQuantity;
                 // If the quantities of the LeanOrder do not match, return false. Don't support.
                 if (crossZeroOrderRequest.LeanOrder.Quantity != leanOrder.Quantity)
                 {
@@ -836,7 +837,6 @@ namespace QuantConnect.Brokerages
             return false;
         }
 
-
         /// <summary>
         /// Calculates the quantities needed to close the current position and establish a new position based on the provided order.
         /// </summary>
@@ -861,22 +861,6 @@ namespace QuantConnect.Brokerages
 
             return (firstOrderQuantity, secondOrderQuantity);
         }
-
-        /// <summary>
-        /// Converts a stop order type to its corresponding market or limit order type.
-        /// </summary>
-        /// <param name="orderType">The original order type to be converted.</param>
-        /// <returns>
-        /// The converted order type. If the original order type is <see cref="OrderType.StopMarket"/>, 
-        /// it returns <see cref="OrderType.Market"/>. If the original order type is <see cref="OrderType.StopLimit"/>,
-        /// it returns <see cref="OrderType.Limit"/>. Otherwise, it returns the original order type.
-        /// </returns>
-        private static OrderType ConvertStopCrossingOrderType(OrderType orderType) => orderType switch
-        {
-            OrderType.StopMarket => OrderType.Market,
-            OrderType.StopLimit => OrderType.Limit,
-            _ => orderType
-        };
 
         #endregion
     }

@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Orders.CrossZero
+namespace QuantConnect.Brokerages.CrossZero
 {
     /// <summary>
     /// Represents a response for a cross zero order request.
@@ -43,9 +43,9 @@ namespace QuantConnect.Orders.CrossZero
         /// <param name="message">The message of the order. This parameter is optional and defaults to <c>null</c>.</param>
         public CrossZeroOrderResponse(string brokerageOrderId, bool isOrderPlacedSuccessfully, string message = "")
         {
+            Message = message;
             BrokerageOrderId = brokerageOrderId;
             IsOrderPlacedSuccessfully = isOrderPlacedSuccessfully;
-            Message = message;
         }
     }
 }
