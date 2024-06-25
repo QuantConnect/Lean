@@ -133,20 +133,12 @@ namespace QuantConnect.Python
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            using (Py.GIL())
-            {
-                message = null;
-                using var result = InvokeMethod(nameof(CanSubmitOrder), security, order, message);
-                // Since pythonnet does not support out parameters, the methods return
-                // a tuple where the out parameter comes after the other returned values
-                if (!PyTuple.IsTupleType(result))
-                {
-                    throw new ArgumentException($@"{(Instance as dynamic).__class__.__name__}.CanSubmitOrder(): Must return a tuple value where the first value is a bool and the second a BrokerageMessageEvent");
-                }
+            message = null;
+            var result = InvokeMethodWithOutParameters<bool>(nameof(CanSubmitOrder), new[] { typeof(BrokerageMessageEvent) },
+                out var outParameters, security, order, message);
+            message = outParameters[0] as BrokerageMessageEvent;
 
-                message = result[1].As<BrokerageMessageEvent>();
-                return result[0].As<bool>();
-            }
+            return result;
         }
 
         /// <summary>
@@ -159,20 +151,12 @@ namespace QuantConnect.Python
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            using (Py.GIL())
-            {
-                message = null;
-                using var result = InvokeMethod(nameof(CanUpdateOrder), security, order, request, message);
-                // Since pythonnet does not support out parameters, the methods return
-                // a tuple where the out parameter comes after the other returned values
-                if (!PyTuple.IsTupleType(result))
-                {
-                    throw new ArgumentException($@"{(Instance as dynamic).__class__.__name__}.CanUpdateOrder(): Must return a tuple value where the first value is a bool and the second a BrokerageMessageEvent");
-                }
+            message = null;
+            var result = InvokeMethodWithOutParameters<bool>(nameof(CanUpdateOrder), new[] { typeof(BrokerageMessageEvent) }, out var outParameters,
+                security, order, request, message);
+            message = outParameters[0] as BrokerageMessageEvent;
 
-                message = result[1].As<BrokerageMessageEvent>();
-                return result[0].As<bool>();
-            }
+            return result;
         }
 
         /// <summary>
@@ -182,15 +166,7 @@ namespace QuantConnect.Python
         /// <returns>The benchmark for this brokerage</returns>
         public IBenchmark GetBenchmark(SecurityManager securities)
         {
-            using (Py.GIL())
-            {
-                var benchmark = InvokeMethod(nameof(GetBenchmark), securities);
-                if (benchmark.TryConvert<IBenchmark>(out var csharpBenchmark))
-                {
-                    return csharpBenchmark;
-                }
-                return new BenchmarkPythonWrapper(benchmark);
-            }
+            return InvokeMethodAndWrapResult<IBenchmark>(nameof(GetBenchmark), (pyInstance) => new BenchmarkPythonWrapper(pyInstance), securities);
         }
 
         /// <summary>
@@ -200,15 +176,7 @@ namespace QuantConnect.Python
         /// <returns>The new fee model for this brokerage</returns>
         public IFeeModel GetFeeModel(Security security)
         {
-            using (Py.GIL())
-            {
-                var feeModel = InvokeMethod(nameof(GetFeeModel), security);
-                if (feeModel.TryConvert<IFeeModel>(out var csharpFeeModel))
-                {
-                    return csharpFeeModel;
-                }
-                return new FeeModelPythonWrapper(feeModel);
-            }
+            return InvokeMethodAndWrapResult<IFeeModel>(nameof(GetFeeModel), (pyInstance) => new FeeModelPythonWrapper(pyInstance), security);
         }
 
         /// <summary>
@@ -218,15 +186,7 @@ namespace QuantConnect.Python
         /// <returns>The new fill model for this brokerage</returns>
         public IFillModel GetFillModel(Security security)
         {
-            using (Py.GIL())
-            {
-                var fillModel = InvokeMethod(nameof(GetFillModel), security);
-                if (fillModel.TryConvert<IFillModel>(out var csharpFillModel))
-                {
-                    return csharpFillModel;
-                }
-                return new FillModelPythonWrapper(fillModel);
-            }
+            return InvokeMethodAndWrapResult<IFillModel>(nameof(GetFillModel), (pyInstance) => new FillModelPythonWrapper(pyInstance), security);
         }
 
         /// <summary>
@@ -246,15 +206,8 @@ namespace QuantConnect.Python
         /// <returns>The settlement model for this brokerage</returns>
         public ISettlementModel GetSettlementModel(Security security)
         {
-            using (Py.GIL())
-            {
-                var settlementModel = InvokeMethod(nameof(GetSettlementModel), security);
-                if (settlementModel.TryConvert<ISettlementModel>(out var csharpSettlementModel))
-                {
-                    return csharpSettlementModel;
-                }
-                return new SettlementModelPythonWrapper(settlementModel);
-            }
+            return InvokeMethodAndWrapResult<ISettlementModel>(nameof(GetSettlementModel),
+                (pyInstance) => new SettlementModelPythonWrapper(pyInstance), security);
         }
 
         /// <summary>
@@ -276,15 +229,8 @@ namespace QuantConnect.Python
         /// <returns>The new slippage model for this brokerage</returns>
         public ISlippageModel GetSlippageModel(Security security)
         {
-            using (Py.GIL())
-            {
-                var slippageModel = InvokeMethod(nameof(GetSlippageModel), security);
-                if (slippageModel.TryConvert<ISlippageModel>(out var csharpSlippageModel))
-                {
-                    return csharpSlippageModel;
-                }
-                return new SlippageModelPythonWrapper(slippageModel);
-            }
+            return InvokeMethodAndWrapResult<ISlippageModel>(nameof(GetSlippageModel),
+                (pyInstance) => new SlippageModelPythonWrapper(pyInstance), security);
         }
 
         /// <summary>
@@ -307,15 +253,8 @@ namespace QuantConnect.Python
         /// <returns>The buying power model for this brokerage/security</returns>
         public IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
-            using (Py.GIL())
-            {
-                var buyingPowerModel = InvokeMethod(nameof(GetBuyingPowerModel), security);
-                if (buyingPowerModel.TryConvert<IBuyingPowerModel>(out var csharpBuyingPowerModel))
-                {
-                    return csharpBuyingPowerModel;
-                }
-                return new BuyingPowerModelPythonWrapper(buyingPowerModel);
-            }
+            return InvokeMethodAndWrapResult<IBuyingPowerModel>(nameof(GetBuyingPowerModel),
+                (pyInstance) => new BuyingPowerModelPythonWrapper(pyInstance), security);
         }
 
         /// <summary>
@@ -336,15 +275,8 @@ namespace QuantConnect.Python
         /// <returns>Shortable provider</returns>
         public IShortableProvider GetShortableProvider(Security security)
         {
-            using (Py.GIL())
-            {
-                var shortableProvider = InvokeMethod(nameof(GetShortableProvider), security);
-                if (shortableProvider.TryConvert<IShortableProvider>(out var csharpShortableProvider))
-                {
-                    return csharpShortableProvider;
-                }
-                return new ShortableProviderPythonWrapper(shortableProvider);
-            }
+            return InvokeMethodAndWrapResult<IShortableProvider>(nameof(GetShortableProvider),
+                (pyInstance) => new ShortableProviderPythonWrapper(pyInstance), security);
         }
 
         /// <summary>
@@ -355,7 +287,7 @@ namespace QuantConnect.Python
         {
             using (Py.GIL())
             {
-                return Instance.AsManagedObject(typeof(IBrokerageModel)) as IBrokerageModel;
+                return Instance.As<IBrokerageModel>();
             }
         }
 
@@ -366,15 +298,8 @@ namespace QuantConnect.Python
         /// <returns>The margin interest rate model for this brokerage</returns>
         public IMarginInterestRateModel GetMarginInterestRateModel(Security security)
         {
-            using (Py.GIL())
-            {
-                var marginInterestRateModel = InvokeMethod(nameof(GetMarginInterestRateModel), security);
-                if (marginInterestRateModel.TryConvert<IMarginInterestRateModel>(out var csharpBuyingPowerModel))
-                {
-                    return csharpBuyingPowerModel;
-                }
-                return new MarginInterestRateModelPythonWrapper(marginInterestRateModel);
-            }
+            return InvokeMethodAndWrapResult<IMarginInterestRateModel>(nameof(GetMarginInterestRateModel),
+                (pyInstance) => new MarginInterestRateModelPythonWrapper(pyInstance), security);
         }
     }
 }

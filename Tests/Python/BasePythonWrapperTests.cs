@@ -173,7 +173,38 @@ class PythonTestInvokeMethodWithOutParamsModel():
 
                         var wrapper = new BasePythonWrapper<ITestInvokeMethodWithOutParamsModel>(pyInstance);
 
-                        AssertInvoke(wrapper, withValidOutParamCount);
+                        AssertInvoke<ArgumentException>(wrapper, withValidOutParamCount);
+                    }
+
+                    [Test]
+                    public void ThrowsWhenReturnedTypeIsNotATuple([Values] bool withValidReturnType)
+                    {
+                        using var _ = Py.GIL();
+                        using var module = PyModule.FromString(nameof(ThrowsWhenWrongReturnType), @"
+from datetime import datetime
+
+class PythonTestInvokeMethodWithOutParamsModel():
+    def __init__(self):
+        self._use_valid_return_type = True
+
+    def set_use_valid_return_type(self, value):
+        self._use_valid_return_type = value
+
+    def method_with_out_params(self, int_out_param, string_out_param):
+        int_out_param = 1
+        string_out_param = 'string'
+        if self._use_valid_return_type:
+            return datetime(2024, 6, 21), int_out_param, string_out_param
+        else:
+            return 1   # Invalid return type, not a tuple
+");
+                        using var pyInstance = module.GetAttr("PythonTestInvokeMethodWithOutParamsModel").Invoke();
+                        using var pyWithValidOutParamCount = withValidReturnType.ToPython();
+                        pyInstance.GetAttr("set_use_valid_return_type").Invoke(pyWithValidOutParamCount);
+
+                        var wrapper = new BasePythonWrapper<ITestInvokeMethodWithOutParamsModel>(pyInstance);
+
+                        AssertInvoke<ArgumentException>(wrapper, withValidReturnType);
                     }
 
                     [Test]
@@ -207,7 +238,8 @@ class PythonTestInvokeMethodWithOutParamsModel():
                         AssertInvoke(wrapper, withValidReturnType);
                     }
 
-                    private static void AssertInvoke(BasePythonWrapper<ITestInvokeMethodWithOutParamsModel> wrapper, bool validCase)
+                    private static void AssertInvoke<TException>(BasePythonWrapper<ITestInvokeMethodWithOutParamsModel> wrapper, bool validCase)
+                        where TException : Exception
                     {
                         var outParametersTypes = new Type[] { typeof(int), typeof(string) };
                         var intOutParameter = -1;
@@ -223,9 +255,14 @@ class PythonTestInvokeMethodWithOutParamsModel():
                         }
                         else
                         {
-                            Assert.Throws<InvalidCastException>(() => wrapper.InvokeMethodWithOutParameters<DateTime>("MethodWithOutParams",
+                            Assert.Throws<TException>(() => wrapper.InvokeMethodWithOutParameters<DateTime>("MethodWithOutParams",
                                 outParametersTypes, out var _, intOutParameter, stringOutParameter));
                         }
+                    }
+
+                    private static void AssertInvoke(BasePythonWrapper<ITestInvokeMethodWithOutParamsModel> wrapper, bool validCase)
+                    {
+                        AssertInvoke<InvalidCastException>(wrapper, validCase);
                     }
                 }
 
@@ -319,11 +356,11 @@ class PythonTestInvokeMethodReturningIterable():
                     {
                         using var _ = Py.GIL();
                         using var module = PyModule.FromString(nameof(WrapsResult), @"
+from AlgorithmImports import *
 from clr import AddReference
 AddReference('QuantConnect.Tests')
 
-from AlgorithmImports import *
-from QuantConnect.Tests.Python import *
+from QuantConnect.Tests.Python import BasePythonWrapperTests
 
 class PythonFeeModel(FeeModel):
     pass

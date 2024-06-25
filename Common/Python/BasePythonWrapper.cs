@@ -16,7 +16,6 @@
 using Python.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace QuantConnect.Python
 {
@@ -382,14 +381,14 @@ namespace QuantConnect.Python
                 // a tuple where the out parameter come after the other returned values
                 if (!PyTuple.IsTupleType(result))
                 {
-                    throw new InvalidCastException($"Invalid return type from method '{pythonMethodName}'. Expected a tuple type but was " +
+                    throw new ArgumentException($"Invalid return type from method '{pythonMethodName}'. Expected a tuple type but was " +
                         $"'{result.GetPythonType().Name}'. The tuple must contain the return value as the first item, " +
                         $"with the remaining ones being the out parameters.");
                 }
 
                 if (result.Length() < outParametersTypes.Length + 1)
                 {
-                    throw new InvalidCastException($"Invalid return type from method '{pythonMethodName}'. Expected a tuple with at least " +
+                    throw new ArgumentException($"Invalid return type from method '{pythonMethodName}'. Expected a tuple with at least " +
                         $"'{outParametersTypes.Length + 1}' items but only '{result.Length()}' were returned. " +
                         $"The tuple must contain the return value as the first item, with the remaining ones being the out parameters.");
                 }
