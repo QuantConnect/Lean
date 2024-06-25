@@ -39,13 +39,11 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", password, "path/to/file.json", _testContent));
         }
 
-        [TestCase(null, "privatekey")]
-        [TestCase("", "privatekey")]
-        [TestCase("publickey", null)]
-        [TestCase("publickey", "")]
-        public void ThrowsOnMissingSSHKeys(string publicKey, string privateKey)
+        [TestCase(null)]
+        [TestCase("")]
+        public void ThrowsOnMissingSSHKeys(string privateKey)
         {
-            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", publicKey, privateKey, "path/to/file.json", _testContent));
+            Assert.Throws<ArgumentException>(() => new NotificationFtp("qc.com", "username", privateKey, "", "path/to/file.json", _testContent));
         }
 
         // Protocol as in a URI

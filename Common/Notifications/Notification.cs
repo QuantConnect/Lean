@@ -251,12 +251,6 @@ namespace QuantConnect.Notifications
         public string FileContent { get; private set; }
 
         /// <summary>
-        /// The public key to use for authentication (optional).
-        /// </summary>
-        [JsonProperty("publicKey", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string? PublicKey { get; }
-
-        /// <summary>
         /// The private key to use for authentication (optional).
         /// </summary>
         [JsonProperty("privateKey", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -305,24 +299,23 @@ namespace QuantConnect.Notifications
         /// </summary>
         /// <param name="hostname">FTP server hostname</param>
         /// <param name="username">The FTP server username</param>
-        /// <param name="publicKey">The public SSH key to use for authentication</param>
         /// <param name="privateKey">The private SSH key to use for authentication</param>
+        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key.
+        /// This can be empty or null if the private key is not encrypted</param>
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key</param>
-        public NotificationFtp(string hostname, string username, string publicKey, string privateKey,
-            string filePath, byte[] fileContent, int? port = null, string privateKeyPassphrase = null)
+        public NotificationFtp(string hostname, string username, string privateKey, string privateKeyPassphrase,
+            string filePath, byte[] fileContent, int? port = null)
             : this(hostname, username, filePath, fileContent, true, port)
         {
-            if (string.IsNullOrEmpty(publicKey) || string.IsNullOrEmpty(privateKey))
+            if (string.IsNullOrEmpty(privateKey))
             {
-                throw new ArgumentException(Messages.NotificationFtp.MissingSSHKeys);
+                throw new ArgumentException(Messages.NotificationFtp.MissingSSHKey);
             }
 
-            PublicKey = publicKey;
             PrivateKey = privateKey;
-            PrivateKeyPassphrase = privateKeyPassphrase;
+            PrivateKeyPassphrase = string.IsNullOrEmpty(privateKeyPassphrase) ? null : privateKeyPassphrase;
         }
 
         /// <summary>
@@ -346,15 +339,15 @@ namespace QuantConnect.Notifications
         /// </summary>
         /// <param name="hostname">FTP server hostname</param>
         /// <param name="username">The FTP server username</param>
-        /// <param name="publicKey">The public SSH key to use for authentication</param>
         /// <param name="privateKey">The private SSH key to use for authentication</param>
+        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key.
+        /// This can be empty or null if the private key is not encrypted</param>
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key</param>
-        public NotificationFtp(string hostname, string username, string publicKey, string privateKey,
-            string filePath, string fileContent, int? port = null, string privateKeyPassphrase = null)
-            : this(hostname, username, publicKey, privateKey, filePath, Encoding.ASCII.GetBytes(fileContent), port, privateKeyPassphrase)
+        public NotificationFtp(string hostname, string username, string privateKey, string privateKeyPassphrase,
+            string filePath, string fileContent, int? port = null)
+            : this(hostname, username, privateKey, privateKeyPassphrase, filePath, Encoding.ASCII.GetBytes(fileContent), port)
         {
         }
 
@@ -380,10 +373,10 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Factory method for Json deserialization: the file contents are already encoded
         /// </summary>
-        internal static NotificationFtp FromEncodedData(string hostname, string username, string publicKey, string privateKey,
-            string filePath, string encodedFileContent, int? port, string privateKeyPassphrase)
+        internal static NotificationFtp FromEncodedData(string hostname, string username, string privateKey, string privateKeyPassphrase,
+            string filePath, string encodedFileContent, int? port)
         {
-            var notification = new NotificationFtp(hostname, username, publicKey, privateKey, filePath, Array.Empty<byte>(), port, privateKeyPassphrase);
+            var notification = new NotificationFtp(hostname, username, privateKey, privateKeyPassphrase, filePath, Array.Empty<byte>(), port);
             notification.FileContent = encodedFileContent;
             return notification;
         }

@@ -117,7 +117,6 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.FileContent, result.FileContent);
             Assert.AreEqual(expected.Port, result.Port);
             Assert.AreEqual(expected.Secure, result.Secure);
-            Assert.IsNull(result.PublicKey);
             Assert.IsNull(result.PrivateKey);
             Assert.IsNull(result.PrivateKeyPassphrase);
         }
@@ -128,19 +127,17 @@ namespace QuantConnect.Tests.Common.Notifications
             var expected = new NotificationFtp(
                 "qc.com",
                 "username",
-                "publickey",
                 "privatekey",
+                withPassphrase ? "passphrase" : null,
                 "path/to/file.json",
                 Encoding.ASCII.GetBytes("{}"),
-                withPort ? 2121 : null,
-                withPassphrase ? "passphrase" : null);
+                withPort ? 2121 : null);
 
             var serialized = JsonConvert.SerializeObject(expected);
             var result = (NotificationFtp)JsonConvert.DeserializeObject<Notification>(serialized);
 
             Assert.AreEqual(expected.Hostname, result.Hostname);
             Assert.AreEqual(expected.Username, result.Username);
-            Assert.AreEqual(expected.PublicKey, result.PublicKey);
             Assert.AreEqual(expected.PrivateKey, result.PrivateKey);
             Assert.AreEqual(expected.FilePath, result.FilePath);
             Assert.AreEqual(expected.FileContent, result.FileContent);
@@ -192,7 +189,6 @@ namespace QuantConnect.Tests.Common.Notifications
 		},{
 			""host"": ""qc.com"",
 			""username"": ""username"",
-            ""publickey"": ""publickey"",
             ""privatekey"": ""privatekey"",
             ""passphrase"": ""privatekeyPassphrase"",
 			""fileDestinationPath"": ""path/to/file.csv"",
@@ -227,7 +223,6 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual("abcde", ftp.FileContent);
             Assert.IsTrue(ftp.Secure);
             Assert.AreEqual(2222, ftp.Port);
-            Assert.IsNull(ftp.PublicKey);
             Assert.IsNull(ftp.PrivateKey);
             Assert.IsNull(ftp.PrivateKeyPassphrase);
 
@@ -239,14 +234,12 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual("abcde", ftp2.FileContent);
             Assert.IsFalse(ftp2.Secure);
             Assert.AreEqual(2222, ftp2.Port);
-            Assert.IsNull(ftp.PublicKey);
             Assert.IsNull(ftp.PrivateKey);
             Assert.IsNull(ftp.PrivateKeyPassphrase);
 
             var ftp3 = result[6] as NotificationFtp;
             Assert.AreEqual("qc.com", ftp3.Hostname);
             Assert.AreEqual("username", ftp3.Username);
-            Assert.AreEqual("publickey", ftp3.PublicKey);
             Assert.AreEqual("privatekey", ftp3.PrivateKey);
             Assert.AreEqual("privatekeyPassphrase", ftp3.PrivateKeyPassphrase);
             Assert.AreEqual("path/to/file.csv", ftp3.FilePath);

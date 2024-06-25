@@ -95,10 +95,9 @@ namespace QuantConnect.Notifications
                     return NotificationFtp.FromEncodedData(hostname, username, password.ToString(), filePath, fileContent, secure, port);
                 }
 
-                var publicKey = jObject.GetValue("publicKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
                 var privateKey = jObject.GetValue("privateKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
                 var passphrase = jObject.GetValue("passphrase", StringComparison.InvariantCultureIgnoreCase)?.ToString();
-                return NotificationFtp.FromEncodedData(hostname, username, publicKey, privateKey, filePath, fileContent, port, passphrase);
+                return NotificationFtp.FromEncodedData(hostname, username, privateKey, passphrase, filePath, fileContent, port);
             }
 
             throw new NotImplementedException(Messages.NotificationJsonConverter.UnexpectedJsonObject(jObject));

@@ -215,21 +215,21 @@ namespace QuantConnect.Notifications
         /// </summary>
         /// <param name="hostname">FTP server hostname</param>
         /// <param name="username">The FTP server username</param>
-        /// <param name="publicKey">The public SSH key to use for authentication</param>
         /// <param name="privateKey">The private SSH key to use for authentication</param>
+        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key.
+        /// This can be empty or null if the private key is not encrypted</param>
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key</param>
-        public bool Sftp(string hostname, string username, string publicKey, string privateKey, string filePath, byte[] fileContent,
-            int? port = null, string privateKeyPassphrase = null)
+        public bool Sftp(string hostname, string username, string privateKey, string privateKeyPassphrase, string filePath, byte[] fileContent,
+            int? port = null)
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var ftp = new NotificationFtp(hostname, username, publicKey, privateKey, filePath, fileContent, port, privateKeyPassphrase);
+            var ftp = new NotificationFtp(hostname, username, privateKey, privateKeyPassphrase, filePath, fileContent, port);
             Messages.Enqueue(ftp);
 
             return true;
@@ -240,21 +240,21 @@ namespace QuantConnect.Notifications
         /// </summary>
         /// <param name="hostname">FTP server hostname</param>
         /// <param name="username">The FTP server username</param>
-        /// <param name="publicKey">The public SSH key to use for authentication</param>
         /// <param name="privateKey">The private SSH key to use for authentication</param>
+        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key.
+        /// This can be empty or null if the private key is not encrypted</param>
         /// <param name="filePath">The path to file on the FTP server</param>
         /// <param name="fileContent">The string contents of the file</param>
         /// <param name="port">The FTP server port. Defaults to 21</param>
-        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key</param>
-        public bool Sftp(string hostname, string username, string publicKey, string privateKey, string filePath, string fileContent,
-            int? port = null, string privateKeyPassphrase = null)
+        public bool Sftp(string hostname, string username, string privateKey, string privateKeyPassphrase, string filePath, string fileContent,
+            int? port = null)
         {
             if (!Allow())
             {
                 return false;
             }
 
-            var ftp = new NotificationFtp(hostname, username, publicKey, privateKey, filePath, fileContent, port, privateKeyPassphrase);
+            var ftp = new NotificationFtp(hostname, username, privateKey, privateKeyPassphrase, filePath, fileContent, port);
             Messages.Enqueue(ftp);
 
             return true;

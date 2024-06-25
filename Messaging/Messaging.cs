@@ -38,6 +38,8 @@ namespace QuantConnect.Messaging
             get;
             set;
         }
+        public IApi Api { get; private set; }
+        public AlgorithmNodePacket Job { get; private set; }
 
         /// <summary>
         /// Initialize the messaging system
@@ -46,6 +48,7 @@ namespace QuantConnect.Messaging
         public void Initialize(MessagingHandlerInitializeParameters initializeParameters)
         {
             //
+            Api = initializeParameters.Api;
         }
 
         /// <summary>
@@ -53,6 +56,7 @@ namespace QuantConnect.Messaging
         /// </summary>
         public virtual void SetAuthentication(AlgorithmNodePacket job)
         {
+            Job = job;
         }
 
         /// <summary>
@@ -113,12 +117,40 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void SendNotification(Notification notification)
         {
+            var ftp = notification as NotificationFtp;
+            if (ftp != null)
+            {
+                Ftp(ftp);
+                return;
+            }
+
             if (!notification.CanSend())
             {
                 Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + notification.GetType().Name);
                 return;
             }
             notification.Send();
+        }
+
+        /// <summary>
+        /// Send a telegram notification triggered during live trading from a user algorithm.
+        /// </summary>
+        /// <param name="notification">Notification object class</param>
+        private void Ftp(NotificationFtp notification)
+        {
+            Log.Trace("Messaging.Cloud.Ftp(): Sending Notification to " + notification.Hostname);
+
+            SendNotificationApi(notification);
+        }
+
+        private void SendNotificationApi(Notification notification)
+        {
+            var response = Api.SendNotification(notification, 18373790);
+            if (response == null || !response.Success)
+            {
+                var message = response == null ? "empty API response" : string.Join("-", response.Errors);
+                throw new Exception($"Error sending '{notification.GetType().Name}': {message}");
+            }
         }
 
         /// <summary>

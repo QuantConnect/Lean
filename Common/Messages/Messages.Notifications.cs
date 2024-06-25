@@ -41,7 +41,7 @@ namespace QuantConnect
         /// </summary>
         public static class NotificationFtp
         {
-            public static string MissingSSHKeys = "FTP SSH keys missing for SFTP notification.";
+            public static string MissingSSHKey = "FTP SSH key missing for SFTP notification.";
 
             public static string MissingPassword = "FTP password is missing for unsecure FTP notification.";
         }

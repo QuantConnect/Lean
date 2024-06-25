@@ -83,9 +83,8 @@ namespace QuantConnect.Algorithm.CSharp
                     Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
                 Notify.Sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
                     Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
-                Notify.Sftp("ftp.quantconnect.com", "username", "publickey", "privatekey", "path/to/file.txt",
-                    Time.ToStringInvariant("u") + ">> Test file from live BTC server.",
-                    privateKeyPassphrase: "optionalprivatekeypassphrase");
+                Notify.Sftp("ftp.quantconnect.com", "username", "privatekey", "optionalprivatekeypassphrase", "path/to/file.txt",
+                    Time.ToStringInvariant("u") + ">> Test file from live BTC server.");
             }
         }
 

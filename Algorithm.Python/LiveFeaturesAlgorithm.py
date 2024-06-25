@@ -62,9 +62,8 @@ class LiveTradingFeaturesAlgorithm(QCAlgorithm):
                             str(data.time) + ">> Test file from live BTC server.")
             self.notify.sftp("ftp.quantconnect.com", "username", "password", "path/to/file.txt",
                              str(data.time) + ">> Test file from live BTC server.")
-            self.notify.sftp("ftp.quantconnect.com", "username", "publickey", "privatekey", "path/to/file.txt",
-                             str(data.time) + ">> Test file from live BTC server.",
-                             privateKeyPassphrase="optionalprivatekeypassphrase")
+            self.notify.sftp("ftp.quantconnect.com", "username", "privatekey", "optionalprivatekeypassphrase", "path/to/file.txt",
+                             str(data.time) + ">> Test file from live BTC server.")
 
     ### Raises the data event
     def on_data(self, data):
