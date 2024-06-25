@@ -255,11 +255,11 @@ namespace QuantConnect.Securities
             // Select the expiry as the nearest to set days later
             var expiry = AllSymbols.OrderBy(x => Math.Abs((x.ID.Date - _lastExchangeDate.AddDays(daysTillExpiry)).Days))
                 .First().ID.Date;
-            var contracts = Contracts(contract => contract.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right));
+            var contracts = AllSymbols.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right);
             // Select strike price
             var selected = contracts.OrderBy(x => Math.Abs(x.ID.StrikePrice - Underlying.Price - strikeFromAtm)).First();
 
-            return contracts.WhereContains(new List<Symbol> { selected });
+            return this.WhereContains(new List<Symbol> { selected });
         }
 
         /// <summary>
@@ -698,7 +698,7 @@ namespace QuantConnect.Securities
             if (filtered.Count() < 4)
             {
                 Log.Trace("BoxSpread(): Insufficient contracts fulfilled conditions, returning empty universe");
-                return filtered.WhereContains(new List<Symbol>());
+                return this.WhereContains(new List<Symbol>());
             }
             return filtered;
         }
