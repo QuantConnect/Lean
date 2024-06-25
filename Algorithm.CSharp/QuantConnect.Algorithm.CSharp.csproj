@@ -12,7 +12,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     <Description>QuantConnect LEAN Engine: Algorithm.CSharp Project - A collection of C# algorithm demonstrations for how to use the API</Description>
-    <NoWarn>CS0618;CA1707;CA1819;CA1062;CA1051;CA1725;CA1002;CA2211</NoWarn>
+    <NoWarn>CS0618</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>bin\Debug\</OutputPath>
