@@ -759,7 +759,6 @@ namespace QuantConnect.Brokerages
                 // if we have a contingent that needs to be submitted then we can't respect the 'Filled' state from the order
                 // because the Lean order hasn't been technically filled yet, so mark it as 'PartiallyFilled'
                 orderEvent.Status = OrderStatus.PartiallyFilled;
-                orderEvent.FillQuantity = orderEvent.FillQuantity;
                 OnOrderEvent(orderEvent);
 
                 Task.Run(() =>
