@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                     || addedSecurity.Open == 0
                     || addedSecurity.Close == 0)
                 {
-                    throw new Exception($"Security {addedSecurity.Symbol} was not warmed up!");
+                    throw new RegressionTestException($"Security {addedSecurity.Symbol} was not warmed up!");
                 }
             }
         }

@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
                     && Time.Hour != 12
                     && Time.Hour != 18)
                 {
-                    throw new Exception($"Unexpected every 6 hours scheduled event time: {Time}");
+                    throw new RegressionTestException($"Unexpected every 6 hours scheduled event time: {Time}");
                 }
             });
 
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _scheduleEventNoonCallCount++;
                 if (Time.Hour != 12)
                 {
-                    throw new Exception($"Unexpected Noon scheduled event time: {Time}");
+                    throw new RegressionTestException($"Unexpected Noon scheduled event time: {Time}");
                 }
             });
 
@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _scheduleEventMidnightCallCount++;
                 if (Time.Hour != 0)
                 {
-                    throw new Exception($"Unexpected Midnight scheduled event time: {Time}");
+                    throw new RegressionTestException($"Unexpected Midnight scheduled event time: {Time}");
                 }
             });
         }
@@ -79,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"SelectSymbolsAt {Time}");
             if (Time.TimeOfDay != new TimeSpan(9, 31, 0))
             {
-                throw new Exception($"Expected 'SelectSymbolsAt' to be called at 9:31 algorithm time: {Time}");
+                throw new RegressionTestException($"Expected 'SelectSymbolsAt' to be called at 9:31 algorithm time: {Time}");
             }
             yield break;
         }
@@ -88,19 +88,19 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (_selectionMethodCallCount != 32)
             {
-                throw new Exception($"Unexpected universe selection call count: {_selectionMethodCallCount}");
+                throw new RegressionTestException($"Unexpected universe selection call count: {_selectionMethodCallCount}");
             }
             if (_scheduleEventEveryCallCount != 130)
             {
-                throw new Exception($"Unexpected scheduled event call count: {_scheduleEventEveryCallCount}");
+                throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventEveryCallCount}");
             }
             if (_scheduleEventNoonCallCount != 32)
             {
-                throw new Exception($"Unexpected scheduled event call count: {_scheduleEventNoonCallCount}");
+                throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventNoonCallCount}");
             }
             if (_scheduleEventMidnightCallCount != 33)
             {
-                throw new Exception($"Unexpected scheduled event call count: {_scheduleEventMidnightCallCount}");
+                throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventMidnightCallCount}");
             }
         }
 

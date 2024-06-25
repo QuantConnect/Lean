@@ -54,7 +54,7 @@ namespace QuantConnect.DataLibrary.Tests
                 var weights = kvp.Value;
                 if (weights.Count < 2)
                 {
-                    throw new Exception($"Expected multiple different weigths from the PCM for {kvp.Key}");
+                    throw new RegressionTestException($"Expected multiple different weigths from the PCM for {kvp.Key}");
                 }
             }
         }

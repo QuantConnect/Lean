@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Securities[SP500].AskPrice == 0)
                 {
-                    throw new Exception("Continuous contract price is not set!");
+                    throw new RegressionTestException("Continuous contract price is not set!");
                 }
                 ContinuousWarmupTimes.Add(Time);
             }
@@ -80,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         if (contract.AskPrice == 0)
                         {
-                            throw new Exception("Contract price is not set!");
+                            throw new RegressionTestException("Contract price is not set!");
                         }
                         ChainWarmupTimes.Add(Time);
                     }
@@ -107,7 +107,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     if (times[count] != start)
                     {
-                        throw new Exception($"Unexpected time {times[count]} expected {start}");
+                        throw new RegressionTestException($"Unexpected time {times[count]} expected {start}");
                     }
                     // if the market is closed there will be no data, so stop moving the index counter
                     count++;

@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (lastDataTime == data.Time)
             {
-                throw new Exception("Duplicate time for current data and last data slice");
+                throw new RegressionTestException("Duplicate time for current data and last data slice");
             }
 
             lastDataTime = data.Time;
@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!Securities[_spy].IsTradable)
                 {
-                    throw new Exception($"{_spy} should be tradable");
+                    throw new RegressionTestException($"{_spy} should be tradable");
                 }
 
                 if (!Portfolio.Invested)
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 if (!Securities[_spy].IsTradable)
                 {
-                    throw new Exception($"{_spy} should be tradable");
+                    throw new RegressionTestException($"{_spy} should be tradable");
                 }
             }
         }
