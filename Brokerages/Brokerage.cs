@@ -573,7 +573,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// A dictionary to store the relationship between brokerage crossing orders and Lean orer id.
         /// </summary>
-        private readonly ConcurrentDictionary<int, ICrossZeroOrderRequest> _leanOrderByBrokerageCrossingOrders = new();
+        private readonly ConcurrentDictionary<int, CrossZeroSecondOrderRequest> _leanOrderByBrokerageCrossingOrders = new();
 
         /// <summary>
         /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
@@ -639,7 +639,7 @@ namespace QuantConnect.Brokerages
         /// <exception cref="NotImplementedException">
         /// Thrown if the method is not overridden in a derived class.
         /// </exception>
-        protected virtual CrossZeroOrderResponse PlaceCrossZeroOrder(ICrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
+        protected virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroFirstOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
         {
             throw new NotImplementedException($"{nameof(PlaceCrossZeroOrder)} method should be overridden in the derived class to handle brokerage-specific logic.");
         }
@@ -727,7 +727,7 @@ namespace QuantConnect.Brokerages
             if (_leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var crossZeroOrderRequest))
             {
                 // If it is a CrossZeroOrder, use the first part of the quantity for the update.
-                quantity = (crossZeroOrderRequest as CrossZeroSecondOrderRequest).FirstPartCrossZeroOrder.OrderQuantity;
+                quantity = crossZeroOrderRequest.FirstPartCrossZeroOrder.OrderQuantity;
                 // If the quantities of the LeanOrder do not match, return false. Don't support.
                 if (crossZeroOrderRequest.LeanOrder.Quantity != leanOrder.Quantity)
                 {

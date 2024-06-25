@@ -497,7 +497,7 @@ namespace QuantConnect.Tests.Brokerages
             /// <returns>
             /// A <see cref="CrossZeroOrderResponse"/> containing the result of placing the order.
             /// </returns>
-            protected override CrossZeroOrderResponse PlaceCrossZeroOrder(ICrossZeroOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithoutLeanEvent)
+            protected override CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroFirstOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithoutLeanEvent)
             {
                 Log.Trace($"{nameof(PhonyBrokerage)}.{nameof(PlaceCrossZeroOrder)}");
 

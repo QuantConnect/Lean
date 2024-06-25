@@ -21,24 +21,39 @@ namespace QuantConnect.Brokerages.CrossZero
     /// <summary>
     /// Represents a first request to cross zero order.
     /// </summary>
-    public class CrossZeroFirstOrderRequest : ICrossZeroOrderRequest
+    public class CrossZeroFirstOrderRequest
     {
-        /// <inheritdoc cref="ICrossZeroOrderRequest.LeanOrder"/>
+        /// <summary>
+        /// Gets the original lean order.
+        /// </summary>
         public Order LeanOrder { get; }
 
-        /// <inheritdoc cref="ICrossZeroOrderRequest.OrderType"/>
+        /// <summary>
+        /// Gets the type of the order.
+        /// </summary>
         public OrderType OrderType { get; }
 
-        /// <inheritdoc cref="ICrossZeroOrderRequest.OrderQuantity"/>
+        /// <summary>
+        /// Gets the quantity of the order.
+        /// </summary>
         public decimal OrderQuantity { get; }
 
-        /// <inheritdoc cref="ICrossZeroOrderRequest.AbsoluteOrderQuantity"/>
+        /// <summary>
+        /// Gets the absolute quantity of the order.
+        /// </summary>
         public decimal AbsoluteOrderQuantity => Math.Abs(OrderQuantity);
 
-        /// <inheritdoc cref="ICrossZeroOrderRequest.OrderQuantityHolding"/>
+        /// <summary>
+        /// Gets the current holding quantity of the order's symbol.
+        /// </summary>
         public decimal OrderQuantityHolding { get; }
 
-        /// <inheritdoc cref="ICrossZeroOrderRequest.OrderPosition"/>
+        /// <summary>
+        /// Gets the position of the order.
+        /// </summary>
+        /// <value>
+        /// The position of the order, which depends on the <see cref="OrderQuantityHolding"/>.
+        /// </value>
         public OrderPosition OrderPosition { get; }
 
         /// <summary>
