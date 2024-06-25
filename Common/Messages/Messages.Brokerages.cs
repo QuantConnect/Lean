@@ -51,6 +51,12 @@ namespace QuantConnect
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedCrossZeroOrderUpdate(IBrokerageModel brokerageModel)
+            {
+                return Invariant($"Unfortunately, the {brokerageModel.GetType().Name} brokerage model does not support updating the quantity of Cross Zero Orders.");
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidSecurityTypeToGetFillModel(IBrokerageModel brokerageModel, Securities.Security security)
             {
                 return Invariant($"{brokerageModel.GetType().Name}.GetFillModel: Invalid security type {security.Type}");

@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
@@ -112,7 +113,24 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage would allow updating the order, false otherwise</returns>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
+            if (security == null)
+            {
+                throw new ArgumentNullException(nameof(security), "The security cannot be null. Please provide a valid security.");
+            }
+            else if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order), "The order cannot be null. Please provide a valid order.");
+            }
+
             message = null;
+
+            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "UpdateRejected",
+                    Messages.DefaultBrokerageModel.UnsupportedCrossZeroOrderUpdate(this));
+                return false;
+            }
+
             return true;
         }
     }

@@ -592,39 +592,6 @@ namespace QuantConnect.Brokerages
         protected ConcurrentDictionary<string, Order> LeanOrderByZeroCrossBrokerageOrderId { get; } = new();
 
         /// <summary>
-        /// Determines if executing the specified order will cross the zero holdings threshold.
-        /// </summary>
-        /// <param name="holdingQuantity">The current quantity of holdings.</param>
-        /// <param name="orderQuantity">The quantity of the order to be evaluated.</param>
-        /// <returns>
-        /// <c>true</c> if the order will change the holdings from positive to negative or vice versa; otherwise, <c>false</c>.
-        /// </returns>
-        /// <remarks>
-        /// This method checks if the order will result in a position change from positive to negative holdings or from negative to positive holdings.
-        /// </remarks>
-        protected static bool OrderCrossesZero(decimal holdingQuantity, decimal orderQuantity)
-        {
-            //We're reducing position or flipping:
-            if (holdingQuantity > 0 && orderQuantity < 0)
-            {
-                if ((holdingQuantity + orderQuantity) < 0)
-                {
-                    //We don't have enough holdings so will cross through zero:
-                    return true;
-                }
-            }
-            else if (holdingQuantity < 0 && orderQuantity > 0)
-            {
-                if ((holdingQuantity + orderQuantity) > 0)
-                {
-                    //Crossed zero: need to split into 2 orders:
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Places an order that crosses zero (transitions from a short position to a long position or vice versa) and returns the response.
         /// This method should be overridden in a derived class to implement brokerage-specific logic for placing such orders.
         /// </summary>
@@ -667,7 +634,7 @@ namespace QuantConnect.Brokerages
             }
 
             // do we need to split the order into two pieces?
-            bool crossesZero = OrderCrossesZero(holdingQuantity, order.Quantity);
+            var crossesZero = BrokerageExtensions.OrderCrossesZero(holdingQuantity, order.Quantity);
             if (crossesZero)
             {
                 // first we need an order to close out the current position
