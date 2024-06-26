@@ -65,5 +65,50 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.IsTrue(algorithm.Portfolio.Cash > 0);
             Assert.IsTrue(algorithm.Portfolio.CashBook["BTC"].ValueInAccountCurrency > 0);
         }
+
+        [Test]
+        public void CurrencyConversionRateResolvedForWhiteListedCurrenciesOnly()
+        {
+            // Unit test to prove that in the event that default resolution (minute) history request returns
+            // no data for our currency conversion that BaseSetupHandler will use a daily history request
+            // to determine the the conversion rate if possible.
+
+            // Setup history provider and algorithm
+            var historyProvider = new SubscriptionDataReaderHistoryProvider();
+
+            var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm { UniverseSettings = { Resolution = Resolution.Minute } };
+
+            historyProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                TestGlobals.DataProvider,
+                TestGlobals.DataCacheProvider,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                null,
+                false,
+                new DataPermissionManager(),
+                algorithm.ObjectStore,
+                algorithm.Settings));
+            algorithm.SetHistoryProvider(historyProvider);
+
+            // Pick a date range where we do NOT have BTCUSD minute data
+            algorithm.SetStartDate(2015, 1, 24);
+            algorithm.SetCash("USD", 0);
+            algorithm.SetCash("BTC", 10);
+            algorithm.SetCash("EUR", 1000);
+            algorithm.SetCash("USDT", 1000);
+
+            // Have BaseSetupHandler resolve the currency conversion
+            BaseSetupHandler.SetupCurrencyConversions(algorithm, algorithm.DataManager.UniverseSelection, new[] { "BTC" });
+
+            // Bitcoin's conversion rate should be set
+            Assert.IsNotNull(algorithm.Portfolio.CashBook["BTC"].CurrencyConversion);
+            Assert.AreNotEqual(0, algorithm.Portfolio.CashBook["BTC"].ConversionRate);
+
+            // The remaining currencies should not have conversion rate set
+            Assert.AreEqual(0, algorithm.Portfolio.CashBook["EUR"].ConversionRate);
+            Assert.AreEqual(0, algorithm.Portfolio.CashBook["USDT"].ConversionRate);
+        }
     }
 }
