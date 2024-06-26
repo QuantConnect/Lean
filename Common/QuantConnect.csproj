@@ -18,7 +18,6 @@
     <DebugType>full</DebugType>
     <Optimize>$(SelectedOptimization)</Optimize>
     <DefineConstants>TRACE</DefineConstants>
-    <NoWarn>1701;1702;CA1062;CA1707;CA1002;CA1051;CA1200;CA2211</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' AND '$(SelectedOptimization)' == ''">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -27,7 +26,6 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
-    <NoWarn>1701;1702;CA1062;CA1707;CA1002;CA1051;CA1200;CA2211</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

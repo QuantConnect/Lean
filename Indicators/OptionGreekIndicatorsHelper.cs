@@ -30,7 +30,7 @@ namespace QuantConnect.Indicators
         public const int Steps = 200;
      
         /// <summary>
-        /// 
+        /// Returns the Black theoretical price for the given arguments
         /// </summary>
         public static decimal BlackTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType)
         {

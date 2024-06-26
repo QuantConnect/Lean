@@ -30,12 +30,10 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <Optimize>$(SelectedOptimization)</Optimize>
-    <NoWarn>1701;1702;CA1062;CA1002;CA1051;CA1200;CA2211</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <DebugType>pdbonly</DebugType>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <NoWarn>1701;1702;CA1062;CA1002;CA1051;CA1200;CA2211</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

@@ -21,7 +21,6 @@
     <Optimize>$(SelectedOptimization)</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <NoWarn>1701;1702;CA1062;CA1051</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' AND '$(SelectedOptimization)' == ''">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -30,7 +29,6 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
-    <NoWarn>1701;1702;CA1062;CA1051</NoWarn>
   </PropertyGroup>
   <Target Name="Print" BeforeTargets="Build">
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />

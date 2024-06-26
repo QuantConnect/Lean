@@ -1559,9 +1559,6 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Converts an enumerable of BaseData into a Python Pandas dataframe
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <returns></returns>
         protected PyObject GetDataFrame<T>(IEnumerable<T> data)
             where T : IBaseData
         {
