@@ -12,6 +12,7 @@
     <DocumentationFile>bin\$(Configuration)\QuantConnect.Common.xml</DocumentationFile>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Description>QuantConnect LEAN Engine: Common Project - A collection of common definitions and utils</Description>
+    <NoWarn>CA1062</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>bin\Debug\</OutputPath>
