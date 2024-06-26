@@ -389,7 +389,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private class CustomEphemeralDataCacheProvider : IDataCacheProvider
         {
-            public StreamWriter _writer;
             public string Data { set; get; }
             public bool IsDataEphemeral { set; get; }
 
@@ -400,10 +399,11 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             public Stream Fetch(string key)
             {
                 var stream = new MemoryStream();
-                _writer = new StreamWriter(stream);
-                _writer.Write(Data);
-                _writer.Flush();
+                var writer = new StreamWriter(stream, leaveOpen: true);
+                writer.Write(Data);
+                writer.Flush();
                 stream.Position = 0;
+                writer.Dispose();
                 return stream;
             }
             public void Store(string key, byte[] data)
@@ -411,7 +411,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             public void Dispose()
             {
-                _writer.Dispose();
             }
         }
     }

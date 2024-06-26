@@ -408,8 +408,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             var config = new SubscriptionDataConfig(typeof(TradeBar), _symbol, resolution, DateTimeZone.Utc, DateTimeZone.Utc, true, false, isInternalFeed, false, tickType);
             var timeZoneOffsetProvider = new TimeZoneOffsetProvider(DateTimeZone.Utc, start, end);
-            using var enumerator = new EnqueueableEnumerator<BaseData>();
-            using var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator, false, false);
+            # pragma warning disable CA2000
+            var enumerator = new EnqueueableEnumerator<BaseData>();
+            var subscriptionDataEnumerator = new SubscriptionDataEnumerator(config, security.Exchange.Hours, timeZoneOffsetProvider, enumerator, false, false);
+                # pragma warning restore CA2000
             var subscriptionRequest = new SubscriptionRequest(false, null, security, config, start, end);
             return new Subscription(subscriptionRequest, subscriptionDataEnumerator, timeZoneOffsetProvider);
         }

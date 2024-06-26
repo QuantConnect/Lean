@@ -777,7 +777,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 return constituents;
 
             });
-            using var universe = _algorithm.AddUniverse(constituentsUniverse);
+
+            var universe = _algorithm.AddUniverse(constituentsUniverse);
 
             _algorithm.PostInitialize();
 

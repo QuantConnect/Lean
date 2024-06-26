@@ -169,7 +169,9 @@ namespace QuantConnect.Tests.Engine.DataProviders
         [Test]
         public void DownloadsFileOnceConcurrently()
         {
-            using var dataProvider = new ApiDataProviderTest();
+            # pragma warning disable CA2000
+            var dataProvider = new ApiDataProviderTest();
+            #pragma warning restore CA2000
 
             var tasks = new List<Task>();
             for (var i = 0; i < 10; i++)

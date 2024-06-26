@@ -23,7 +23,6 @@ using System.Linq;
 
 namespace QuantConnect.Tests.Common.Data
 {
-#pragma warning disable CS0618
     [TestFixture]
     public class RangeConsolidatorTests
     {
@@ -32,7 +31,9 @@ namespace QuantConnect.Tests.Common.Data
         {
             using var consolidator = CreateConsolidator(100);
             var testValues = new List<decimal>() { 90m, 94.5m, 94m, 89.5m, 89m, 90.5m, 90m, 91.5m, 90m, 90.5m, 92.5m };
+            #pragma warning disable CS0618
             var returnedBars = UpdateConsolidator(consolidator, testValues, "IBM");
+            #pragma warning restore CS0618
 
             var expectedValues = GetRangeConsolidatorExpectedValues();
             RangeBar lastRangeBar = null;

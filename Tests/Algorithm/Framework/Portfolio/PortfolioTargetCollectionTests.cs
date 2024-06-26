@@ -26,7 +26,6 @@ using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
-#pragma warning disable CS0618
     [TestFixture]
     public class PortfolioTargetCollectionTests
     {
@@ -147,6 +146,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var algorithm = new FakeAlgorithm();
             algorithm.SetFinishedWarmingUp();
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
+            #pragma warning disable CS0618
             var equity = algorithm.AddEquity(symbol);
             var dummySecurityHolding = new FakeSecurityHolding(equity);
             equity.Holdings = dummySecurityHolding;
@@ -296,6 +296,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var algorithm = GetAlgorithm(orderProcessor);
             var symbol = new Symbol(SecurityIdentifier.GenerateEquity(_symbol, Market.USA), _symbol);
             var equity = algorithm.AddEquity(symbol);
+            #pragma warning restore CS0618
             equity.Cache.AddData(new TradeBar(DateTime.UtcNow, symbol, 1, 1, 1, 1, 1));
             var collection = new PortfolioTargetCollection();
             var target = new PortfolioTarget(symbol, 1);

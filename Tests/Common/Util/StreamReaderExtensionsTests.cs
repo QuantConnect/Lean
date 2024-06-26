@@ -381,7 +381,6 @@ namespace QuantConnect.Tests.Common.Util
                 }
                 stopWatch.Stop();
                 getLineReaderMilliSeconds = stopWatch.ElapsedMilliseconds;
-                zipCache.DisposeSafely();
             }
             Log.Trace($"StreamReader: {streamReaderMilliSeconds}ms. Count {streamReaderCount}");
             Log.Trace($"GetLine Reader: {getLineReaderMilliSeconds}ms. Count {getLineReaderCount}");

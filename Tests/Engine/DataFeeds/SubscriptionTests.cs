@@ -182,11 +182,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var security = SecurityTests.GetSecurity();
             var config = SecurityTests.CreateTradeBarConfig(resolution);
-            using var universe = new ManualUniverse(
+            # pragma warning disable CA2000
+            var universe = new ManualUniverse(
                 config,
                 new UniverseSettings(Resolution.Daily, 1, true, true, TimeSpan.FromDays(1)),
                 new[] {security.Symbol}
             );
+            #pragma warning restore CA2000
             return new SubscriptionRequest(isUniverseSelection, useUniverse ? universe : null, security, config, _start, _end);
         }
     }

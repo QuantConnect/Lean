@@ -41,7 +41,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             scheduledEventService.NewEvent += handler;
             handler(this, null);
             Thread.Sleep(5000);
-            scheduledEventService.DisposeSafely();
         }
     }
 }

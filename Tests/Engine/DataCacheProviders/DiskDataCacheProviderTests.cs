@@ -53,8 +53,6 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
             using var zip = new ZipFile(filePath);
             Assert.AreEqual(1, zip.Count);
             Assert.IsNotNull(zip.GetEntry(entryName));
-
-            zip.DisposeSafely();
         }
 
         [Test]
