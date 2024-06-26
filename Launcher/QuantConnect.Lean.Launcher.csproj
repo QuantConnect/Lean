@@ -13,7 +13,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <Description>QuantConnect LEAN Engine: Launcher Project - Main startup executable for live and backtesting</Description>
-    <NoWarn>1701;1702;CS1707;CA1062</NoWarn>
+    <NoWarn>1701;1702;CA1062</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
