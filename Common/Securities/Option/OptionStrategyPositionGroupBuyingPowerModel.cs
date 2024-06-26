@@ -163,7 +163,7 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
             {
-                var result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+                var result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
                 return new MaintenanceMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.CallCalendarSpread.Name
@@ -184,7 +184,7 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearPutSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullPutSpread.Name)
             {
-                var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+                var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
                 return new MaintenanceMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.Straddle.Name || _optionStrategy.Name == OptionStrategyDefinitions.Strangle.Name)
@@ -210,7 +210,7 @@ namespace QuantConnect.Securities.Option
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name)
             {
-                var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+                var result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
                 return new MaintenanceMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BoxSpread.Name)
@@ -257,38 +257,24 @@ namespace QuantConnect.Securities.Option
                 var shortCalendarSpreadShortLegSecurity = (Option)parameters.Portfolio.Securities[shortCalendarSpreadShortLeg.Symbol];
                 var result = Math.Abs(shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetMaintenanceMargin(
                     MaintenanceMarginParameters.ForQuantityAtCurrentPrice(shortCalendarSpreadShortLegSecurity, shortCalendarSpreadShortLeg.Quantity)));
+
+                return new MaintenanceMargin(result);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallLadder.Name)
             {
-                // Bear Call Ladder = Bear Call Spread of 2 lower strike prices + Long Naked Call with the highest strike price (margin: 0)
-                var callSpread = parameters.PositionGroup.Positions.OrderBy(position => position.Symbol.ID.StrikePrice).Take(2).ToList();
-                return GetLongCallShortCallStrikeDifferenceMargin((IPositionGroup)callSpread, parameters.Portfolio);
+                return GetCallLadderMargin(parameters, true);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearPutLadder.Name)
             {
-                // Bear Put Ladder = Bear Put Spread of 2 lower strike prices (margin: 0) + Short Naked Put with the highest strike price
-                var shortNakedPut = parameters.PositionGroup.Positions.OrderBy(position => position.Symbol.ID.StrikePrice).First();
-                var shortNakedPutSecurity = (Option)parameters.Portfolio.Securities[shortNakedPut.Symbol];
-                var results = shortNakedPutSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    shortNakedPutSecurity, shortNakedPut.Quantity));
-
-                return new MaintenanceMargin(results);
+                return GetPutLadderMargin(parameters, false);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BullCallLadder.Name)
             {
-                // Bull Call Ladder = Bull Call Spread of 2 lower strike prices (margin: 0) + Short Naked Call with the highest strike price
-                var shortNakedCall = parameters.PositionGroup.Positions.OrderByDescending(position => position.Symbol.ID.StrikePrice).First();
-                var shortNakedCallSecurity = (Option)parameters.Portfolio.Securities[shortNakedCall.Symbol];
-                var results = shortNakedCallSecurity.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForQuantityAtCurrentPrice(
-                    shortNakedCallSecurity, shortNakedCall.Quantity));
-
-                return new MaintenanceMargin(results);
+                return GetCallLadderMargin(parameters, false);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BullPutLadder.Name)
             {
-                // Bull Put Ladder = Bull Put Spread of 2 lower strike prices + Long Naked Put with the lowest strike price (margin: 0)
-                var putSpread = parameters.PositionGroup.Positions.OrderByDescending(position => position.Symbol.ID.StrikePrice).Take(2).ToList();
-                return GetShortPutLongPutStrikeDifferenceMargin((IPositionGroup)putSpread, parameters.Portfolio);
+                return GetPutLadderMargin(parameters, true);
             }
 
             throw new NotImplementedException($"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented");
@@ -362,7 +348,7 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallSpread.Name)
             {
-                result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+                result = GetLongCallShortCallStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.CallCalendarSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.PutCalendarSpread.Name)
@@ -379,7 +365,7 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearPutSpread.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullPutSpread.Name)
             {
-                result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+                result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.Straddle.Name || _optionStrategy.Name == OptionStrategyDefinitions.Strangle.Name)
             {
@@ -401,7 +387,7 @@ namespace QuantConnect.Securities.Option
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.IronCondor.Name)
             {
-                result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup, parameters.Portfolio);
+                result = GetShortPutLongPutStrikeDifferenceMargin(parameters.PositionGroup.Positions, parameters.Portfolio, parameters.PositionGroup.Quantity);
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BoxSpread.Name)
             {
@@ -414,14 +400,7 @@ namespace QuantConnect.Securities.Option
             else if (_optionStrategy.Name == OptionStrategyDefinitions.JellyRoll.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.ShortJellyRoll.Name)
             {
-                // long calendar spread part has no margin requirement due to same strike
-                // only the short calendar spread's short option has margin requirement
-                var furtherExpiry = parameters.PositionGroup.Positions.Max(position => position.Symbol.ID.Date);
-                var shortCalendarSpreadShortLeg = parameters.PositionGroup.Positions.Single(position =>
-                    position.Quantity < 0 && position.Symbol.ID.Date == furtherExpiry);
-                var shortCalendarSpreadShortLegSecurity = (Option)parameters.Portfolio.Securities[shortCalendarSpreadShortLeg.Symbol];
-                result = Math.Abs(shortCalendarSpreadShortLegSecurity.BuyingPowerModel.GetInitialMarginRequirement(
-                    new InitialMarginParameters(shortCalendarSpreadShortLegSecurity, shortCalendarSpreadShortLeg.Quantity)));
+                result = GetMaintenanceMargin(new PositionGroupMaintenanceMarginParameters(parameters.Portfolio, parameters.PositionGroup));
             }
             else if (_optionStrategy.Name == OptionStrategyDefinitions.BearCallLadder.Name || _optionStrategy.Name == OptionStrategyDefinitions.BearPutLadder.Name
                 || _optionStrategy.Name == OptionStrategyDefinitions.BullCallLadder.Name || _optionStrategy.Name == OptionStrategyDefinitions.BullPutLadder.Name)
@@ -512,16 +491,16 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Returns the Maximum (Short Put Strike - Long Put Strike, 0)
         /// </summary>
-        private static decimal GetShortPutLongPutStrikeDifferenceMargin(IPositionGroup positionGroup, SecurityPortfolioManager portfolio)
+        private static decimal GetShortPutLongPutStrikeDifferenceMargin(IEnumerable<IPosition> positions, SecurityPortfolioManager portfolio, decimal quantity)
         {
-            var longOption = positionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Put && position.Quantity > 0);
-            var shortOption = positionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Put && position.Quantity < 0);
+            var longOption = positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Put && position.Quantity > 0);
+            var shortOption = positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Put && position.Quantity < 0);
             var optionSecurity = (Option)portfolio.Securities[longOption.Symbol];
 
             // Maximum (Short Put Strike - Long Put Strike, 0)
             var strikeDifference = shortOption.Symbol.ID.StrikePrice - longOption.Symbol.ID.StrikePrice;
 
-            var result = Math.Max(strikeDifference * optionSecurity.ContractUnitOfTrade * Math.Abs(positionGroup.Quantity), 0);
+            var result = Math.Max(strikeDifference * optionSecurity.ContractUnitOfTrade * Math.Abs(quantity), 0);
 
             // convert into account currency
             return portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
@@ -530,15 +509,15 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Returns the Maximum (Strike Long Call - Strike Short Call, 0)
         /// </summary>
-        private static decimal GetLongCallShortCallStrikeDifferenceMargin(IPositionGroup positionGroup, SecurityPortfolioManager portfolio)
+        private static decimal GetLongCallShortCallStrikeDifferenceMargin(IEnumerable<IPosition> positions, SecurityPortfolioManager portfolio, decimal quantity)
         {
-            var longOption = positionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Call && position.Quantity > 0);
-            var shortOption = positionGroup.Positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Call && position.Quantity < 0);
+            var longOption = positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Call && position.Quantity > 0);
+            var shortOption = positions.Single(position => position.Symbol.ID.OptionRight == OptionRight.Call && position.Quantity < 0);
             var optionSecurity = (Option)portfolio.Securities[longOption.Symbol];
 
             var strikeDifference = longOption.Symbol.ID.StrikePrice - shortOption.Symbol.ID.StrikePrice;
 
-            var result = Math.Max(strikeDifference * optionSecurity.ContractUnitOfTrade * Math.Abs(positionGroup.Quantity), 0);
+            var result = Math.Max(strikeDifference * optionSecurity.ContractUnitOfTrade * Math.Abs(quantity), 0);
 
             // convert into account currency
             return portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
@@ -627,6 +606,66 @@ namespace QuantConnect.Securities.Option
 
             var result = Math.Abs(initialMarginRequirement) + inTheMoneyAmount;
             return portfolio.CashBook.ConvertToAccountCurrency(result, optionSecurity.QuoteCurrency.Symbol);
+        }
+
+        /// <summary>
+        /// Returns the initial/maintenance margin requirement for a call ladder
+        /// </summary>
+        private static decimal GetCallLadderMargin(PositionGroupMaintenanceMarginParameters parameters, bool bearCallLadder)
+        {
+            var quantity = parameters.PositionGroup.Quantity;
+
+            if ((quantity >= 0 && bearCallLadder) || (quantity < 0 && !bearCallLadder))
+            {
+                // Bear Call Ladder = Bear Call Spread of 2 lower strike prices + Long Naked Call with the highest strike price (margin: 0)
+                var callSpread = parameters.PositionGroup.Positions.OrderBy(position => position.Symbol.ID.StrikePrice).Take(2).ToList();
+                return GetLongCallShortCallStrikeDifferenceMargin(callSpread, parameters.Portfolio, Math.Abs(quantity));
+            }
+            else
+            {
+                // Bull Call Ladder = Bull Call Spread of 2 lower strike prices (margin: 0) + Short Naked Call with the highest strike price
+                var shortNakedCall = parameters.PositionGroup.Positions.OrderByDescending(position => position.Symbol.ID.StrikePrice).First();
+                var shortNakedCallSecurity = (Option)parameters.Portfolio.Securities[shortNakedCall.Symbol];
+                var undPrice = shortNakedCallSecurity.Underlying.Price;
+
+                var singleMargin = (shortNakedCallSecurity.Price + Math.Max(0.2m * undPrice - shortNakedCallSecurity.OutOfTheMoneyAmount(undPrice),
+                    0.1m * shortNakedCallSecurity.StrikePrice));
+                var multiplier = Math.Abs(shortNakedCall.Quantity) * shortNakedCallSecurity.ContractUnitOfTrade;
+                var result = singleMargin * multiplier;
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, shortNakedCallSecurity.QuoteCurrency.Symbol);
+
+                return new MaintenanceMargin(inAccountCurrency);
+            }
+        }
+
+        /// <summary>
+        /// Returns the initial/maintenance margin requirement for a put ladder
+        /// </summary>
+        private static decimal GetPutLadderMargin(PositionGroupMaintenanceMarginParameters parameters, bool bullPutLadder)
+        {
+            var quantity = parameters.PositionGroup.Quantity;
+
+            if ((quantity >= 0 && bullPutLadder) || (quantity < 0 && !bullPutLadder))
+            {
+                // Bull Put Ladder = Bull Put Spread of 2 lower strike prices + Long Naked Put with the lowest strike price (margin: 0)
+                var putSpread = parameters.PositionGroup.Positions.OrderByDescending(position => position.Symbol.ID.StrikePrice).Take(2).ToList();
+                return GetShortPutLongPutStrikeDifferenceMargin(putSpread, parameters.Portfolio, Math.Abs(quantity));
+            }
+            else
+            {
+                // Bear Put Ladder = Bear Put Spread of 2 lower strike prices (margin: 0) + Short Naked Put with the highest strike price
+                var shortNakedPut = parameters.PositionGroup.Positions.OrderBy(position => position.Symbol.ID.StrikePrice).First();
+                var shortNakedPutSecurity = (Option)parameters.Portfolio.Securities[shortNakedPut.Symbol];
+                var undPrice = shortNakedPutSecurity.Underlying.Price;
+
+                var singleMargin = (shortNakedPutSecurity.Price + Math.Max(0.2m * undPrice - shortNakedPutSecurity.OutOfTheMoneyAmount(undPrice),
+                    0.1m * shortNakedPutSecurity.StrikePrice));
+                var multiplier = Math.Abs(shortNakedPut.Quantity) * shortNakedPutSecurity.ContractUnitOfTrade;
+                var result = singleMargin * multiplier;
+                var inAccountCurrency = parameters.Portfolio.CashBook.ConvertToAccountCurrency(result, shortNakedPutSecurity.QuoteCurrency.Symbol);
+
+                return new MaintenanceMargin(inAccountCurrency);
+            }
         }
     }
 }
