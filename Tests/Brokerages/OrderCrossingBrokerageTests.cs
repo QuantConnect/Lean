@@ -70,17 +70,9 @@ namespace QuantConnect.Tests.Brokerages
 
             using var brokerage = InitializeBrokerage((leanOrder?.Symbol.Value, 180m, 10));
 
-            var skipFirstFilledEvent = default(bool);
             brokerage.OrdersStatusChanged += (_, orderEvents) =>
             {
                 var orderEventStatus = orderEvents[0].Status;
-
-                // Skip processing the first occurrence of the Filled event, The First Part of CrossZeroOrder was filled.
-                if (!skipFirstFilledEvent && orderEventStatus == OrderStatus.Filled)
-                {
-                    skipFirstFilledEvent = true;
-                    return;
-                }
 
                 actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
 
@@ -146,17 +138,9 @@ namespace QuantConnect.Tests.Brokerages
 
             using var brokerage = InitializeBrokerage((leanOrder?.Symbol.Value, 180m, 10));
 
-            var skipFirstFilledEvent = default(bool);
             brokerage.OrdersStatusChanged += (_, orderEvents) =>
             {
                 var orderEventStatus = orderEvents[0].Status;
-
-                // Skip processing the first occurrence of the Filled event, The First Part of CrossZeroOrder was filled.
-                if (!skipFirstFilledEvent && orderEventStatus == OrderStatus.Filled)
-                {
-                    skipFirstFilledEvent = true;
-                    return;
-                }
 
                 actualCrossZeroOrderStatusOrdering.Enqueue(orderEventStatus);
 
@@ -359,13 +343,6 @@ namespace QuantConnect.Tests.Brokerages
             private readonly CancellationTokenSource _cancellationTokenSource = new();
 
             /// <summary>
-            /// Indicates whether the first occurrence of the Filled event has been skipped.
-            /// Used to ensure the first Filled event is processed appropriately for setting the
-            /// order state to PartiallyFilled.
-            /// </summary>
-            private bool _isSkipFirstFilled;
-
-            /// <summary>
             /// Temporarily stores the IDs of brokerage orders for testing purposes.
             /// </summary>
             private List<string> _tempBrokerageOrderIds = new();
@@ -409,13 +386,7 @@ namespace QuantConnect.Tests.Brokerages
                     leanOrder = _orderProvider.GetOrderById(orderEvent.OrderId);
                 }
 
-                // Process the first occurrence of the Filled event to simulate the leanOrder as PartiallyFilled.
-                if (!_isSkipFirstFilled && orderEvent.Status == OrderStatus.Filled)
-                {
-                    _isSkipFirstFilled = true;
-                    TryHandleRemainingCrossZeroOrder(leanOrder, orderEvent);
-                }
-                else
+                if (!TryHandleRemainingCrossZeroOrder(leanOrder, orderEvent))
                 {
                     _orderProvider.UpdateOrderStatusById(orderEvent.OrderId, orderEvent.Status);
                 }
@@ -592,7 +563,11 @@ namespace QuantConnect.Tests.Brokerages
                         {
                             if (order.Status == OrderStatus.Submitted || order.Status == OrderStatus.PartiallyFilled || order.Status == OrderStatus.UpdateSubmitted)
                             {
-                                OnOrderEvent(new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero) { Status = OrderStatus.Filled });
+                                var orderEvent = new OrderEvent(order, new DateTime(2024, 6, 10), OrderFee.Zero) { Status = OrderStatus.Filled };
+                                if (!TryHandleRemainingCrossZeroOrder(order, orderEvent))
+                                {
+                                    OnOrderEvent(orderEvent);
+                                }
                             }
                         }
                     }
