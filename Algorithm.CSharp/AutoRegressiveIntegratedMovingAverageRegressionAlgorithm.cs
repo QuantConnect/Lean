@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 1, 07);
             SetEndDate(2013, 12, 11);
 
-            EnableAutomaticIndicatorWarmUp = true;
+            Settings.AutomaticIndicatorWarmUp = true;
             AddEquity("SPY", Resolution.Daily);
             _arima = ARIMA("SPY", 1, 1, 1, 50);
             _ar = ARIMA("SPY", 1, 1, 0, 50);

@@ -31,7 +31,7 @@ class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
         self.set_end_date(2019, 1, 1)
         self.set_cash(1000000)
 
-        self.enable_automatic_indicator_warm_up = True
+        self.settings.automatic_indicator_warm_up = True
 
         ibm = self.add_equity("IBM", Resolution.HOUR).symbol
         ibm_sma = self.sma(ibm, 40)
