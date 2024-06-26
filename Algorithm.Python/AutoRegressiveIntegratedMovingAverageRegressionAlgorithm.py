@@ -23,7 +23,7 @@ class AutoRegressiveIntegratedMovingAverageRegressionAlgorithm(QCAlgorithm):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
         self.set_start_date(2013, 1, 7)
         self.set_end_date(2013, 12, 11)
-        self.enable_automatic_indicator_warm_up = True
+        self.settings.automatic_indicator_warm_up = True
         self.add_equity("SPY", Resolution.DAILY)
         self._arima = self.arima("SPY", 1, 1, 1, 50)
         self._ar = self.arima("SPY", 1, 1, 0, 50)

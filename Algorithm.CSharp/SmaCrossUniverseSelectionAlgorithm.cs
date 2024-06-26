@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2019, 01, 01);
             SetCash(1000000);
 
-            EnableAutomaticIndicatorWarmUp = true;
+            Settings.AutomaticIndicatorWarmUp = true;
 
             var ibm = AddEquity("IBM", Resolution.Tick).Symbol;
             var ibmSma = SMA(ibm, 40);

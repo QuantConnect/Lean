@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
                 security.SetMarketPrice(new TradeBar(_algorithm.Time, security.Symbol, 100m, 100m, 100m, 100m, 1));
             }
 
-            _algorithm.EnableAutomaticIndicatorWarmUp = true;
+            _algorithm.Settings.AutomaticIndicatorWarmUp = true;
 
             _slippageModel = new MarketImpactSlippageModel(_algorithm);
         }

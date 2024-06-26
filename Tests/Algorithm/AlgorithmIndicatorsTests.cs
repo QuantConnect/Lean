@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.AddEquity("SPY");
             _option = Symbol.CreateOption("SPY", Market.USA, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2023, 9, 1));
             _algorithm.AddOptionContract(_option);
-            _algorithm.EnableAutomaticIndicatorWarmUp = true;
+            _algorithm.Settings.AutomaticIndicatorWarmUp = true;
         }
 
         [Test]

@@ -30,6 +30,11 @@ namespace QuantConnect
             TimeSpan.TryParse(Config.Get("databases-refresh-period", "1.00:00:00"), out var refreshPeriod) ? refreshPeriod : Time.OneDay;
 
         /// <summary>
+        /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
+        /// </summary>
+        public bool AutomaticIndicatorWarmUp { get; set; }
+
+        /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
         /// </summary>
         public bool? RebalancePortfolioOnSecurityChanges { get; set; }

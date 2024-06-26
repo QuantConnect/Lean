@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void Initialize()
         {
             UniverseSettings.DataNormalizationMode = DataNormalizationMode.Raw;
-            EnableAutomaticIndicatorWarmUp = true;
+            Settings.AutomaticIndicatorWarmUp = true;
             SetStartDate(2013, 10, 08);
             SetEndDate(2013, 10, 10);
 

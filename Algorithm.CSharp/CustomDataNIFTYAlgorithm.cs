@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
             var rupee = AddData<DollarRupee>("USDINR", Resolution.Daily).Symbol;
             var nifty = AddData<Nifty>("NIFTY", Resolution.Daily).Symbol;
 
-            EnableAutomaticIndicatorWarmUp = true;
+            Settings.AutomaticIndicatorWarmUp = true;
             var rupeeSma = SMA(rupee, 20);
             var niftySma = SMA(rupee, 20);
             Log($"SMA - Is ready? USDINR: {rupeeSma.IsReady} NIFTY: {niftySma.IsReady}");
