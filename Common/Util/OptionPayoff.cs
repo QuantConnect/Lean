@@ -17,6 +17,9 @@ using System;
 
 namespace QuantConnect.Util
 {
+    /// <summary>
+    /// Static class containing useful methods related with options payoff
+    /// </summary>
     public static class OptionPayoff
     {
         /// <summary>

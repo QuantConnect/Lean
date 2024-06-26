@@ -181,7 +181,9 @@ namespace QuantConnect.Indicators
         {
         }
 
-        // Calculate the Rho of the option
+        /// <summary>
+        /// Calculate the Rho of the option
+        /// </summary>
         protected override decimal CalculateGreek(decimal timeTillExpiry)
         {
             var math = OptionGreekIndicatorsHelper.DecimalMath;

@@ -20,7 +20,7 @@ using QuantConnect.Util;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// Helper clas for option greeks related indicators
+    /// Helper class for option greeks related indicators
     /// </summary>
     public class OptionGreekIndicatorsHelper
     {
@@ -29,6 +29,9 @@ namespace QuantConnect.Indicators
         /// </summary>
         public const int Steps = 200;
      
+        /// <summary>
+        /// Returns the Black theoretical price for the given arguments
+        /// </summary>
         public static decimal BlackTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice, decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType)
         {
             var d1 = CalculateD1(spotPrice, strikePrice, timeToExpiration, riskFreeRate, dividendYield, volatility);
@@ -72,7 +75,10 @@ namespace QuantConnect.Indicators
             return d1 - volatility * DecimalMath(Math.Sqrt, Math.Max(0m, timeToExpiration));
         }
 
-        // Reference: https://en.wikipedia.org/wiki/Binomial_options_pricing_model#Step_1:_Create_the_binomial_price_tree
+        /// <summary>
+        /// Creates a Binomial Theoretical Price Tree from the given parameters
+        /// </summary>
+        /// <remarks>Reference: https://en.wikipedia.org/wiki/Binomial_options_pricing_model#Step_1:_Create_the_binomial_price_tree</remarks>
         public static decimal CRRTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
             decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType, int steps = Steps)
         {
@@ -89,6 +95,9 @@ namespace QuantConnect.Indicators
             return BinomialTheoreticalPrice(deltaTime, probUp, upFactor, riskFreeRate, spotPrice, strikePrice, optionType, steps);
         }
 
+        /// <summary>
+        /// Creates the Forward Binomial Theoretical Price Tree from the given parameters
+        /// </summary>
         public static decimal ForwardTreeTheoreticalPrice(decimal volatility, decimal spotPrice, decimal strikePrice,
             decimal timeToExpiration, decimal riskFreeRate, decimal dividendYield, OptionRight optionType, int steps = Steps)
         {

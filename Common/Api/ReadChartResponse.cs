@@ -17,8 +17,14 @@ using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
+    /// <summary>
+    /// Class for wrapping Read Chart response
+    /// </summary>
     public class ReadChartResponse: RestResponse
     {
+        /// <summary>
+        /// Chart object from the ReadChart response
+        /// </summary>
         [JsonProperty(PropertyName = "chart")]
         public Chart Chart { get; set; }
     }

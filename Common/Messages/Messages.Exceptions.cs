@@ -106,6 +106,9 @@ namespace QuantConnect
         /// </summary>
         public static class StackExceptionInterpreter
         {
+            /// <summary>
+            /// Returns a message for a Loaded Exception Interpreter
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string LoadedExceptionInterpreter(IExceptionInterpreter interpreter)
             {
@@ -118,8 +121,14 @@ namespace QuantConnect
         /// </summary>
         public static class UnsupportedOperandPythonExceptionInterpreter
         {
+            /// <summary>
+            /// Unsupported Operand Type Expected substring
+            /// </summary>
             public static string UnsupportedOperandTypeExpectedSubstring = "unsupported operand type";
 
+            /// <summary>
+            /// Returns a message for invalid object types for operation
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidObjectTypesForOperation(string types)
             {

@@ -39,6 +39,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly SecurityExchangeHours _securityExchange;
         private readonly IEnumerator<BaseData> _underlying;
 
+        /// <summary>
+        /// Current value of the enumerator
+        /// </summary>
         public BaseData Current => _underlying.Current;
 
         object IEnumerator.Current => _underlying.Current;
@@ -52,6 +55,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _securityExchange = securityExchangeHours;
         }
 
+        /// <summary>
+        /// Move to the next date
+        /// </summary>
         public bool MoveNext()
         {
             var result = _underlying.MoveNext();
@@ -62,11 +68,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             return result;
         }
 
+        /// <summary>
+        /// Reset the enumerator
+        /// </summary>
         public void Reset()
         {
             _underlying.Reset();
         }
 
+        /// <summary>
+        /// Dispose the enumerator
+        /// </summary>
         public void Dispose()
         {
             _underlying.Dispose();

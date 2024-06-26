@@ -401,6 +401,9 @@ namespace QuantConnect.Data
             return Invariant($"{Symbol.Value},#{ContractDepthOffset},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
         }
 
+        /// <summary>
+        /// New base class for all event classes.
+        /// </summary>
         public class NewSymbolEventArgs : EventArgs
         {
             /// <summary>
@@ -413,6 +416,11 @@ namespace QuantConnect.Data
             /// </summary>
             public Symbol New { get; }
 
+            /// <summary>
+            /// Create an instance of NewSymbolEventArgs
+            /// </summary>
+            /// <param name="new"></param>
+            /// <param name="old"></param>
             public NewSymbolEventArgs(Symbol @new, Symbol old)
             {
                 New = @new;

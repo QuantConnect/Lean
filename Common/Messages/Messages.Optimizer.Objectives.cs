@@ -51,6 +51,9 @@ namespace QuantConnect
         /// </summary>
         public static class Objective
         {
+            /// <summary>
+            /// Null or empty Objective string message
+            /// </summary>
             public static string NullOrEmptyObjective = "Objective can not be null or empty";
         }
 
@@ -59,6 +62,9 @@ namespace QuantConnect
         /// </summary>
         public static class Target
         {
+            /// <summary>
+            /// Parses a Target object into a string message
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Optimizer.Objectives.Target instance)
             {

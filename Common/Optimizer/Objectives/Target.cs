@@ -48,6 +48,9 @@ namespace QuantConnect.Optimizer.Objectives
             Extremum = extremum;
         }
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
         public Target()
         {
 
