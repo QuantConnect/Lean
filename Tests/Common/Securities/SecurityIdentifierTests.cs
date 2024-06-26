@@ -26,6 +26,12 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Logging;
 using QuantConnect.Util;
 using QuantConnect.Securities;
+using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Custom.AlphaStreams;
+using QuantConnect.Data.Custom.IconicTypes;
+using QuantConnect.Data.Custom.Intrinio;
+using QuantConnect.Data.Custom;
+using QuantConnect.Data.Custom.Tiingo;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -610,6 +616,33 @@ namespace QuantConnect.Tests.Common.Securities
 
             CollectionAssert.AreEqual(expected, sids);
         }
+
+        [TestCaseSource(nameof(ReturnsExpectedCustomDataTypeTestCases))]
+        public void ReturnsExpectedCustomDataType(string symbol, Type expectedDataType)
+        {
+            SecurityIdentifier.GenerateBaseSymbol(expectedDataType, symbol.Split(".")[0]);
+            var result = SecurityIdentifier.TryGetCustomDataTypeInstance(symbol, out var obtainedDataType);
+
+            Assert.AreEqual(expectedDataType, obtainedDataType);
+        }
+
+        public static object[] ReturnsExpectedCustomDataTypeTestCases =
+        {
+            new object[] {"BTC.Bitcoin", typeof(CustomDataBitcoinAlgorithm.Bitcoin)},
+            new object[] {"AAPL.FundamentalUniverse", typeof(FundamentalUniverse)},
+            new object[] {"AAPL.PlaceHolder", typeof(PlaceHolder)},
+            new object[] {"AAPL.LinkedData", typeof(LinkedData)},
+            new object[] {"AAPL.UnlinkedData", typeof(UnlinkedData)},
+            new object[] {"AAPL.UnlinkedDataTradeBar", typeof(UnlinkedDataTradeBar)},
+            new object[] {"AAPL.IndexedLinkedData", typeof(IndexedLinkedData)},
+            new object[] {"AAPL.IndexedLinkedData2", typeof(IndexedLinkedData2)},
+            new object[] {"AAPL.IntrinioEconomicDataSources", typeof(IntrinioEconomicDataSources)},
+            new object[] {"AAPL.IntrinioEconomicData", typeof(IntrinioEconomicData)},
+            new object[] {"AAPL.FxcmVolume", typeof(FxcmVolume)},
+            new object[] {"AAPL.Tiingo", typeof(Tiingo)},
+            new object[] {"AAPL.TiingoDailyData", typeof(TiingoDailyData)},
+            new object[] {"AAPL.TiingoPrice", typeof(TiingoPrice)},
+        };
 
         class Container
         {

@@ -904,11 +904,8 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable();
-            Type dataType = null;
-            if (symbols.Any() && symbols.All(x => Securities.Keys.Contains(x)) && symbols.All(x => Securities[x].IsCustomData()))
-            {
-                dataType = Securities[symbols.First()]?.SubscriptionDataConfig.Type;
-            }
+            Type dataType = GetCustomDataTypeFromSymbols(symbols);
+
             return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset), dataType);
         }
@@ -970,11 +967,7 @@ namespace QuantConnect.Algorithm
             }
 
             var symbols = tickers.ConvertToSymbolEnumerable();
-            Type dataType = null;
-            if (symbols.Any() && symbols.All(x => Securities.Keys.Contains(x)) && symbols.All(x => Securities[x].IsCustomData()))
-            {
-                dataType = Securities[symbols.First()]?.SubscriptionDataConfig.Type;
-            }
+            Type dataType = GetCustomDataTypeFromSymbols(symbols);
 
             return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset), dataType);
@@ -1614,6 +1607,18 @@ namespace QuantConnect.Algorithm
                 }
             }
             return history;
+        }
+
+        private Type GetCustomDataTypeFromSymbols(IEnumerable<Symbol> symbols)
+        {
+            var arraySymbols = symbols.ToArray();
+            if (arraySymbols.Any() && arraySymbols.All(x => Securities[x].IsCustomData()))
+            {
+                SecurityIdentifier.TryGetCustomDataTypeInstance(arraySymbols[0].ID.Symbol, out var dataType);
+                return dataType;
+            }
+
+            return null;
         }
     }
 }
