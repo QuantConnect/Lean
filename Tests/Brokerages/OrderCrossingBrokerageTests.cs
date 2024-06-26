@@ -389,7 +389,7 @@ namespace QuantConnect.Tests.Brokerages
                 if (!TryHandleRemainingCrossZeroOrder(leanOrder, orderEvent))
                 {
                     _orderProvider.UpdateOrderStatusById(orderEvent.OrderId, orderEvent.Status);
-                }           
+                }
             }
 
             public IEnumerable<Order> GetAllOrders(Func<Order, bool> filter)
