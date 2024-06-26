@@ -13,6 +13,7 @@
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Description>QuantConnect LEAN Engine: Queues Project - Handles and generates live and backtesting algorithm jobs</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <NoWarn>1701;1702;CA1062;CA1725</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
