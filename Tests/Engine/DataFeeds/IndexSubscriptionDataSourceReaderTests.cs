@@ -22,6 +22,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -36,6 +37,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             _initialDate = new DateTime(2018, 1, 1);
             _dataCacheProvider = new TestDataCacheProvider();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _dataCacheProvider.DisposeSafely();
         }
 
         [Test]
@@ -85,7 +92,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var dataBars = reader.Read(source).First();
 
             Assert.IsNotNull(dataBars);
-            Assert.IsNotNull(dataBars.Symbol, Symbols.SPY);
+            Assert.IsNotNull(dataBars.Symbol, Symbols.SPY.Value);
             Assert.AreEqual("20000101 00:00,2,2,2,2,2", TestIndexedBasedFactory.IndexLine);
             Assert.AreEqual("20000101 00:00,2,2,2,2,2", TestIndexedBasedFactory.ReaderLine);
         }
@@ -119,15 +126,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
         private class TestDataCacheProvider : IDataCacheProvider
         {
+            private StreamWriter _writer;
             public string Data { set; get; }
             public bool IsDataEphemeral => false;
 
             public Stream Fetch(string key)
             {
                 var stream = new MemoryStream();
-                var writer = new StreamWriter(stream);
-                writer.Write(Data);
-                writer.Flush();
+                _writer = new StreamWriter(stream);
+                _writer.Write(Data);
+                _writer.Flush();
                 stream.Position = 0;
                 return stream;
             }
@@ -140,6 +148,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             public void Dispose()
             {
+                _writer.DisposeSafely();
             }
         }
     }

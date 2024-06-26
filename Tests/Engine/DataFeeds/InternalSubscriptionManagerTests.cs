@@ -43,6 +43,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private DataManager _dataManager;
         private QCAlgorithm _algorithm;
         private IDataFeed _dataFeed;
+        private AggregationManager _aggregationManager;
+        private PaperBrokerage _paperBrokerage;
 
         [SetUp]
         public void Setup()
@@ -57,6 +59,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _dataManager.RemoveAllSubscriptions();
             _resultHandler.Exit();
             _synchronizer.Dispose();
+            _aggregationManager.DisposeSafely();
+            _paperBrokerage.DisposeSafely();
         }
 
         [TestCaseSource(nameof(DataTypeTestCases))]
@@ -234,6 +238,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                     }
                     else if(_algorithm.Securities["AAPL"].Price != 0 && _algorithm.Securities["IBM"].Price != 0)
                     {
+                        #pragma warning disable CS0618
                         _algorithm.SetHoldings("AAPL", 0.01);
                         _algorithm.SetHoldings("IBM", 0.01);
 
@@ -243,6 +248,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
 
                         orders = _algorithm.Transactions.GetOpenOrders("IBM");
+                        #pragma warning restore CS0618
                         Assert.AreEqual(1, orders.Count);
                         Assert.AreEqual(Symbols.IBM, orders[0].Symbol);
                         Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
@@ -378,7 +384,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private void SetupImpl(IDataQueueHandler dataQueueHandler, Synchronizer synchronizer, IDataAggregator dataAggregator)
         {
             _algorithm = new AlgorithmStub(createDataManager: false);
-            _dataFeed = new TestableLiveTradingDataFeed(_algorithm.Settings, dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? new AggregationManager()));
+            _aggregationManager = new AggregationManager();
+            _dataFeed = new TestableLiveTradingDataFeed(_algorithm.Settings, dataQueueHandler ?? new FakeDataQueue(dataAggregator ?? _aggregationManager));
             _synchronizer = synchronizer ?? new LiveSynchronizer();
             _algorithm.SetStartDate(new DateTime(2022, 04, 13));
 
@@ -414,7 +421,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.Securities.SetSecurityService(securityService);
             var backtestingTransactionHandler = new BacktestingTransactionHandler();
-            backtestingTransactionHandler.Initialize(_algorithm, new PaperBrokerage(_algorithm, new LiveNodePacket()), _resultHandler);
+            _paperBrokerage = new PaperBrokerage(_algorithm, new LiveNodePacket());
+            backtestingTransactionHandler.Initialize(_algorithm, _paperBrokerage, _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
         }
         private class TestAggregationManager : AggregationManager

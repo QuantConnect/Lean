@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -27,14 +27,14 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void IsNotBusyWithZeroItemsWaiting()
         {
-            var collection = new BusyBlockingCollection<int>();
+            using var collection = new BusyBlockingCollection<int>();
             Assert.IsTrue(collection.WaitHandle.WaitOne(0));
         }
 
         [Test]
         public void IsBusyWithItemsWaiting()
         {
-            var collection = new BusyBlockingCollection<int>();
+            using var collection = new BusyBlockingCollection<int>();
             collection.Add(1);
             Assert.IsFalse(collection.WaitHandle.WaitOne(0));
         }
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void GetConsumingEnumerableReturnsItemsInOrder()
         {
-            var collection = new BusyBlockingCollection<int>();
+            using var collection = new BusyBlockingCollection<int>();
             collection.Add(1);
             collection.Add(2);
             collection.Add(3);
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void WaitForProcessingCompletedDuringGetConsumingEnumerable()
         {
-            var collection = new BusyBlockingCollection<int>();
+            using var collection = new BusyBlockingCollection<int>();
             collection.Add(1);
             collection.Add(2);
             collection.Add(3);

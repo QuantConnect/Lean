@@ -31,7 +31,9 @@ namespace QuantConnect.Tests.Brokerages
                 SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 CreateConfig(symbol, market, securityType, resolution),
                 new Cash(quoteCurrency, 1000, price),
+                #pragma warning disable CS0618
                 SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, SecurityType.Crypto, quoteCurrency),
+                #pragma warning restore CS0618
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTimeValuePairsWithOutVolumeProperly()
         {
             TradeBar newTradeBar = null;
-            var consolidator = new DynamicDataConsolidator(4);
+            using var consolidator = new DynamicDataConsolidator(4);
             consolidator.DataConsolidated += (sender, tradeBar) =>
             {
                 newTradeBar = tradeBar;
@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTimeValuePairsWithVolumeProperly()
         {
             TradeBar newTradeBar = null;
-            var consolidator = new DynamicDataConsolidator(4);
+            using var consolidator = new DynamicDataConsolidator(4);
             consolidator.DataConsolidated += (sender, tradeBar) =>
             {
                 newTradeBar = tradeBar;
@@ -145,7 +145,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTradeBarsWithVolumeProperly()
         {
             TradeBar consolidated = null;
-            var consolidator = new DynamicDataConsolidator(3);
+            using var consolidator = new DynamicDataConsolidator(3);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;
@@ -200,7 +200,7 @@ namespace QuantConnect.Tests.Common.Data
         public void AggregatesTradeBarsWithOutVolumeProperly()
         {
             TradeBar consolidated = null;
-            var consolidator = new DynamicDataConsolidator(3);
+            using var consolidator = new DynamicDataConsolidator(3);
             consolidator.DataConsolidated += (sender, bar) =>
             {
                 consolidated = bar;

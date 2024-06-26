@@ -583,11 +583,13 @@ namespace QuantConnect.Tests.Algorithm
             // self.AddData(CustomPythonData, "IBM", Resolution.Daily)
             qcAlgorithm.Initialize();
 
-            var niftyConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
+            #pragma warning disable CS0618
+            using var niftyConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
             Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("NIFTY", niftyConsolidator));
 
-            var customDataConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
+            using var customDataConsolidator = new DynamicDataConsolidator(TimeSpan.FromDays(2));
             Assert.DoesNotThrow(() => qcAlgorithm.SubscriptionManager.AddConsolidator("IBM", customDataConsolidator));
+            #pragma warning restore CS0618
         }
 
         [Test]
@@ -704,6 +706,7 @@ namespace QuantConnect.Tests.Algorithm
             {
                 var now = DateTime.UtcNow;
                 LastResolutionRequest = requests.First().Resolution;
+                #pragma warning disable CS0618
                 var tradeBar1 = new TradeBar(now, underlyingSymbol, 1, 1, 1, 1, 1, TimeSpan.FromDays(1));
                 var tradeBar2 = new TradeBar(now, underlyingSymbol2, 3, 3, 3, 3, 3, TimeSpan.FromDays(1));
                 var slice1 = new Slice(now, new List<BaseData> { tradeBar1, tradeBar2 },
@@ -713,6 +716,7 @@ namespace QuantConnect.Tests.Algorithm
                                     new Dividends(now), new Delistings(),
                                     new SymbolChangedEvents(), new MarginInterestRates(), now);
                 var tradeBar1_2 = new TradeBar(now, underlyingSymbol, 2, 2, 2, 2, 2, TimeSpan.FromDays(1));
+                #pragma warning restore CS0618
                 var slice2 = new Slice(now, new List<BaseData> { tradeBar1_2 },
                     new TradeBars(now), new QuoteBars(),
                     new Ticks(), new OptionChains(),

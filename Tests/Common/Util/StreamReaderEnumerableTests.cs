@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Common.Util
             var content = string.Join(Environment.NewLine, lines);
             using (var streamReader = new StreamReader(new MemoryStream(Encoding.Default.GetBytes(content))))
             {
-                var enumerable = new StreamReaderEnumerable(streamReader);
+                using var enumerable = new StreamReaderEnumerable(streamReader);
                 var actualLines = enumerable.ToList();
                 CollectionAssert.AreEqual(lines, actualLines);
             }
@@ -43,9 +43,9 @@ namespace QuantConnect.Tests.Common.Util
         public void DisposesWhenEnumerationIsCompleted()
         {
             var disposable = new TestDisposable();
-            var memoryStream = new TestMemoryStream(Encoding.Default.GetBytes("line1\r\nline2\r\nline3"));
-            var streamReader = new TestStreamReader(memoryStream);
-            var enumerable = new StreamReaderEnumerable(streamReader, disposable);
+            using var memoryStream = new TestMemoryStream(Encoding.Default.GetBytes("line1\r\nline2\r\nline3"));
+            using var streamReader = new TestStreamReader(memoryStream);
+            using var enumerable = new StreamReaderEnumerable(streamReader, disposable);
 
             // complete enumeration
             var lines = enumerable.ToList();

@@ -30,7 +30,8 @@ namespace QuantConnect.Tests.Algorithm
         public void Download_Without_Parameters_Successfully()
         {
             var algo = new QCAlgorithm();
-            algo.SetApi(new Api.Api());
+            using var api = new Api.Api();
+            algo.SetApi(api);
             var content = string.Empty;
             Assert.DoesNotThrow(() => content = algo.Download("https://www.quantconnect.com/"));
             Assert.IsNotEmpty(content);
@@ -40,7 +41,8 @@ namespace QuantConnect.Tests.Algorithm
         public void Download_With_CSharp_Parameter_Successfully()
         {
             var algo = new QCAlgorithm();
-            algo.SetApi(new Api.Api());
+            using var api = new Api.Api();
+            algo.SetApi(api);
 
             var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
             var headers = new List<KeyValuePair<string, string>>
@@ -57,14 +59,15 @@ namespace QuantConnect.Tests.Algorithm
         public void Download_With_Python_Parameter_Successfully()
         {
             var algo = new QCAlgorithm();
-            algo.SetApi(new Api.Api());
+            using var api = new Api.Api();
+            algo.SetApi(api);
 
             var byteKey = Encoding.ASCII.GetBytes($"UserName:Password");
             var value = $"Basic ({Convert.ToBase64String(byteKey)})";
 
             using (Py.GIL())
             {
-                var headers = new PyDict();
+                using var headers = new PyDict();
                 headers.SetItem("Authorization".ToPython(), value.ToPython());
 
                 var content = string.Empty;

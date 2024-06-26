@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Engine.DataProviders
             File.Create(path).Dispose();
             File.SetLastWriteTime(path, time);
 
-            var dataProvider = new ApiDataProviderTest();
+            using var dataProvider = new ApiDataProviderTest();
             var result = dataProvider.NeedToDownloadExposed(path);
             Assert.AreEqual(expected, result);
 
@@ -169,7 +169,9 @@ namespace QuantConnect.Tests.Engine.DataProviders
         [Test]
         public void DownloadsFileOnceConcurrently()
         {
+            # pragma warning disable CA2000
             var dataProvider = new ApiDataProviderTest();
+            #pragma warning restore CA2000
 
             var tasks = new List<Task>();
             for (var i = 0; i < 10; i++)

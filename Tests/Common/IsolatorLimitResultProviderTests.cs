@@ -48,8 +48,8 @@ namespace QuantConnect.Tests.Common
         [Test]
         public void ConsumeRequestsAdditionalTimeAfterOneMinute()
         {
-            var minuteElapsed = new ManualResetEvent(false);
-            var consumeStarted = new ManualResetEvent(false);
+            using var minuteElapsed = new ManualResetEvent(false);
+            using var consumeStarted = new ManualResetEvent(false);
 
             Action code = () =>
             {

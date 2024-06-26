@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Engine
             algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(Enumerable.Empty<MarketHoursSegment>(), referenceTime.ConvertFromUtc(TimeZones.NewYork).DayOfWeek);
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
-            var api = new Api.Api();
+            using var api = new Api.Api();
             var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromSeconds(2));
 
             Assert.IsNull(algorithm.RunTimeError);
@@ -66,7 +66,7 @@ namespace QuantConnect.Tests.Engine
             algorithm.Securities[Symbols.SPY].Exchange.SetMarketHours(new [] {marketHours}, localReferencTime.DayOfWeek);
             var job = new LiveNodePacket();
             var results = new TestResultHandler();//packet => Console.WriteLine(FieldsToString(packet)));
-            var api = new Api.Api();
+            using var api = new Api.Api();
             var handler = new DefaultBrokerageMessageHandler(algorithm, job, api, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(.25));
 
             Assert.IsNull(algorithm.RunTimeError);

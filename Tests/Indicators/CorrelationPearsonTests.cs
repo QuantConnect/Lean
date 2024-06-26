@@ -34,7 +34,9 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestColumnName => (_correlationType==CorrelationType.Pearson)?"Correlation_Pearson":"Correlation_Spearman";
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            #pragma warning disable CS0618
             var indicator = new QuantConnect.Indicators.Correlation("testCorrelationIndicator", Symbols.SPY, "QQQ RIWIV7K5Z9LX", 252, _correlationType);
+            #pragma warning restore CS0618
             return indicator;
         }
 

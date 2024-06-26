@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Optimizer.Parameters
             [Test, TestCaseSource(nameof(OptimizationParameters))]
             public void Enumerate(OptimizationStepParameter optimizationParameter)
             {
-                var enumerator = new OptimizationStepParameterEnumerator(optimizationParameter);
+                using var enumerator = new OptimizationStepParameterEnumerator(optimizationParameter);
                 int total = 0;
 
                 for (decimal value = optimizationParameter.MinValue; value <= optimizationParameter.MaxValue; value += optimizationParameter.Step.Value)

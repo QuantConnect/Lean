@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.Securities.SetSecurityService(securityService);
             var dataPermissionManager = new DataPermissionManager();
             var dataManager = new DataManager(feed,
-                new UniverseSelection(algorithm, securityService, dataPermissionManager, new DefaultDataProvider()),
+                new UniverseSelection(algorithm, securityService, dataPermissionManager, TestGlobals.DataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,
@@ -94,7 +94,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             foreach (var kvp in algorithm.Securities)
             {
                 int dataPointCount;
-                subscriptions.TryAdd(CreateSubscription(algorithm, kvp.Value, startTimeUtc, endTimeUtc, out dataPointCount));
+                # pragma warning disable CA2000
+                var subscription = CreateSubscription(algorithm, kvp.Value, startTimeUtc, endTimeUtc, out dataPointCount);
+                # pragma warning restore CA2000
+                subscriptions.TryAdd(subscription);
                 totalDataPoints += dataPointCount;
             }
 

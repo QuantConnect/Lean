@@ -28,7 +28,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void OutputTypeIsVolumeRenkoBar()
         {
-            var consolidator = new VolumeRenkoConsolidator(10);
+            using var consolidator = new VolumeRenkoConsolidator(10);
             Assert.AreEqual(typeof(VolumeRenkoBar), consolidator.OutputType);
         }
 
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Common.Data
         public void ConsolidatesOnTickVolumeReached()
         {
             VolumeRenkoBar bar = null;
-            var consolidator = new VolumeRenkoConsolidator(10);
+            using var consolidator = new VolumeRenkoConsolidator(10);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 bar = consolidated;
@@ -71,7 +71,7 @@ namespace QuantConnect.Tests.Common.Data
         public void ConsolidatesOnTraderBarVolumeReached()
         {
             VolumeRenkoBar bar = null;
-            var consolidator = new VolumeRenkoConsolidator(10);
+            using var consolidator = new VolumeRenkoConsolidator(10);
             consolidator.DataConsolidated += (sender, consolidated) => 
             {
                 bar = consolidated;
@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Common.Data
         [Test]
         public void ConsolidatesOnQuoteBar()
         {
-            var consolidator = new VolumeRenkoConsolidator(10);
+            using var consolidator = new VolumeRenkoConsolidator(10);
 
             var reference = new DateTime(2013, 10, 1);
             Assert.Throws<ArgumentException>(() => 
@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.Common.Data
         public void MultipleConsoldation()
         {
             VolumeRenkoBar bar = null;
-            var consolidator = new VolumeRenkoConsolidator(10m);
+            using var consolidator = new VolumeRenkoConsolidator(10m);
             consolidator.DataConsolidated += (sender, consolidated) =>
             {
                 bar = consolidated;

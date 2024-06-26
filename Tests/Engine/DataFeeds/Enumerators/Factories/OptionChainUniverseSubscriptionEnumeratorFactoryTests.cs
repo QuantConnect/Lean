@@ -90,7 +90,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             var factory = new OptionChainUniverseSubscriptionEnumeratorFactory(underlyingEnumeratorFunc, symbolUniverse, timeProvider);
 
             var universeSettings = new UniverseSettings(Resolution.Minute, 0, true, false, TimeSpan.Zero);
-            var universe = new OptionChainUniverse(option, universeSettings);
+            using var universe = new OptionChainUniverse(option, universeSettings);
             var request = new SubscriptionRequest(true, universe, option, config, startTime, Time.EndOfTime);
             var enumerator = (DataQueueOptionChainUniverseDataCollectionEnumerator) factory.CreateEnumerator(request, TestGlobals.DataProvider);
 

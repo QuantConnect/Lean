@@ -146,7 +146,7 @@ namespace QuantConnect.Tests.Algorithm
                         RegisteredSecurityDataTypesProvider.Null,
                         new SecurityCacheProvider(algorithm.Portfolio)),
                     dataPermissionManager,
-                    new DefaultDataProvider()),
+                    TestGlobals.DataProvider),
                 algorithm,
                 algorithm.TimeKeeper,
                 marketHoursDatabase,

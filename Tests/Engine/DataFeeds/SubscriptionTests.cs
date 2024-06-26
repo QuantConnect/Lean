@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void ConstructorNoUniverse()
         {
             var subscriptionRequest = GetSubscriptionRequest(false);
-            var subscription = new Subscription(
+            using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
@@ -52,7 +52,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void Constructor()
         {
             var subscriptionRequest = GetSubscriptionRequest();
-            var subscription = new Subscription(
+            using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
@@ -70,7 +70,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void AddSubscriptionRequestOncePerUniverse()
         {
             var subscriptionRequest = GetSubscriptionRequest();
-            var subscription = new Subscription(
+            using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var subscriptionRequest = GetSubscriptionRequest(true, true);
             var subscriptionRequest2 = GetSubscriptionRequest();
-            var subscription = new Subscription(
+            using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var subscriptionRequest = GetSubscriptionRequest();
             var subscriptionRequest2 = GetSubscriptionRequest(resolution: Resolution.Second);
-            var subscription = new Subscription(
+            using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
@@ -131,7 +131,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void RemoveSubscriptionRequest()
         {
             var subscriptionRequest = GetSubscriptionRequest();
-            var subscription = new Subscription(
+            using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
@@ -147,7 +147,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var subscriptionRequest = GetSubscriptionRequest();
             var subscriptionRequest2 = GetSubscriptionRequest();
-            var subscription = new Subscription(
+            using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
@@ -164,7 +164,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void RemoveAllSubscriptionRequestNoUniverse()
         {
             var subscriptionRequest = GetSubscriptionRequest(false);
-            var subscription = new Subscription(
+            using var subscription = new Subscription(
                 subscriptionRequest,
                 null,
                 new TimeZoneOffsetProvider(DateTimeZone.Utc, _start, _end));
@@ -182,11 +182,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         {
             var security = SecurityTests.GetSecurity();
             var config = SecurityTests.CreateTradeBarConfig(resolution);
+            # pragma warning disable CA2000
             var universe = new ManualUniverse(
                 config,
                 new UniverseSettings(Resolution.Daily, 1, true, true, TimeSpan.FromDays(1)),
                 new[] {security.Symbol}
             );
+            #pragma warning restore CA2000
             return new SubscriptionRequest(isUniverseSelection, useUniverse ? universe : null, security, config, _start, _end);
         }
     }

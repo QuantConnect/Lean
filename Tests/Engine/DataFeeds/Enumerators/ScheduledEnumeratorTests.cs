@@ -88,8 +88,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         [Test]
         public void ScheduleSkipsOldDates()
         {
+            using var testEnumerator = new TestEnumerator();
             using var enumerator = new ScheduledEnumerator(
-                new TestEnumerator(),
+                testEnumerator,
                 new List<DateTime> { _referenceTime },
                 new ManualTimeProvider(_referenceTime),
                 TimeZones.Utc,

@@ -153,10 +153,11 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
             brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
@@ -197,10 +198,11 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
             brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             var result = setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider));
@@ -284,10 +286,11 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             Assert.AreEqual(!fails, setupHandler.Setup(new SetupHandlerParameters(algorithm.DataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
@@ -320,9 +323,10 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
             brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.EUR);
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
@@ -350,10 +354,11 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             Assert.IsFalse(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
@@ -393,6 +398,7 @@ namespace QuantConnect.Tests.Engine.Setup
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
@@ -402,7 +408,8 @@ namespace QuantConnect.Tests.Engine.Setup
                 .Count(group => ((OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel).ToString() == OptionStrategyDefinitions.CoveredCall.Name
                     && (Math.Abs(group.Quantity) == 1)) != 1)
             {
-                throw new Exception($"Option strategy: '{OptionStrategyDefinitions.CoveredCall.Name}' was not found!");
+                factory.Dispose();
+                throw new RegressionTestException($"Option strategy: '{OptionStrategyDefinitions.CoveredCall.Name}' was not found!");
             }
         }
 
@@ -432,10 +439,11 @@ namespace QuantConnect.Tests.Engine.Setup
             });
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
@@ -471,10 +479,11 @@ namespace QuantConnect.Tests.Engine.Setup
             });
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
@@ -516,10 +525,11 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
@@ -564,10 +574,11 @@ namespace QuantConnect.Tests.Engine.Setup
                     : new List<Holding>());
             brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
 
-            var setupHandler = new BrokerageSetupHandler();
+            using var setupHandler = new BrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             var dataManager = new DataManagerStub(algorithm, new MockDataFeed(), true);
 
@@ -598,10 +609,11 @@ namespace QuantConnect.Tests.Engine.Setup
             brokerage.Setup(x => x.GetAccountHoldings()).Returns(getHoldings);
             brokerage.Setup(x => x.GetOpenOrders()).Returns(getOrders);
 
-            var setupHandler = new TestableBrokerageSetupHandler();
+            using var setupHandler = new TestableBrokerageSetupHandler();
 
             IBrokerageFactory factory;
             setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
 
             var parameters = new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
                 transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider);
@@ -744,7 +756,9 @@ namespace QuantConnect.Tests.Engine.Setup
                         }),
                         new Func<List<Order>>(() => new List<Order>
                         {
+                            #pragma warning disable CS0618
                             new LimitOrder("XYZ", 1, 1, DateTime.UtcNow)
+                            #pragma warning restore CS0618
                         }), false);
 
                     yield return new TestCaseData(
@@ -758,12 +772,12 @@ namespace QuantConnect.Tests.Engine.Setup
                         }), false);
 
                     yield return new TestCaseData(
-                        new Func<List<Holding>>(() => { throw new Exception(); }),
+                        new Func<List<Holding>>(() => { throw new RegressionTestException(); }),
                         new Func<List<Order>>(() => new List<Order>()), false);
 
                     yield return new TestCaseData(
                         new Func<List<Holding>>(() => new List<Holding>()),
-                        new Func<List<Order>>(() => { throw new Exception(); }), false);
+                        new Func<List<Order>>(() => { throw new RegressionTestException(); }), false);
                 }
             }
         }

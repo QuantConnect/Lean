@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         [Test]
         public void EmptyStore()
         {
-            var field = new TestMultiPeriodField();
+            using var field = new TestMultiPeriodField();
             Assert.IsFalse(field.HasValue);
             Assert.AreEqual(MultiPeriodField.NoValue, field.Value);
             Assert.AreEqual(MultiPeriodField.NoValue, field.FiveYears);
@@ -105,7 +105,7 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         [Test]
         public void EmptyStoreToString()
         {
-            var field = new TestMultiPeriodField();
+            using var field = new TestMultiPeriodField();
             Assert.AreEqual("", field.ToString());
         }
 

@@ -180,11 +180,11 @@ namespace QuantConnect.Tests.Algorithm
                 var sma = indicatorDataPoint.ToPython();
                 var atr = indicatorTradeBar.ToPython();
                 var vwapi = indicatorDataBar.ToPython();
-
+                #pragma warning disable CS0618
                 Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", sma, Resolution.Minute));
                 Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", atr, Resolution.Minute));
                 Assert.DoesNotThrow(() => algo.WarmUpIndicator("SPY", vwapi, Resolution.Minute));
-
+                #pragma warning restore CS0618
                 var smaIsReady = ((dynamic)sma).IsReady;
                 var atrIsReady = ((dynamic)atr).IsReady;
                 var vwapiIsReady = ((dynamic)vwapi).IsReady;
