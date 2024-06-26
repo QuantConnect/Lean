@@ -23,7 +23,10 @@ using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using QuantConnect.Brokerages.CrossZero;
 
 namespace QuantConnect.Brokerages
 {
@@ -565,5 +568,268 @@ namespace QuantConnect.Brokerages
 
         #endregion
 
+        #region CrossZeroOrder implementation
+
+        /// <summary>
+        /// A dictionary to store the relationship between brokerage crossing orders and Lean orer id.
+        /// </summary>
+        private readonly ConcurrentDictionary<int, CrossZeroSecondOrderRequest> _leanOrderByBrokerageCrossingOrders = new();
+
+        /// <summary>
+        /// An object used to lock the critical section in the <see cref="TryGetOrRemoveCrossZeroOrder"/> method,
+        /// ensuring thread safety when accessing the order collection.
+        /// </summary>
+        private object _lockCrossZeroObject = new();
+
+        /// <summary>
+        /// A thread-safe dictionary that maps brokerage order IDs to their corresponding Order objects.
+        /// </summary>
+        /// <remarks>
+        /// This ConcurrentDictionary is used to maintain a mapping between Zero Cross brokerage order IDs and Lean Order objects. 
+        /// The dictionary is protected and read-only, ensuring that it can only be modified by the class that declares it and cannot 
+        /// be assigned a new instance after initialization.
+        /// </remarks>
+        protected ConcurrentDictionary<string, Order> LeanOrderByZeroCrossBrokerageOrderId { get; } = new();
+
+        /// <summary>
+        /// Places an order that crosses zero (transitions from a short position to a long position or vice versa) and returns the response.
+        /// This method should be overridden in a derived class to implement brokerage-specific logic for placing such orders.
+        /// </summary>
+        /// <param name="crossZeroOrderRequest">The request object containing details of the cross zero order to be placed.</param>
+        /// <param name="isPlaceOrderWithLeanEvent">
+        /// A boolean indicating whether the order should be placed with triggering a Lean event. 
+        /// Default is <c>true</c>, meaning Lean events will be triggered.
+        /// </param>
+        /// <returns>
+        /// A <see cref="CrossZeroOrderResponse"/> object indicating the result of the order placement.
+        /// </returns>
+        /// <exception cref="NotImplementedException">
+        /// Thrown if the method is not overridden in a derived class.
+        /// </exception>
+        protected virtual CrossZeroOrderResponse PlaceCrossZeroOrder(CrossZeroFirstOrderRequest crossZeroOrderRequest, bool isPlaceOrderWithLeanEvent = true)
+        {
+            throw new NotImplementedException($"{nameof(PlaceCrossZeroOrder)} method should be overridden in the derived class to handle brokerage-specific logic.");
+        }
+
+        /// <summary>
+        /// Attempts to place an order that may cross the zero position. 
+        /// If the order needs to be split into two parts due to crossing zero, 
+        /// this method handles the split and placement accordingly.
+        /// </summary>
+        /// <param name="order">The order to be placed. Must not be <c>null</c>.</param>
+        /// <param name="holdingQuantity">The current holding quantity of the order's symbol.</param>
+        /// <returns>
+        /// <para><c>true</c> if the order crosses zero and the first part was successfully placed;</para>
+        /// <para><c>false</c> if the first part of the order could not be placed;</para>
+        /// <para><c>null</c> if the order does not cross zero.</para>
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="order"/> is <c>null</c>.
+        /// </exception>
+        protected bool? TryCrossZeroPositionOrder(Order order, decimal holdingQuantity)
+        {
+            if (order == null)
+            {
+                throw new ArgumentNullException(nameof(order), "The order parameter cannot be null.");
+            }
+
+            // do we need to split the order into two pieces?
+            var crossesZero = BrokerageExtensions.OrderCrossesZero(holdingQuantity, order.Quantity);
+            if (crossesZero)
+            {
+                // first we need an order to close out the current position
+                var (firstOrderQuantity, secondOrderQuantity) = GetQuantityOnCrossPosition(holdingQuantity, order.Quantity);
+
+                // Note: original quantity - already sell
+                var firstOrderPartRequest = new CrossZeroFirstOrderRequest(order, order.Type, firstOrderQuantity, holdingQuantity,
+                    GetOrderPosition(order.Direction, holdingQuantity));
+
+                // we actually can't place this order until the closingOrder is filled
+                // create another order for the rest, but we'll convert the order type to not be a stop
+                // but a market or a limit order                
+                var secondOrderPartRequest = new CrossZeroSecondOrderRequest(order, order.Type, secondOrderQuantity, 0m,
+                    GetOrderPosition(order.Direction, 0m), firstOrderPartRequest);
+
+                _leanOrderByBrokerageCrossingOrders.AddOrUpdate(order.Id, secondOrderPartRequest);
+
+                // issue the first order to close the position
+                var response = PlaceCrossZeroOrder(firstOrderPartRequest);
+                if (!response.IsOrderPlacedSuccessfully)
+                {
+                    OnOrderEvent(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, $"{nameof(Brokerage)}: {response.Message}")
+                    {
+                        Status = OrderStatus.Invalid
+                    });
+                    // remove the contingent order if we weren't successful in placing the first
+                    //ContingentOrderQueue contingent;
+                    _leanOrderByBrokerageCrossingOrders.TryRemove(order.Id, out _);
+                    return false;
+                }
+
+                order.BrokerId.Add(response.BrokerageOrderId.ToStringInvariant());
+
+                return true;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Determines whether the given Lean order crosses zero quantity based on the initial order quantity.
+        /// </summary>
+        /// <param name="leanOrder">The Lean order to check.</param>
+        /// <param name="quantity">The quantity to be updated based on whether the order crosses zero.</param>
+        /// <returns>
+        /// <c>true</c> if the Lean order does not cross zero quantity; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="leanOrder"/> is null.</exception>
+        protected bool TryGetUpdateCrossZeroOrderQuantity(Order leanOrder, out decimal quantity)
+        {
+            if (leanOrder == null)
+            {
+                throw new ArgumentNullException(nameof(leanOrder), "The provided leanOrder cannot be null.");
+            }
+
+            // Check if the order is a CrossZeroOrder.
+            if (_leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var crossZeroOrderRequest))
+            {
+                // If it is a CrossZeroOrder, use the first part of the quantity for the update.
+                quantity = crossZeroOrderRequest.FirstPartCrossZeroOrder.OrderQuantity;
+                // If the quantities of the LeanOrder do not match, return false. Don't support.
+                if (crossZeroOrderRequest.LeanOrder.Quantity != leanOrder.Quantity)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // If it is not a CrossZeroOrder, use the original order quantity.
+                quantity = leanOrder.Quantity;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Attempts to retrieve or remove a cross-zero order based on the brokerage order ID and its filled status.
+        /// </summary>
+        /// <param name="brokerageOrderId">The unique identifier of the brokerage order.</param>
+        /// <param name="leanOrderStatus">The updated status of the order received from the brokerage</param>
+        /// <param name="leanOrder">
+        /// When this method returns, contains the <see cref="Order"/> object associated with the given brokerage order ID,
+        /// if the operation was successful; otherwise, null.
+        /// This parameter is passed uninitialized.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if the method successfully retrieves or removes the order; otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// The method locks on a private object to ensure thread safety while accessing the collection of orders.
+        /// If the order is filled, it is removed from the collection. If the order is partially filled,
+        /// it is retrieved but not removed. If the order is not found, the method returns <c>false</c>.
+        /// </remarks>
+        protected bool TryGetOrRemoveCrossZeroOrder(string brokerageOrderId, OrderStatus leanOrderStatus, out Order leanOrder)
+        {
+            lock (_lockCrossZeroObject)
+            {
+                // Remove the order if it has already been filled
+                if (leanOrderStatus == OrderStatus.Filled && LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out leanOrder))
+                {
+                    return true;
+                }
+                // If the order is partially filled, retrieve it from the collection
+                else if (LeanOrderByZeroCrossBrokerageOrderId.TryGetValue(brokerageOrderId, out leanOrder))
+                {
+                    return true;
+                }
+                // Return false if the brokerage order ID does not correspond to a cross-zero order
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to handle any remaining orders that cross the zero boundary.
+        /// </summary>
+        /// <param name="leanOrder">The order object that needs to be processed.</param>
+        /// <param name="orderEvent">The event object containing order event details.</param>
+        protected bool TryHandleRemainingCrossZeroOrder(Order leanOrder, OrderEvent orderEvent)
+        {
+            if (leanOrder != null && orderEvent != null
+                && orderEvent.Status == OrderStatus.Filled && _leanOrderByBrokerageCrossingOrders.TryRemove(leanOrder.Id, out var brokerageOrder))
+            {
+                // if we have a contingent that needs to be submitted then we can't respect the 'Filled' state from the order
+                // because the Lean order hasn't been technically filled yet, so mark it as 'PartiallyFilled'
+                orderEvent.Status = OrderStatus.PartiallyFilled;
+                OnOrderEvent(orderEvent);
+
+                Task.Run(() =>
+                {
+#pragma warning disable CA1031 // Do not catch general exception types
+                    try
+                    {
+                        var response = default(CrossZeroOrderResponse);
+                        lock (_lockCrossZeroObject)
+                        {
+                            Log.Trace($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Submit the second part of cross order by Id:{leanOrder.Id}");
+                            response = PlaceCrossZeroOrder(brokerageOrder, false);
+
+                            if (response.IsOrderPlacedSuccessfully)
+                            {
+                                // add the new brokerage id for retrieval later
+                                leanOrder.BrokerId.Add(response.BrokerageOrderId);
+                                LeanOrderByZeroCrossBrokerageOrderId.AddOrUpdate(response.BrokerageOrderId, leanOrder);
+                            }
+                        }
+
+                        if (!response.IsOrderPlacedSuccessfully)
+                        {
+                            // if we failed to place this order I don't know what to do, we've filled the first part
+                            // and failed to place the second... strange. Should we invalidate the rest of the order??
+                            Log.Error($"{nameof(Brokerage)}.{nameof(TryHandleRemainingCrossZeroOrder)}: Failed to submit contingent order.");
+                            var message = $"{leanOrder.Symbol} Failed submitting the second part of cross order for " +
+                                $"LeanOrderId: {leanOrder.Id.ToStringInvariant()} Filled - BrokerageOrderId: {response.BrokerageOrderId}. " +
+                                $"{response.Message}";
+                            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroFailed", message));
+                            OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err);
+                        OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "CrossZeroOrderError", "An error occurred while trying to submit an cross zero order: " + err));
+                        OnOrderEvent(new OrderEvent(leanOrder, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Canceled });
+                    }
+#pragma warning restore CA1031 // Do not catch general exception types
+                });
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Calculates the quantities needed to close the current position and establish a new position based on the provided order.
+        /// </summary>
+        /// <param name="holdingQuantity">The quantity currently held in the position that needs to be closed.</param>
+        /// <param name="orderQuantity">The quantity defined in the new order to be established.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// <list type="bullet">
+        /// <item>
+        /// <description>The quantity needed to close the current position (negative value).</description>
+        /// </item>
+        /// <item>
+        /// <description>The quantity needed to establish the new position.</description>
+        /// </item>
+        /// </list>
+        /// </returns>
+        private static (decimal closePostionQunatity, decimal newPositionQuantity) GetQuantityOnCrossPosition(decimal holdingQuantity, decimal orderQuantity)
+        {
+            // first we need an order to close out the current position
+            var firstOrderQuantity = -holdingQuantity;
+            var secondOrderQuantity = orderQuantity - firstOrderQuantity;
+
+            return (firstOrderQuantity, secondOrderQuantity);
+        }
+
+        #endregion
     }
 }
