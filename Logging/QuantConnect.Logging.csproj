@@ -14,7 +14,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Description>QuantConnect LEAN Engine: Logging Project - The logging library implementation</Description>
-    <NoWarn>1701;1702;CA1062</NoWarn>
+    <NoWarn>CA1062</NoWarn>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

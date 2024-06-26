@@ -14,7 +14,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Description>QuantConnect LEAN Engine: API Project - C# SDK for interaction with the QuantConnect.com</Description>
-    <NoWarn>1701;1702;CA1062</NoWarn>
+    <NoWarn>CA1062</NoWarn>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
