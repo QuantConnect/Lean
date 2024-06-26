@@ -80,6 +80,25 @@ namespace QuantConnect.Notifications
                 var botToken = jObject.GetValue("Token", StringComparison.InvariantCultureIgnoreCase);
                 return new NotificationTelegram(token.ToString(), message?.ToString(), botToken?.ToString());
             }
+            else if (jObject.TryGetValue("host", StringComparison.InvariantCultureIgnoreCase, out token))
+            {
+                // This is an FTP notification
+                var hostname = token.ToString();
+                var port = jObject.GetValue("port", StringComparison.InvariantCultureIgnoreCase)?.ToObject<int?>();
+                var username = jObject.GetValue("username", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var filePath = jObject.GetValue("fileDestinationPath", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var fileContent = jObject.GetValue("fileContent", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+
+                if (jObject.TryGetValue("password", StringComparison.InvariantCultureIgnoreCase, out var password))
+                {
+                    var secure = jObject.GetValue("secure", StringComparison.InvariantCultureIgnoreCase)?.ToObject<bool>() ?? true;
+                    return NotificationFtp.FromEncodedData(hostname, username, password.ToString(), filePath, fileContent, secure, port);
+                }
+
+                var privateKey = jObject.GetValue("privateKey", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                var passphrase = jObject.GetValue("passphrase", StringComparison.InvariantCultureIgnoreCase)?.ToString();
+                return NotificationFtp.FromEncodedData(hostname, username, privateKey, passphrase, filePath, fileContent, port);
+            }
 
             throw new NotImplementedException(Messages.NotificationJsonConverter.UnexpectedJsonObject(jObject));
         }

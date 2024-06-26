@@ -15,6 +15,7 @@
 */
 
 using System.Collections.Generic;
+using System.Text;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using QuantConnect.Notifications;
@@ -95,6 +96,66 @@ namespace QuantConnect.Tests.Common.Notifications
         }
 
         [Test]
+        public void FtpWithPasswordRoundTrip([Values] bool secure, [Values] bool withPort)
+        {
+            var expected = new NotificationFtp(
+                "qc.com",
+                "username",
+                "password",
+                "path/to/file.json",
+                Encoding.ASCII.GetBytes("{}"),
+                secure,
+                withPort ? 2121: null);
+
+            var serialized = JsonConvert.SerializeObject(expected);
+            var result = (NotificationFtp)JsonConvert.DeserializeObject<Notification>(serialized);
+
+            Assert.AreEqual(expected.Hostname, result.Hostname);
+            Assert.AreEqual(expected.Username, result.Username);
+            Assert.AreEqual(expected.Password, result.Password);
+            Assert.AreEqual(expected.FilePath, result.FilePath);
+            Assert.AreEqual(expected.FileContent, result.FileContent);
+            Assert.AreEqual(expected.Port, result.Port);
+            Assert.AreEqual(expected.Secure, result.Secure);
+            Assert.IsNull(result.PrivateKey);
+            Assert.IsNull(result.PrivateKeyPassphrase);
+        }
+
+        [Test]
+        public void FtpWithKeyRoundTrip([Values] bool withPort, [Values] bool withPassphrase)
+        {
+            var expected = new NotificationFtp(
+                "qc.com",
+                "username",
+                "privatekey",
+                withPassphrase ? "passphrase" : null,
+                "path/to/file.json",
+                Encoding.ASCII.GetBytes("{}"),
+                withPort ? 2121 : null);
+
+            var serialized = JsonConvert.SerializeObject(expected);
+            var result = (NotificationFtp)JsonConvert.DeserializeObject<Notification>(serialized);
+
+            Assert.AreEqual(expected.Hostname, result.Hostname);
+            Assert.AreEqual(expected.Username, result.Username);
+            Assert.AreEqual(expected.PrivateKey, result.PrivateKey);
+            Assert.AreEqual(expected.FilePath, result.FilePath);
+            Assert.AreEqual(expected.FileContent, result.FileContent);
+            Assert.AreEqual(expected.Port, result.Port);
+            Assert.IsNull(result.Password);
+            Assert.IsTrue(result.Secure);
+
+            if (withPassphrase)
+            {
+                Assert.AreEqual(expected.PrivateKeyPassphrase, result.PrivateKeyPassphrase);
+            }
+            else
+            {
+                Assert.IsNull(result.PrivateKeyPassphrase);
+            }
+        }
+
+        [Test]
         public void CaseInsensitive()
         {
             var serialized = @"[{
@@ -109,10 +170,35 @@ namespace QuantConnect.Tests.Common.Notifications
 			""address"": ""qc.com""
 		}, {
 			""address"": ""qc.com/1234""
+		},{
+			""host"": ""qc.com"",
+			""username"": ""username"",
+			""password"": ""password"",
+			""fileDestinationPath"": ""path/to/file.csv"",
+			""fileContent"": ""abcde"",
+			""secure"": ""true"",
+			""port"": 2222
+		},{
+			""host"": ""qc.com"",
+			""username"": ""username"",
+			""password"": ""password"",
+			""fileDestinationPath"": ""path/to/file.csv"",
+			""filecontent"": ""abcde"",
+			""secure"": ""false"",
+			""port"": 2222
+		},{
+			""host"": ""qc.com"",
+			""username"": ""username"",
+            ""privatekey"": ""privatekey"",
+            ""passphrase"": ""privatekeyPassphrase"",
+			""fileDestinationPath"": ""path/to/file.csv"",
+			""filecontent"": ""abcde"",
+			""secure"": ""false"",
+			""port"": 2222
 		}]";
             var result = JsonConvert.DeserializeObject<List<Notification>>(serialized);
 
-            Assert.AreEqual(4, result.Count);
+            Assert.AreEqual(7, result.Count);
 
             var email = result[0] as NotificationEmail;
             Assert.AreEqual("sdads", email.Subject);
@@ -128,6 +214,39 @@ namespace QuantConnect.Tests.Common.Notifications
 
             var web2 = result[3] as NotificationWeb;
             Assert.AreEqual("qc.com/1234", web2.Address);
+
+            var ftp = result[4] as NotificationFtp;
+            Assert.AreEqual("qc.com", ftp.Hostname);
+            Assert.AreEqual("username", ftp.Username);
+            Assert.AreEqual("password", ftp.Password);
+            Assert.AreEqual("path/to/file.csv", ftp.FilePath);
+            Assert.AreEqual("abcde", ftp.FileContent);
+            Assert.IsTrue(ftp.Secure);
+            Assert.AreEqual(2222, ftp.Port);
+            Assert.IsNull(ftp.PrivateKey);
+            Assert.IsNull(ftp.PrivateKeyPassphrase);
+
+            var ftp2 = result[5] as NotificationFtp;
+            Assert.AreEqual("qc.com", ftp2.Hostname);
+            Assert.AreEqual("username", ftp2.Username);
+            Assert.AreEqual("password", ftp2.Password);
+            Assert.AreEqual("path/to/file.csv", ftp2.FilePath);
+            Assert.AreEqual("abcde", ftp2.FileContent);
+            Assert.IsFalse(ftp2.Secure);
+            Assert.AreEqual(2222, ftp2.Port);
+            Assert.IsNull(ftp.PrivateKey);
+            Assert.IsNull(ftp.PrivateKeyPassphrase);
+
+            var ftp3 = result[6] as NotificationFtp;
+            Assert.AreEqual("qc.com", ftp3.Hostname);
+            Assert.AreEqual("username", ftp3.Username);
+            Assert.AreEqual("privatekey", ftp3.PrivateKey);
+            Assert.AreEqual("privatekeyPassphrase", ftp3.PrivateKeyPassphrase);
+            Assert.AreEqual("path/to/file.csv", ftp3.FilePath);
+            Assert.AreEqual("abcde", ftp3.FileContent);
+            Assert.IsTrue(ftp3.Secure);
+            Assert.AreEqual(2222, ftp3.Port);
+            Assert.IsNull(ftp3.Password);
         }
     }
 }

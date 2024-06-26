@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Notifications;
@@ -73,9 +74,44 @@ namespace QuantConnect.Tests.Common.Notifications
         }
 
         [Test]
+        public void TelegramAddsNotificationToMessagesWhenLiveModeIsTrue()
+        {
+            Assert.AreEqual(_liveMode, _notify.Telegram("pepe", "ImAMessage", "botToken"));
+            Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
+            if (_liveMode)
+            {
+                Assert.IsInstanceOf<NotificationTelegram>(_notify.Messages.Single());
+            }
+        }
+
+        [Test]
+        public void FtpAddsNotificationToMessagesWhenLiveModeIsTrue()
+        {
+            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "password", "path/to/file.json", Encoding.ASCII.GetBytes("{}")));
+            Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
+            if (_liveMode)
+            {
+                Assert.IsInstanceOf<NotificationFtp>(_notify.Messages.Single());
+            }
+        }
+
+        [Test]
+        public void FtpAddsNotificationToMessagesWhenLiveModeIsTrueFromStringContents()
+        {
+            Assert.AreEqual(_liveMode, _notify.Ftp("qc.com", "username", "password", "path/to/file.json", "{}"));
+            Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
+            if (_liveMode)
+            {
+                Assert.IsInstanceOf<NotificationFtp>(_notify.Messages.Single());
+            }
+        }
+
+        [Test]
         [TestCase("email")]
         [TestCase("sms")]
         [TestCase("web")]
+        [TestCase("telegram")]
+        [TestCase("ftp")]
         public void RateLimits_Notifications_AfterThirtyCalls(string method)
         {
             for (var invocationNumber = 1; invocationNumber <= 31; invocationNumber++)
@@ -93,6 +129,14 @@ namespace QuantConnect.Tests.Common.Notifications
 
                     case "web":
                         result = _notify.Web("address", "data");
+                        break;
+
+                    case "telegram":
+                        result = _notify.Telegram("pepe", "ImAMessage", "botToken");
+                        break;
+
+                    case "ftp":
+                        result = _notify.Ftp("qc.com", "username", "password", "path/to/file.json", Encoding.ASCII.GetBytes("{}"));
                         break;
 
                     default:

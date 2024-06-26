@@ -138,7 +138,7 @@ namespace QuantConnect.Notifications
         /// Send a telegram message to the chat ID specified, supply token for custom bot.
         /// Note: Requires bot to have chat with user or be in the group specified by ID.
         /// </summary>
-        /// <param name="user">Chat or group ID to send message to</param>
+        /// <param name="id">Chat or group ID to send message to</param>
         /// <param name="message">Message to send</param>
         /// <param name="token">Bot token to use for this message</param>
         public bool Telegram(string id, string message, string token = null)
@@ -150,6 +150,138 @@ namespace QuantConnect.Notifications
 
             var telegram = new NotificationTelegram(id, message, token);
             Messages.Enqueue(telegram);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Send a file to the FTP specified server using password authentication over unsecure FTP.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="password">The FTP server password</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public bool Ftp(string hostname, string username, string password, string filePath, byte[] fileContent, int? port = null)
+        {
+            return Ftp(hostname, username, password, filePath, fileContent, secure: false, port);
+        }
+
+        /// <summary>
+        /// Send a file to the FTP specified server using password authentication over unsecure FTP.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="password">The FTP server password</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The string contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public bool Ftp(string hostname, string username, string password, string filePath, string fileContent, int? port = null)
+        {
+            return Ftp(hostname, username, password, filePath, fileContent, secure: false, port);
+        }
+
+        /// <summary>
+        /// Send a file to the FTP specified server using password authentication over SFTP.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="password">The FTP server password</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public bool Sftp(string hostname, string username, string password, string filePath, byte[] fileContent, int? port = null)
+        {
+            return Ftp(hostname, username, password, filePath, fileContent, secure: true, port);
+        }
+
+        /// <summary>
+        /// Send a file to the FTP specified server using password authentication over SFTP.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="password">The FTP server password</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The string contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public bool Sftp(string hostname, string username, string password, string filePath, string fileContent, int? port = null)
+        {
+            return Ftp(hostname, username, password, filePath, fileContent, secure: true, port);
+        }
+
+        /// <summary>
+        /// Send a file to the FTP specified server using password authentication over SFTP using SSH keys.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="privateKey">The private SSH key to use for authentication</param>
+        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key.
+        /// This can be empty or null if the private key is not encrypted</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public bool Sftp(string hostname, string username, string privateKey, string privateKeyPassphrase, string filePath, byte[] fileContent,
+            int? port = null)
+        {
+            if (!Allow())
+            {
+                return false;
+            }
+
+            var ftp = new NotificationFtp(hostname, username, privateKey, privateKeyPassphrase, filePath, fileContent, port);
+            Messages.Enqueue(ftp);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Send a file to the FTP specified server using password authentication over SFTP using SSH keys.
+        /// </summary>
+        /// <param name="hostname">FTP server hostname</param>
+        /// <param name="username">The FTP server username</param>
+        /// <param name="privateKey">The private SSH key to use for authentication</param>
+        /// <param name="privateKeyPassphrase">The optional passphrase to decrypt the private key.
+        /// This can be empty or null if the private key is not encrypted</param>
+        /// <param name="filePath">The path to file on the FTP server</param>
+        /// <param name="fileContent">The string contents of the file</param>
+        /// <param name="port">The FTP server port. Defaults to 21</param>
+        public bool Sftp(string hostname, string username, string privateKey, string privateKeyPassphrase, string filePath, string fileContent,
+            int? port = null)
+        {
+            if (!Allow())
+            {
+                return false;
+            }
+
+            var ftp = new NotificationFtp(hostname, username, privateKey, privateKeyPassphrase, filePath, fileContent, port);
+            Messages.Enqueue(ftp);
+
+            return true;
+        }
+
+        private bool Ftp(string hostname, string username, string password, string filePath, byte[] fileContent, bool secure = true, int? port = null)
+        {
+            if (!Allow())
+            {
+                return false;
+            }
+
+            var ftp = new NotificationFtp(hostname, username, password, filePath, fileContent, secure: secure, port);
+            Messages.Enqueue(ftp);
+
+            return true;
+        }
+
+        private bool Ftp(string hostname, string username, string password, string filePath, string fileContent, bool secure = true, int? port = null)
+        {
+            if (!Allow())
+            {
+                return false;
+            }
+
+            var ftp = new NotificationFtp(hostname, username, password, filePath, fileContent, secure: secure, port);
+            Messages.Enqueue(ftp);
 
             return true;
         }

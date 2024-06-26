@@ -14,7 +14,6 @@
 */
 
 using System.Runtime.CompilerServices;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -35,6 +34,16 @@ namespace QuantConnect
             {
                 return $"Invalid email address: {email}";
             }
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Notifications.NotificationFtp"/> class and its consumers or related classes
+        /// </summary>
+        public static class NotificationFtp
+        {
+            public static string MissingSSHKey = "FTP SSH key missing for SFTP notification.";
+
+            public static string MissingPassword = "FTP password is missing for unsecure FTP notification.";
         }
 
         /// <summary>

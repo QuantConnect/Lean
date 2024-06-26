@@ -1,11 +1,11 @@
 /*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ namespace QuantConnect.Messaging
     {
         private AlgorithmNodePacket _job;
         private volatile bool _loaded;
-        private Queue<Packet> _queue; 
+        private Queue<Packet> _queue;
 
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.
@@ -41,7 +41,7 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Initialize the Messaging System Plugin. 
+        /// Initialize the Messaging System Plugin.
         /// </summary>
         /// <param name="initializeParameters">The parameters required for initialization</param>
         public void Initialize(MessagingHandlerInitializeParameters initializeParameters)
@@ -114,17 +114,16 @@ namespace QuantConnect.Messaging
             //Finally process this new packet
             ProcessPacket(packet);
         }
-        
+
         /// <summary>
         /// Send any notification with a base type of Notification.
         /// </summary>
         /// <param name="notification">The notification to be sent.</param>
         public void SendNotification(Notification notification)
         {
-            var type = notification.GetType();
-            if (type == typeof (NotificationEmail) || type == typeof (NotificationWeb) || type == typeof (NotificationSms) || type == typeof (NotificationTelegram))
+            if (!notification.CanSend())
             {
-                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + type.Name);
+                Log.Error("Messaging.SendNotification(): Send not implemented for notification of type: " + notification.GetType().Name);
                 return;
             }
             notification.Send();
