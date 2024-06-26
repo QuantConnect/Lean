@@ -953,26 +953,26 @@ namespace QuantConnect.Securities.Option
         /// The strike price of the short call is below the strikes of the two long calls.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
-        /// <param name="leg1Strike">The strike price of the short call</param>
-        /// <param name="leg2Strike">The strike price of the long call with lower strike price</param>
-        /// <param name="leg3Strike">The strike price of the long call with higher strike price</param>
+        /// <param name="lowerStrike">The strike price of the short call</param>
+        /// <param name="middleStrike">The strike price of the long call with lower strike price</param>
+        /// <param name="higherStrike">The strike price of the long call with higher strike price</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy BearCallLadder(
             Symbol canonicalOption,
-            decimal leg1Strike,
-            decimal leg2Strike,
-            decimal leg3Strike,
+            decimal lowerStrike,
+            decimal middleStrike,
+            decimal higherStrike,
             DateTime expiration
             )
         {
             CheckCanonicalOptionSymbol(canonicalOption, "BearCallLadder");
             CheckExpirationDate(expiration, "BearCallLadder", nameof(expiration));
 
-            if (leg1Strike >= leg2Strike || leg1Strike >= leg3Strike || leg2Strike >= leg3Strike)
+            if (lowerStrike >= middleStrike || lowerStrike >= higherStrike || middleStrike >= higherStrike)
             {
                 throw new ArgumentException("BearCallLadder: strike prices must be in ascending order", 
-                    $"{nameof(leg1Strike)}, {nameof(leg2Strike)}, {nameof(leg3Strike)}");
+                    $"{nameof(lowerStrike)}, {nameof(middleStrike)}, {nameof(higherStrike)}");
             }
 
             return new OptionStrategy
@@ -984,15 +984,15 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg1Strike, Quantity = -1, Expiration = expiration
+                        Right = OptionRight.Call, Strike = lowerStrike, Quantity = -1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1, Expiration = expiration
+                        Right = OptionRight.Call, Strike = middleStrike, Quantity = 1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Call, Strike = leg3Strike, Quantity = 1, Expiration = expiration
+                        Right = OptionRight.Call, Strike = higherStrike, Quantity = 1, Expiration = expiration
                     }
                 }
             };
@@ -1002,26 +1002,26 @@ namespace QuantConnect.Securities.Option
         /// The strike price of the long put is above the strikes of the two short puts.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
-        /// <param name="leg1Strike">The strike price of the long put</param>
-        /// <param name="leg2Strike">The strike price of the short put with higher strike price</param>
-        /// <param name="leg3Strike">The strike price of the short put with lower strike price</param>
+        /// <param name="higherStrike">The strike price of the long put</param>
+        /// <param name="middleStrike">The strike price of the short put with higher strike price</param>
+        /// <param name="lowerStrike">The strike price of the short put with lower strike price</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy BearPutLadder(
             Symbol canonicalOption,
-            decimal leg1Strike,
-            decimal leg2Strike,
-            decimal leg3Strike,
+            decimal higherStrike,
+            decimal middleStrike,
+            decimal lowerStrike,
             DateTime expiration
             )
         {
             CheckCanonicalOptionSymbol(canonicalOption, "BearPutLadder");
             CheckExpirationDate(expiration, "BearPutLadder", nameof(expiration));
 
-            if (leg1Strike <= leg2Strike || leg1Strike <= leg3Strike || leg2Strike <= leg3Strike)
+            if (higherStrike <= middleStrike || higherStrike <= lowerStrike || middleStrike <= lowerStrike)
             {
                 throw new ArgumentException("BearPutLadder: strike prices must be in descending order", 
-                    $"{nameof(leg1Strike)}, {nameof(leg2Strike)}, {nameof(leg3Strike)}");
+                    $"{nameof(higherStrike)}, {nameof(middleStrike)}, {nameof(lowerStrike)}");
             }
 
             return new OptionStrategy
@@ -1033,16 +1033,16 @@ namespace QuantConnect.Securities.Option
                 {
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg1Strike, Quantity = 1,
+                        Right = OptionRight.Put, Strike = higherStrike, Quantity = 1,
                         Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1, Expiration = expiration
+                        Right = OptionRight.Put, Strike = middleStrike, Quantity = -1, Expiration = expiration
                     },
                     new OptionStrategy.OptionLegData
                     {
-                        Right = OptionRight.Put, Strike = leg3Strike, Quantity = -1, Expiration = expiration
+                        Right = OptionRight.Put, Strike = lowerStrike, Quantity = -1, Expiration = expiration
                     }
                 }
             };
@@ -1053,20 +1053,20 @@ namespace QuantConnect.Securities.Option
         /// The strike price of the long call is below the strikes of the two short calls.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
-        /// <param name="leg1Strike">The strike price of the long call</param>
-        /// <param name="leg2Strike">The strike price of the short call with lower strike price</param>
-        /// <param name="leg3Strike">The strike price of the short call with higher strike price</param>
+        /// <param name="lowerStrike">The strike price of the long call</param>
+        /// <param name="middleStrike">The strike price of the short call with lower strike price</param>
+        /// <param name="higherStrike">The strike price of the short call with higher strike price</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy BullCallLadder(
             Symbol canonicalOption,
-            decimal leg1Strike,
-            decimal leg2Strike,
-            decimal leg3Strike,
+            decimal lowerStrike,
+            decimal middleStrike,
+            decimal higherStrike,
             DateTime expiration
             )
         {
-            return InvertStrategy(BearCallLadder(canonicalOption, leg1Strike, leg2Strike, leg3Strike, expiration), OptionStrategyDefinitions.BullCallLadder.Name);
+            return InvertStrategy(BearCallLadder(canonicalOption, lowerStrike, middleStrike, higherStrike, expiration), OptionStrategyDefinitions.BullCallLadder.Name);
         }
 
         /// <summary>
@@ -1074,20 +1074,20 @@ namespace QuantConnect.Securities.Option
         /// The strike price of the short put is above the strikes of the two long puts.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
-        /// <param name="leg1Strike">The strike price of the short put</param>
-        /// <param name="leg2Strike">The strike price of the long put with higher strike price</param>
-        /// <param name="leg3Strike">The strike price of the long put with lower strike price</param>
+        /// <param name="higherStrike">The strike price of the short put</param>
+        /// <param name="middleStrike">The strike price of the long put with higher strike price</param>
+        /// <param name="lowerStrike">The strike price of the long put with lower strike price</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy BullPutLadder(
             Symbol canonicalOption,
-            decimal leg1Strike,
-            decimal leg2Strike,
-            decimal leg3Strike,
+            decimal higherStrike,
+            decimal middleStrike,
+            decimal lowerStrike,
             DateTime expiration
             )
         {
-            return InvertStrategy(BearPutLadder(canonicalOption, leg1Strike, leg2Strike, leg3Strike, expiration), OptionStrategyDefinitions.BullPutLadder.Name);
+            return InvertStrategy(BearPutLadder(canonicalOption, higherStrike, middleStrike, lowerStrike, expiration), OptionStrategyDefinitions.BullPutLadder.Name);
         }
 
         /// <summary>

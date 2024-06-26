@@ -415,7 +415,6 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Short Jelly Roll is long 1 call and short 1 call with the same strike but further expiry, together with
         /// short 1 put and long 1 put with the same strike and expiries as calls.
-        /// expiration.
         /// </summary>
         public static OptionStrategyDefinition ShortJellyRoll { get; }
             = OptionStrategyDefinition.Create("Short Jelly Roll",
@@ -430,7 +429,6 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
         /// Bear Call Ladder strategy is short 1 call and long 2 calls, with ascending strike prices in order,
         /// All options have the same expiry.
-        /// expiration.
         /// </summary>
         public static OptionStrategyDefinition BearCallLadder { get; }
             = OptionStrategyDefinition.Create("Bear Call Ladder",
@@ -442,9 +440,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
-        /// Bear Call Ladder strategy is long 1 put and short 2 puts, with descending strike prices in order,
+        /// Bear Put Ladder strategy is long 1 put and short 2 puts, with descending strike prices in order,
         /// All options have the same expiry.
-        /// expiration.
         /// </summary>
         public static OptionStrategyDefinition BearPutLadder { get; }
             = OptionStrategyDefinition.Create("Bear Put Ladder",
@@ -458,7 +455,6 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Bull Call Ladder strategy is long 1 call and short 2 calls, with ascending strike prices in order,
         /// All options have the same expiry.
-        /// expiration.
         /// </summary>
         public static OptionStrategyDefinition BullCallLadder { get; }
             = OptionStrategyDefinition.Create("Bull Call Ladder",
@@ -470,9 +466,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
-        /// Bull Call Ladder strategy is short 1 put and long 2 puts, with descending strike prices in order,
+        /// Bull Put Ladder strategy is short 1 put and long 2 puts, with descending strike prices in order,
         /// All options have the same expiry.
-        /// expiration.
         /// </summary>
         public static OptionStrategyDefinition BullPutLadder { get; }
             = OptionStrategyDefinition.Create("Bull Put Ladder",
