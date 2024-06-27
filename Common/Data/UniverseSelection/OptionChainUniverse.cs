@@ -99,7 +99,7 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            var underlyingData = data.Data.FirstOrDefault() as OptionsUniverse;
+            var underlyingData = data.Data.FirstOrDefault() as OptionUniverse;
             // TODO: This can be removed once all options (including FOPs) universes are handled by OptionsUniverse
             var availableContracts = (underlyingData != null ? data.Data.Skip(1) : data.Data).Select(x => x.Symbol).ToList();
 

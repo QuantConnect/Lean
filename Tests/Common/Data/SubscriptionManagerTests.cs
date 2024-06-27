@@ -75,10 +75,10 @@ namespace QuantConnect.Tests.Common.Data
         [TestCase(SecurityType.Future, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
         [TestCase(SecurityType.FutureOption, Resolution.Minute, typeof(ZipEntryName), TickType.Quote)]
         [TestCase(SecurityType.FutureOption, Resolution.Tick, typeof(ZipEntryName), TickType.Quote)]
-        [TestCase(SecurityType.Option, Resolution.Minute, typeof(OptionsUniverse), TickType.Quote)]
-        [TestCase(SecurityType.Option, Resolution.Tick, typeof(OptionsUniverse), TickType.Quote)]
-        [TestCase(SecurityType.IndexOption, Resolution.Minute, typeof(OptionsUniverse), TickType.Quote)]
-        [TestCase(SecurityType.IndexOption, Resolution.Tick, typeof(OptionsUniverse), TickType.Quote)]
+        [TestCase(SecurityType.Option, Resolution.Minute, typeof(OptionUniverse), TickType.Quote)]
+        [TestCase(SecurityType.Option, Resolution.Tick, typeof(OptionUniverse), TickType.Quote)]
+        [TestCase(SecurityType.IndexOption, Resolution.Minute, typeof(OptionUniverse), TickType.Quote)]
+        [TestCase(SecurityType.IndexOption, Resolution.Tick, typeof(OptionUniverse), TickType.Quote)]
         public void GetsSubscriptionDataTypesCanonical(SecurityType securityType, Resolution resolution, Type expectedDataType, TickType expectedTickType)
         {
             var types = GetSubscriptionDataTypes(securityType, resolution, true);
