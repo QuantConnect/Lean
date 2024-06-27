@@ -28,9 +28,9 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private static Dictionary<int, DateTime> _expiries = new Dictionary<int, DateTime>
         {
-            { 1, new DateTime(2016, 3, 4) },
-            { 2, new DateTime(2016, 5, 4) },
-            { 3, new DateTime(2017, 5, 4) }
+            { 1, new DateTime(2016, 3, 10) },
+            { 2, new DateTime(2016, 5, 10) },
+            { 3, new DateTime(2017, 5, 10) }
         };
 
         [TestCase(100, 0, 100, 10, false)]
@@ -38,14 +38,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(100, 5, 105, 10, false)]
         [TestCase(100, 10.05, 110, 10, false)]
         [TestCase(105.5, 0, 105, 10, false)]
-        [TestCase(100, 0, 100, 90, true)]
-        public void FiltersSingleCall(decimal underlyingPrice, decimal strikeFromAtm, decimal expectedStrike, int daysTillExpiry,
+        [TestCase(100, 0, 100, 40, true)]
+        public void FiltersSingleCall(decimal underlyingPrice, decimal strikeFromAtm, decimal expectedStrike, int minDaysTillExpiry,
             bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
             
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .SingleCall(daysTillExpiry, strikeFromAtm);
+                                .NakedCall(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(1, filtered.Count);
@@ -59,14 +59,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(100, 5, 105, 10, false)]
         [TestCase(100, 10.05, 110, 10, false)]
         [TestCase(105.5, 0, 105, 10, false)]
-        [TestCase(100, 0, 100, 90, true)]
-        public void FiltersSinglePut(decimal underlyingPrice, decimal strikeFromAtm, decimal expectedStrike, int daysTillExpiry = 10,
+        [TestCase(100, 0, 100, 40, true)]
+        public void FiltersSinglePut(decimal underlyingPrice, decimal strikeFromAtm, decimal expectedStrike, int minDaysTillExpiry = 10,
             bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .SinglePut(daysTillExpiry, strikeFromAtm);
+                                .NakedPut(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(1, filtered.Count);
@@ -94,14 +94,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(105.5, 5, 2, 100, 110, 10, false)]
         [TestCase(1000, 10, 0, 0, 0, 10, false)]            // extreme strike will have no matching pair, returning no contract
         [TestCase(1, 5, 2, 85, 90, 10, false)]
-        [TestCase(100, 5, 2, 95, 105, 90, true)]
+        [TestCase(100, 5, 2, 95, 105, 40, true)]
         public void FiltersCallSpread(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal lowerExpectedStrike, 
-            decimal higherExpectedStrike, int daysTillExpiry, bool far = false)
+            decimal higherExpectedStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
             
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .CallSpread(daysTillExpiry, strikeFromAtm);
+                                .CallSpread(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -130,14 +130,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(105.5, -4.9, 5.1, 2, 100, 110, 10, false)]
         [TestCase(1000, -10, 10, 0, 0, 0, 10, false)]       // extreme strike will have no matching pair, returning no contract
         [TestCase(1, -5, 5, 2, 85, 90, 10, false)]
-        [TestCase(100, -5, 5, 2, 95, 105, 90, true)]
+        [TestCase(100, -5, 5, 2, 95, 105, 40, true)]
         public void FiltersCallSpread(decimal underlyingPrice, decimal lowerStrikeFromAtm, decimal higherStrikeFromAtm, int expectedCount,
-            decimal lowerExpectedStrike, decimal higherExpectedStrike, int daysTillExpiry, bool far = false)
+            decimal lowerExpectedStrike, decimal higherExpectedStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .CallSpread(daysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm);
+                                .CallSpread(minDaysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -179,14 +179,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(105.5, 5, 2, 100, 110, 10, false)]
         [TestCase(1000, 10, 0, 0, 0, 10, false)]            // extreme strike will have no matching pair, returning no contract
         [TestCase(1, 5, 2, 85, 90, 10, false)]
-        [TestCase(100, 5, 2, 95, 105, 90, true)]
+        [TestCase(100, 5, 2, 95, 105, 40, true)]
         public void FiltersPutSpread(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal lowerExpectedStrike,
-            decimal higherExpectedStrike, int daysTillExpiry, bool far = false)
+            decimal higherExpectedStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
             
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .PutSpread(daysTillExpiry, strikeFromAtm);
+                                .PutSpread(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -215,14 +215,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(105.5, -4.9, 5.1, 2, 100, 110, 10, false)]
         [TestCase(1000, -10, 10, 0, 0, 0, 10, false)]       // extreme strike will have no matching pair, returning no contract
         [TestCase(1, -5, 5, 2, 85, 90, 10, false)]
-        [TestCase(100, -5, 5, 2, 95, 105, 90, true)]
+        [TestCase(100, -5, 5, 2, 95, 105, 40, true)]
         public void FiltersPutSpread(decimal underlyingPrice, decimal lowerStrikeFromAtm, decimal higherStrikeFromAtm, int expectedCount,
-            decimal lowerExpectedStrike, decimal higherExpectedStrike, int daysTillExpiry, bool far = false)
+            decimal lowerExpectedStrike, decimal higherExpectedStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .PutSpread(daysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm);
+                                .PutSpread(minDaysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -258,11 +258,11 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         // Expected expiry: (1) 2016/3/4, (2) 2016/5/4, (3) 2017/5/4
-        [TestCase(100, 0, 10, 90, 1, 2, 2)]
-        [TestCase(100, 10, 10, 90, 1, 2, 2)]
-        [TestCase(100, 0, 10, 400, 1, 3, 2)]
-        [TestCase(100, 0, 100, 450, 2, 3, 2)]
-        [TestCase(105, 0, 100, 101, 2, 3, 2)]       // only select later contracts for far expiry
+        [TestCase(100, 0, 10, 40, 1, 2, 2)]
+        [TestCase(100, 10, 10, 40, 1, 2, 2)]
+        [TestCase(100, 0, 10, 350, 1, 3, 2)]
+        [TestCase(100, 0, 40, 350, 2, 3, 2)]
+        [TestCase(105, 0, 40, 41, 2, 3, 2)]         // only select later contracts for far expiry
         [TestCase(105, 0, 500, 1000, 0, 0, 0)]      // select none if no further contracts available
         public void FiltersCallCalendarSpread(decimal underlyingPrice, decimal strikeFromAtm, int nearExpiry, int farExpiry, int expectedNearExpiryCase,
             int expectedFarExpiryCase, int expectedCount)
@@ -304,11 +304,11 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         // Expected expiry: (1) 2016/3/4, (2) 2016/5/4, (3) 2017/5/4
-        [TestCase(100, 0, 10, 90, 1, 2, 2)]
-        [TestCase(100, 10, 10, 90, 1, 2, 2)]
-        [TestCase(100, 0, 10, 400, 1, 3, 2)]
-        [TestCase(100, 0, 100, 450, 2, 3, 2)]
-        [TestCase(105, 0, 100, 101, 2, 3, 2)]       // only select later contracts for far expiry
+        [TestCase(100, 0, 10, 40, 1, 2, 2)]
+        [TestCase(100, 10, 10, 40, 1, 2, 2)]
+        [TestCase(100, 0, 10, 350, 1, 3, 2)]
+        [TestCase(100, 0, 40, 350, 2, 3, 2)]
+        [TestCase(105, 0, 40, 41, 2, 3, 2)]         // only select later contracts for far expiry
         [TestCase(105, 0, 500, 1000, 0, 0, 0)]      // select none if no further contracts available
         public void FiltersPutCalendarSpread(decimal underlyingPrice, decimal strikeFromAtm, int nearExpiry, int farExpiry, int expectedNearExpiryCase,
             int expectedFarExpiryCase, int expectedCount)
@@ -356,14 +356,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(105.5, 5, -5, 2, 110, 100, 10, false)]
         [TestCase(1000, 5, -5, 0, 0, 0, 10, false)]             // extreme strike causing no OTM contract
         [TestCase(1, 5, -5, 0, 0, 0, 10, false)]                // extreme strike causing no OTM contract
-        [TestCase(100, 5, -5, 2, 105, 95, 90, true)]
+        [TestCase(100, 5, -5, 2, 105, 95, 40, true)]
         public void FiltersStrangle(decimal underlyingPrice, decimal callStrikeFromAtm, decimal putStrikeFromAtm, int expectedCount,
-            decimal expectedCallStrike, decimal expectedPutStrike, int daysTillExpiry, bool far = false)
+            decimal expectedCallStrike, decimal expectedPutStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .Strangle(daysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
+                                .Strangle(minDaysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -388,13 +388,13 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(100, 100, 10, false)]
         [TestCase(105, 105, 10, false)]
         [TestCase(101.20, 100, 10, false)]
-        [TestCase(100, 100, 90, true)]
-        public void FiltersStraddle(decimal underlyingPrice, decimal expectedStrike, int daysTillExpiry, bool far = false)
+        [TestCase(100, 100, 40, true)]
+        public void FiltersStraddle(decimal underlyingPrice, decimal expectedStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .Straddle(daysTillExpiry);
+                                .Straddle(minDaysTillExpiry);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(2, filtered.Count);
@@ -425,14 +425,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(105.5, 5.2, -5.3, 2, 110, 100, 10, false)]
         [TestCase(1000, 5, -5, 0, 0, 0, 10, false)]             // extreme strike -> put strike = call strike
         [TestCase(1, 5, -5, 0, 0, 0, 10, false)]                // extreme strike -> put strike = call strike
-        [TestCase(100, 5, -5, 2, 105, 95, 90, true)]
+        [TestCase(100, 5, -5, 2, 105, 95, 40, true)]
         public void FiltersProtectiveCollar(decimal underlyingPrice, decimal callStrikeFromAtm, decimal putStrikeFromAtm, int expectedCount,
-            decimal expectedCallStrike, decimal expectedPutStrike, int daysTillExpiry, bool far = false)
+            decimal expectedCallStrike, decimal expectedPutStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .ProtectiveCollar(daysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
+                                .ProtectiveCollar(minDaysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -456,14 +456,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(100, -5, 95, 10, false)]
         [TestCase(100, 5, 105, 10, false)]
         [TestCase(105.5, 5.2, 110, 10, false)]
-        [TestCase(100, 0, 100, 90, true)]
+        [TestCase(100, 0, 100, 40, true)]
         public void FiltersConversion(decimal underlyingPrice, decimal strikeFromAtm, decimal expectedStrike, 
-            int daysTillExpiry, bool far = false)
+            int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
             
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .Conversion(daysTillExpiry, strikeFromAtm);
+                                .Conversion(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(2, filtered.Count);
@@ -493,14 +493,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(99.5, 5.25, 3, 95, 100, 105, 10, false)]
         [TestCase(1000, 5, 0, 0, 0, 0, 10, false)]              // extreme strike -> no match OTM
         [TestCase(1, 5, 0, 0, 0, 0, 10, false)]                 // extreme strike -> no match ITM
-        [TestCase(100, 5, 3, 95, 100, 105, 90, true)]
+        [TestCase(100, 5, 3, 95, 100, 105, 40, true)]
         public void FiltersCallButterfly(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal expectedItmStrike,
-            decimal expectedAtmStrike, decimal expectedOtmStrike, int daysTillExpiry, bool far = false)
+            decimal expectedAtmStrike, decimal expectedOtmStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .CallButterfly(daysTillExpiry, strikeFromAtm);
+                                .CallButterfly(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -544,14 +544,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(99.5, 5.25, 3, 95, 100, 105, 10, false)]
         [TestCase(1000, 5, 0, 0, 0, 0, 10, false)]              // extreme strike -> no match ITM
         [TestCase(1, 5, 0, 0, 0, 0, 10, false)]                 // extreme strike -> no match OTM
-        [TestCase(100, 5, 3, 95, 100, 105, 90, true)]
+        [TestCase(100, 5, 3, 95, 100, 105, 40, true)]
         public void FiltersPutButterfly(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal expectedOtmStrike,
-            decimal expectedAtmStrike, decimal expectedItmStrike, int daysTillExpiry, bool far = false)
+            decimal expectedAtmStrike, decimal expectedItmStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .PutButterfly(daysTillExpiry, strikeFromAtm);
+                                .PutButterfly(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -596,14 +596,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(100, 1, 4, 95, 100, 105, 10, false)]
         [TestCase(1000, 5, 0, 0, 0, 0, 10, false)]              // extreme strike
         [TestCase(1, 5, 0, 0, 0, 0, 10, false)]                 // extreme strike
-        [TestCase(100, 5, 4, 95, 100, 105, 90, true)]
+        [TestCase(100, 5, 4, 95, 100, 105, 40, true)]
         public void FiltersIronButterfly(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal expectedLowerStrike,
-            decimal expectedAtmStrike, decimal expectedHigherStrike, int daysTillExpiry, bool far = false)
+            decimal expectedAtmStrike, decimal expectedHigherStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .IronButterfly(daysTillExpiry, strikeFromAtm);
+                                .IronButterfly(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -662,14 +662,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(100, 1, 6, 4, 90, 95, 105, 110, 10, false)]
         [TestCase(1000, 5, 10, 0, 0, 0, 0, 0, 10, false)]              // extreme strike
         [TestCase(1, 5, 10, 0, 0, 0, 0, 0, 10, false)]                 // extreme strike
-        [TestCase(100, 5, 10, 4, 95, 100, 105, 110, 90, true)]
+        [TestCase(100, 5, 10, 4, 90, 95, 105, 110, 40, true)]
         public void FiltersIronCondor(decimal underlyingPrice, decimal nearStrikeFromAtm, decimal farStrikeFromAtm, int expectedCount, decimal expectedFarPutStrike,
-            decimal expectedNearPutStrike, decimal expectedNearCallStrike, decimal expectedFarCallStrike, int daysTillExpiry, bool far = false)
+            decimal expectedNearPutStrike, decimal expectedNearCallStrike, decimal expectedFarCallStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .IronCondor(daysTillExpiry, nearStrikeFromAtm, farStrikeFromAtm);
+                                .IronCondor(minDaysTillExpiry, nearStrikeFromAtm, farStrikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -723,14 +723,14 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase(100, 1, 4, 95, 105, 10, false)]
         [TestCase(1000, 5, 0, 0, 0, 10, false)]                 // extreme strike
         [TestCase(1, 5, 0, 0, 0, 10, false)]                    // extreme strike
-        [TestCase(100, 5, 4, 95, 105, 90, true)]
+        [TestCase(100, 5, 4, 95, 105, 40, true)]
         public void FiltersBoxSpread(decimal underlyingPrice, decimal strikeFromAtm, int expectedCount, decimal expectedLowerStrike,
-            decimal expectedHigherStrike, int daysTillExpiry, bool far = false)
+            decimal expectedHigherStrike, int minDaysTillExpiry, bool far = false)
         {
-            var expectedExpiry = far ? new DateTime(2016, 5, 4) : new DateTime(2016, 3, 4);
+            var expectedExpiry = far ? new DateTime(2016, 5, 10) : new DateTime(2016, 3, 10);
 
             Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe
-                                .BoxSpread(daysTillExpiry, strikeFromAtm);
+                                .BoxSpread(minDaysTillExpiry, strikeFromAtm);
             var filtered = Filtering(underlyingPrice, universeFunc);
 
             Assert.AreEqual(expectedCount, filtered.Count);
@@ -804,9 +804,9 @@ namespace QuantConnect.Tests.Common.Securities
         static Symbol[] CreateOptionUniverse()
         {
             var ticker = "SPY";
-            var expiry = new DateTime(2016, 3, 4);
-            var farExpiry = new DateTime(2016, 5, 4);
-            var veryFarExpiry = new DateTime(2017, 5, 4);
+            var expiry = new DateTime(2016, 3, 10);
+            var farExpiry = new DateTime(2016, 5, 10);
+            var veryFarExpiry = new DateTime(2017, 5, 10);
 
             return new[] {
                 Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Put, 85, expiry),
