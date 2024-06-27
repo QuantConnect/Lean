@@ -26,18 +26,6 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class OptionUniverse : BaseDataCollection
     {
-        public override void Add(BaseData newDataPoint)
-        {
-            if (!newDataPoint.Symbol.HasUnderlying)
-            {
-                Underlying = newDataPoint;
-            }
-            //else
-            //{
-                base.Add(newDataPoint);
-            //}
-        }
-
         private string[] _csvLine;
 
         private decimal? _open;
@@ -310,7 +298,7 @@ namespace QuantConnect.Data.UniverseSelection
 
             if (!string.IsNullOrEmpty(_underlyingSid))
             {
-                var optionSid = SecurityIdentifier.Parse($"{csv[0]}");
+                var optionSid = SecurityIdentifier.Parse(csv[0]);
                 symbol = Symbol.CreateOption(_underlyingSymbol, optionSid.Symbol, optionSid.Market, optionSid.OptionStyle, optionSid.OptionRight,
                     optionSid.StrikePrice, optionSid.Date);
             }
@@ -325,6 +313,23 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             return new OptionUniverse(date, symbol, csv);
+        }
+
+        /// <summary>
+        /// Adds a new data point to this collection.
+        /// If the data point is for the underlying, it will be stored in the <see cref="BaseDataCollection.Underlying"/> property.
+        /// </summary>
+        /// <param name="newDataPoint">The new data point to add</param>
+        public override void Add(BaseData newDataPoint)
+        {
+            if (newDataPoint.Symbol.HasUnderlying)
+            {
+                base.Add(newDataPoint);
+            }
+            else
+            {
+                Underlying = newDataPoint;
+            }
         }
 
         /// <summary>
