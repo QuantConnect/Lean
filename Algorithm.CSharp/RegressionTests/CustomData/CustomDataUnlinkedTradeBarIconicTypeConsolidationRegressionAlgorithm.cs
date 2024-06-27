@@ -128,7 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <remarks>
         /// Unable to be tested in Python, due to pythonnet not supporting overriding of methods from Python
         /// </remarks>
-        public List<Language> Languages { get; } = new List<Language>() { Language.CSharp };
+        public List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

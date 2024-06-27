@@ -181,7 +181,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new List<Language>() { Language.CSharp, Language.Python };
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
@@ -229,8 +229,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$1100000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
             {"Portfolio Turnover", "549.26%"},
-            {"Most Traded Security", "IBM"},
             {"Most Traded Security Trade Count", "63"},
+            {"Most Traded Security", "IBM"},
             {"OrderListHash", "8dd77e35338a81410a5b68dc8345f402"}
         };
     }
