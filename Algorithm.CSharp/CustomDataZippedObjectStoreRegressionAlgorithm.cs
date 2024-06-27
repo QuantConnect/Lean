@@ -14,7 +14,6 @@
 */
 
 using System.Text;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {

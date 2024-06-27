@@ -17,7 +17,6 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Example algorithm using the asynchronous universe selection functionality
-using System.Collections.Generic;
     /// </summary>
     public class AsynchronousUniverseRegressionAlgorithm : FundamentalRegressionAlgorithm
     {

@@ -16,7 +16,6 @@
 using System;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
-using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
