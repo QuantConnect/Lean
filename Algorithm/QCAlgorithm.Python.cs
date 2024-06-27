@@ -1613,12 +1613,11 @@ namespace QuantConnect.Algorithm
         {
             if (symbols.Any())
             {
-                SecurityIdentifier.TryGetCustomDataTypeInstance(symbols[0].ID.Symbol, out var dataType);
-                if (symbols.Any(x => !SecurityIdentifier.TryGetCustomDataTypeInstance(x.ID.Symbol, out var customDataType) || customDataType != dataType))
+                if (!SecurityIdentifier.TryGetCustomDataTypeInstance(symbols[0].ID.Symbol, out var dataType)
+                    || symbols.Any(x => !SecurityIdentifier.TryGetCustomDataTypeInstance(x.ID.Symbol, out var customDataType) || customDataType != dataType))
                 {
                     return null;
                 }
-
                 return dataType;
             }
 

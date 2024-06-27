@@ -598,7 +598,7 @@ def getHistory():
             var symbol = qb.AddEquity("AAPL", Resolution.Daily).Symbol;
             var datasetSymbol = Symbol.CreateBase(typeof(FundamentalUniverse), symbol, symbol.ID.Market);
             MarketHoursDatabase.Reset();
-            Assert.DoesNotThrow(() => qb.History(datasetSymbol, new DateTime(2014, 3, 1), new DateTime(2014, 4, 1), Resolution.Daily));
+            Assert.DoesNotThrow(() => qb.History(datasetSymbol, new DateTime(2014, 3, 1), new DateTime(2014, 4, 1), Resolution.Daily).ToList());
         }
 
         [Test]
