@@ -955,8 +955,8 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="lowerStrike">The strike price of the short call</param>
-        /// <param name="middleStrike">The strike price of the long call with lower strike price</param>
-        /// <param name="higherStrike">The strike price of the long call with higher strike price</param>
+        /// <param name="middleStrike">The middle strike price of one long call</param>
+        /// <param name="higherStrike">The strike price of one long call with higher strike price</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy BearCallLadder(
@@ -1005,8 +1005,8 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="higherStrike">The strike price of the long put</param>
-        /// <param name="middleStrike">The strike price of the short put with higher strike price</param>
-        /// <param name="lowerStrike">The strike price of the short put with lower strike price</param>
+        /// <param name="middleStrike">The middle strike price of one short put</param>
+        /// <param name="lowerStrike">The strike price of one short put with lower strike price</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy BearPutLadder(
@@ -1056,8 +1056,8 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="lowerStrike">The strike price of the long call</param>
-        /// <param name="middleStrike">The strike price of the short call with lower strike price</param>
-        /// <param name="higherStrike">The strike price of the short call with higher strike price</param>
+        /// <param name="middleStrike">The middle strike price of one short call</param>
+        /// <param name="higherStrike">The strike price of one short call with higher strike price</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy BullCallLadder(
@@ -1077,8 +1077,8 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="higherStrike">The strike price of the short put</param>
-        /// <param name="middleStrike">The strike price of the long put with higher strike price</param>
-        /// <param name="lowerStrike">The strike price of the long put with lower strike price</param>
+        /// <param name="middleStrike">The middle strike price of one long put</param>
+        /// <param name="lowerStrike">The strike price of one long put with lower strike price</param>
         /// <param name="expiration">Option expiration date</param>
         /// <returns>Option strategy specification</returns>
         public static OptionStrategy BullPutLadder(
