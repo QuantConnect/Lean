@@ -29,7 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            _func = u => u.IncludeWeeklys().Strikes(-10, +10).Expiration(0, 180).SinglePut(30, 0);
+            _func = u => u.IncludeWeeklys().NakedPut(28, 0);
             _expectedCount = 1;
 
             base.Initialize();
