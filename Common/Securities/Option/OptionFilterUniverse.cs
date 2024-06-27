@@ -16,8 +16,9 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Logging;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
