@@ -24,8 +24,20 @@ namespace QuantConnect.Data.UniverseSelection
     /// <summary>
     /// Represents a universe of options data
     /// </summary>
-    public class OptionsUniverse : BaseDataCollection
+    public class OptionUniverse : BaseDataCollection
     {
+        public override void Add(BaseData newDataPoint)
+        {
+            if (!newDataPoint.Symbol.HasUnderlying)
+            {
+                Underlying = newDataPoint;
+            }
+            //else
+            //{
+                base.Add(newDataPoint);
+            //}
+        }
+
         private string[] _csvLine;
 
         private decimal? _open;
@@ -164,7 +176,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// Greeks values of the option
         /// </summary>
-        public Greeks? Greeks
+        public Greeks Greeks
         {
             get
             {
@@ -204,17 +216,22 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="OptionsUniverse"/> class
+        /// Creates a new instance of the <see cref="OptionUniverse"/> class
         /// </summary>
-        public OptionsUniverse()
+        public OptionUniverse()
         {
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="OptionsUniverse"/> class
+        /// Creates a new instance of the <see cref="OptionUniverse"/> class
         /// </summary>
-        public OptionsUniverse(DateTime date, Symbol symbol, string[] csv)
+        public OptionUniverse(DateTime date, Symbol symbol, string[] csv)
             : base(date, symbol)
+        {
+            Initialize(symbol, csv);
+        }
+
+        private void Initialize(Symbol symbol, string[] csv)
         {
             _csvLine = csv;
             if (!symbol.HasUnderlying)
@@ -225,11 +242,17 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="OptionsUniverse"/> class
+        /// Creates a new instance of the <see cref="OptionUniverse"/> class
         /// </summary>
-        public OptionsUniverse(DateTime date, Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume,
-            decimal? openInterest, decimal? impliedVolatility, Greeks? greeks)
+        public OptionUniverse(DateTime date, Symbol symbol, decimal open, decimal high, decimal low, decimal close, decimal volume,
+            decimal? openInterest, decimal? impliedVolatility, Greeks greeks)
             : base(date, symbol)
+        {
+            Initialize(open, high, low, close, volume, openInterest, impliedVolatility, greeks);
+        }
+
+        private void Initialize(decimal? open, decimal? high, decimal? low, decimal? close, decimal? volume, decimal? openInterest,
+            decimal? impliedVolatility, Greeks greeks)
         {
             _open = open;
             _high = high;
@@ -242,20 +265,13 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="OptionsUniverse"/> class as a copy of the given instance
+        /// Creates a new instance of the <see cref="OptionUniverse"/> class as a copy of the given instance
         /// </summary>
-        public OptionsUniverse(OptionsUniverse other)
-            : this(other.Time, other.Symbol, other._csvLine)
+        public OptionUniverse(OptionUniverse other)
+            : base(other)
         {
-            _open = other._open;
-            _high = other._high;
-            _low = other._low;
-            _close = other._close;
-            _volume = other._volume;
-            _openInterest = other._openInterest;
-            _impliedVolatility = other._impliedVolatility;
-            _greeks = other._greeks;
-            Data = other.Data;
+            Initialize(other.Symbol, other._csvLine);
+            Initialize(other._open, other._high, other._low, other._close, other._volume, other._openInterest, other._impliedVolatility, other._greeks);
         }
 
         /// <summary>
@@ -308,7 +324,7 @@ namespace QuantConnect.Data.UniverseSelection
                 symbol = _underlyingSymbol;
             }
 
-            return new OptionsUniverse(date, symbol, csv);
+            return new OptionUniverse(date, symbol, csv);
         }
 
         /// <summary>
@@ -317,7 +333,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>Clone of the instance</returns>
         public override BaseData Clone()
         {
-            return new OptionsUniverse(this);
+            return new OptionUniverse(this);
         }
 
         /// <summary>

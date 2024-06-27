@@ -111,7 +111,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             var request = new HistoryRequest(date.AddDays(-1),
                 date.AddDays(1),
-                typeof(OptionsUniverse),
+                typeof(OptionUniverse),
                 canonicalSymbol,
                 Resolution.Daily,
                 marketHoursEntry.ExchangeHours,
