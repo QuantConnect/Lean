@@ -32,6 +32,7 @@ namespace QuantConnect.Data
         private static readonly MethodInfo SetPropertyMethodInfo = typeof(DynamicData).GetMethod("SetProperty");
         private static readonly MethodInfo GetPropertyMethodInfo = typeof(DynamicData).GetMethod("GetProperty");
 
+        private readonly IDictionary<string, object> _snakeNameStorage = new Dictionary<string, object>();
         private readonly IDictionary<string, object> _storage = new Dictionary<string, object>();
 
         /// <summary>
@@ -50,6 +51,8 @@ namespace QuantConnect.Data
         /// <returns>Returns the input value back to the caller</returns>
         public object SetProperty(string name, object value)
         {
+            // let's be polite and support snake name access for the given object value too
+            var snakeName = name.ToSnakeCase();
             name = name.LazyToLower();
 
             if (name == "time")
@@ -105,6 +108,10 @@ namespace QuantConnect.Data
             }
 
             _storage[name] = value;
+            if (snakeName != name)
+            {
+                _snakeNameStorage[snakeName] = value;
+            }
             return value;
         }
 
@@ -140,7 +147,7 @@ namespace QuantConnect.Data
             }
 
             object value;
-            if (!_storage.TryGetValue(name, out value))
+            if (!_storage.TryGetValue(name, out value) && !_snakeNameStorage.TryGetValue(name, out value))
             {
                 // let the user know the property name that we couldn't find
                 throw new KeyNotFoundException(

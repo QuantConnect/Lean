@@ -24,12 +24,24 @@ class IndicatorTest():
 
     def test_bollinger_bands(self, symbol, start, end, resolution):
         ind = BollingerBands(10, 2)
-        return self.qb.Indicator(ind, symbol, start, end, resolution)
+        return self.qb.IndicatorHistory(ind, symbol, start, end, resolution)
 
     def test_average_true_range(self, symbol, start, end, resolution):
         ind = AverageTrueRange(14)
-        return self.qb.Indicator(ind, symbol, start, end, resolution)
+        return self.qb.IndicatorHistory(ind, symbol, start, end, resolution)
 
     def test_on_balance_volume(self, symbol, start, end, resolution):
+        ind = OnBalanceVolume(symbol)
+        return self.qb.IndicatorHistory(ind, symbol, start, end, resolution)
+    
+    def test_bollinger_bands_backwards_compatibility(self, symbol, start, end, resolution):
+        ind = BollingerBands(10, 2)
+        return self.qb.Indicator(ind, symbol, start, end, resolution)
+
+    def test_average_true_range_backwards_compatibility(self, symbol, start, end, resolution):
+        ind = AverageTrueRange(14)
+        return self.qb.Indicator(ind, symbol, start, end, resolution)
+
+    def test_on_balance_volume_backwards_compatibility(self, symbol, start, end, resolution):
         ind = OnBalanceVolume(symbol)
         return self.qb.Indicator(ind, symbol, start, end, resolution)

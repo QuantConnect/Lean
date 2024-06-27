@@ -100,34 +100,30 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase("StartAndEndDate", Language.Python)]
         public void IndicatorsDataPoint(string testCase, Language language)
         {
-            var indicator = new BollingerBands(10, 2);
+            var period = 10;
+            var indicator = new BollingerBands(period, 2);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
             int dataCount;
 
-            DataHistory<IndicatorValues> indicatorValues;
+            IndicatorHistory indicatorValues;
             if (language == Language.CSharp)
             {
                 if (testCase == "StartAndEndDate")
                 {
-                    indicatorValues = _algorithm.Indicator(indicator, _equity, new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
                 }
                 else if (testCase == "Span")
                 {
-                    indicatorValues = _algorithm.Indicator(indicator, _equity, TimeSpan.FromDays(5), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, TimeSpan.FromDays(5), Resolution.Minute);
                 }
                 else
                 {
-                    indicatorValues = _algorithm.Indicator(indicator, _equity, (int)(4 * 60 * 6.5), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, (int)(4 * 60 * 6.5), Resolution.Minute);
                 }
                 // BollingerBands, upper, lower, mid bands, std, band width, percentB, price
-                Assert.AreEqual(8, indicatorValues.Count);
-                dataCount = indicatorValues.First().Values.Count;
-                foreach (var indicatorValue in indicatorValues)
-                {
-                    Assert.AreEqual(dataCount, indicatorValue.Values.Count);
-                }
-                dataCount = indicatorValues.SelectMany(x => x.Values).DistinctBy(y => y.EndTime).Count();
+                Assert.AreEqual(8, indicatorValues.First().GetStorageDictionary().Count);
+                dataCount = indicatorValues.ToList().Count;
             }
             else
             {
@@ -135,21 +131,31 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     if (testCase == "StartAndEndDate")
                     {
-                        indicatorValues = _algorithm.Indicator(indicator.ToPython(), _equity.ToPython(), new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
                     }
                     else if (testCase == "Span")
                     {
-                        indicatorValues = _algorithm.Indicator(indicator.ToPython(), _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
                     }
                     else
                     {
-                        indicatorValues = _algorithm.Indicator(indicator.ToPython(), _equity.ToPython(), (int)(4 * 60 * 6.5), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), (int)(4 * 60 * 6.5), Resolution.Minute);
                     }
                     dataCount = QuantBookIndicatorsTests.GetDataFrameLength(indicatorValues.DataFrame);
                 }
             }
+
+            // the historical indicator current values
+            Assert.AreEqual(1550 + period, indicatorValues.Current.Count);
+            Assert.AreEqual(1550 + period, indicatorValues["current"].Count);
+            Assert.AreEqual(indicatorValues.Current, indicatorValues["current"]);
+            Assert.IsNull(indicatorValues["NonExisting"]);
+
             Assert.IsTrue(indicator.IsReady);
-            Assert.AreEqual(1551, dataCount);
+            Assert.AreEqual(1550 + period, dataCount);
+
+            var lastData = indicatorValues.Current.Last();
+            Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastData.EndTime);
         }
 
         [TestCase("Span", Language.CSharp)]
@@ -160,31 +166,29 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase("StartAndEndDate", Language.Python)]
         public void IndicatorsBar(string testCase, Language language)
         {
-            var indicator = new AverageTrueRange(10);
+            var period = 10;
+            var indicator = new AverageTrueRange(period);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
-            DataHistory<IndicatorValues > indicatorValues;
+            IndicatorHistory indicatorValues;
             int dataCount;
             if (language == Language.CSharp)
             {
                 if (testCase == "StartAndEndDate")
                 {
-                    indicatorValues = _algorithm.Indicator(indicator, _equity, new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
                 }
                 else if (testCase == "Span")
                 {
-                    indicatorValues = _algorithm.Indicator(indicator, _equity, TimeSpan.FromDays(5), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, TimeSpan.FromDays(5), Resolution.Minute);
                 }
                 else
                 {
-                    indicatorValues = _algorithm.Indicator(indicator, _equity, (int)(4 * 60 * 6.5), Resolution.Minute);
+                    indicatorValues = _algorithm.IndicatorHistory(indicator, _equity, (int)(4 * 60 * 6.5), Resolution.Minute);
                 }
                 // the TrueRange & the AVGTrueRange
-                Assert.AreEqual(2, indicatorValues.Count);
-                dataCount = indicatorValues.First().Values.Count;
-                Assert.AreEqual(dataCount, indicatorValues.Skip(1).First().Values.Count);
-
-                dataCount = indicatorValues.SelectMany(x => x.Values).DistinctBy(y => y.EndTime).Count();
+                Assert.AreEqual(2, indicatorValues.First().GetStorageDictionary().Count);
+                dataCount = indicatorValues.ToList().Count;
             }
             else
             {
@@ -192,21 +196,31 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     if (testCase == "StartAndEndDate")
                     {
-                        indicatorValues = _algorithm.Indicator(indicator.ToPython(), _equity.ToPython(), new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), new DateTime(2013, 10, 07), new DateTime(2013, 10, 11), Resolution.Minute);
                     }
                     else if (testCase == "Span")
                     {
-                        indicatorValues = _algorithm.Indicator(indicator.ToPython(), _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
                     }
                     else
                     {
-                        indicatorValues = _algorithm.Indicator(indicator.ToPython(), _equity.ToPython(), (int)(4 * 60 * 6.5), Resolution.Minute);
+                        indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), _equity.ToPython(), (int)(4 * 60 * 6.5), Resolution.Minute);
                     }
                     dataCount = QuantBookIndicatorsTests.GetDataFrameLength(indicatorValues.DataFrame);
                 }
             }
+
+            // the historical indicator current values
+            Assert.AreEqual(1550 + period, indicatorValues.Current.Count);
+            Assert.AreEqual(1550 + period, indicatorValues["current"].Count);
+            Assert.AreEqual(indicatorValues.Current, indicatorValues["current"]);
+            Assert.IsNull(indicatorValues["NonExisting"]);
+
             Assert.IsTrue(indicator.IsReady);
-            Assert.AreEqual(1551, dataCount);
+            Assert.AreEqual(1550 + period, dataCount);
+
+            var lastData = indicatorValues.Current.Last();
+            Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastData.EndTime);
         }
 
         [TestCase(Language.Python)]
@@ -218,21 +232,29 @@ namespace QuantConnect.Tests.Algorithm
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
             int dataCount;
+            IndicatorHistory indicatorValues;
             if (language == Language.CSharp)
             {
-                var indicatorValues = _algorithm.Indicator(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(5));
-                Assert.AreEqual(1, indicatorValues.Count);
-                dataCount = indicatorValues.First().Values.Count;
+                indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(5));
+                Assert.AreEqual(1, indicatorValues.First().GetStorageDictionary().Count);
+                dataCount = indicatorValues.ToList().Count;
             }
             else
             {
                 using (Py.GIL())
                 {
-                    var pandasFrame = _algorithm.Indicator(indicator.ToPython(), (new[] { _equity, referenceSymbol }).ToPython(), TimeSpan.FromDays(5));
-                    dataCount = QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame.DataFrame);
+                    indicatorValues = _algorithm.IndicatorHistory(indicator.ToPython(), (new[] { _equity, referenceSymbol }).ToPython(), TimeSpan.FromDays(5));
+                    dataCount = QuantBookIndicatorsTests.GetDataFrameLength(indicatorValues.DataFrame);
                 }
             }
-            Assert.AreEqual(1549, dataCount);
+
+            // the historical indicator current values
+            Assert.AreEqual(1560, indicatorValues.Current.Count);
+            Assert.AreEqual(1560, indicatorValues["current"].Count);
+            Assert.AreEqual(indicatorValues.Current, indicatorValues["current"]);
+            Assert.IsNull(indicatorValues["NonExisting"]);
+
+            Assert.AreEqual(1560, dataCount);
             Assert.IsTrue(indicator.IsReady);
         }
 
@@ -243,8 +265,9 @@ namespace QuantConnect.Tests.Algorithm
             var indicator = new Beta(_equity, referenceSymbol, 10);
             _algorithm.SetDateTime(new DateTime(2013, 10, 11));
 
-            var indicatorValues = _algorithm.Indicator(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
-            Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Values.Last().Price);
+            var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
+            Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Price);
+            Assert.AreEqual(0.676480102032563m, indicatorValues.Last().Current.Value);
         }
 
         [TestCase(Language.Python)]
@@ -259,15 +282,15 @@ namespace QuantConnect.Tests.Algorithm
             int dataCount;
             if (language == Language.CSharp)
             {
-                var indicatorValues = _algorithm.Indicator(indicator, history);
-                Assert.AreEqual(1, indicatorValues.Count);
-                dataCount = indicatorValues.First().Values.Count;
+                var indicatorValues = _algorithm.IndicatorHistory(indicator, history);
+                Assert.AreEqual(1, indicatorValues.First().GetStorageDictionary().Count);
+                dataCount = indicatorValues.Count;
             }
             else
             {
                 using (Py.GIL())
                 {
-                    var pandasFrame = _algorithm.Indicator(indicator.ToPython(), history);
+                    var pandasFrame = _algorithm.IndicatorHistory(indicator.ToPython(), history);
                     dataCount = QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame.DataFrame);
                 }
             }
@@ -310,7 +333,7 @@ class GoodCustomIndicator:
                 }
 
                 var goodIndicator = module.GetAttr("GoodCustomIndicator").Invoke();
-                var pandasFrame = _algorithm.Indicator(goodIndicator, _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
+                var pandasFrame = _algorithm.IndicatorHistory(goodIndicator, _equity.ToPython(), TimeSpan.FromDays(5), Resolution.Minute);
                 var dataCount = QuantBookIndicatorsTests.GetDataFrameLength(pandasFrame.DataFrame);
 
                 Assert.IsTrue((bool)((dynamic)goodIndicator).IsReady);

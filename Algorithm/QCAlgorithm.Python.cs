@@ -1489,22 +1489,22 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
-        public DataHistory<IndicatorValues> Indicator(PyObject indicator, PyObject symbol, int period, Resolution? resolution = null, PyObject selector = null)
+        public IndicatorHistory IndicatorHistory(PyObject indicator, PyObject symbol, int period, Resolution? resolution = null, PyObject selector = null)
         {
             var symbols = symbol.ConvertToSymbolEnumerable();
             if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
             {
-                return Indicator(indicatorDataPoint, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return IndicatorHistory(indicatorDataPoint, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
             }
             else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
             {
-                return Indicator(indicatorBar, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return IndicatorHistory(indicatorBar, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
             }
             else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
             {
-                return Indicator(indicatorTradeBar, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return IndicatorHistory(indicatorTradeBar, symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
             }
-            return Indicator(WrapPythonIndicator(indicator), symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            return IndicatorHistory(WrapPythonIndicator(indicator), symbols, period, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>
@@ -1517,22 +1517,9 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
-        public DataHistory<IndicatorValues> Indicator(PyObject indicator, PyObject symbol, TimeSpan span, Resolution? resolution = null, PyObject selector = null)
+        public IndicatorHistory IndicatorHistory(PyObject indicator, PyObject symbol, TimeSpan span, Resolution? resolution = null, PyObject selector = null)
         {
-            var symbols = symbol.ConvertToSymbolEnumerable();
-            if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
-            {
-                return Indicator(indicatorDataPoint, symbols, span, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
-            }
-            else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
-            {
-                return Indicator(indicatorBar, symbols, span, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
-            }
-            else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
-            {
-                return Indicator(indicatorTradeBar, symbols, span, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
-            }
-            return Indicator(WrapPythonIndicator(indicator), symbols, span, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            return IndicatorHistory(indicator, symbol, Time - span, Time, resolution, selector);
         }
 
         /// <summary>
@@ -1546,22 +1533,22 @@ namespace QuantConnect.Algorithm
         /// <param name="resolution">The resolution to request</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame of historical data of an indicator</returns>
-        public DataHistory<IndicatorValues> Indicator(PyObject indicator, PyObject symbol, DateTime start, DateTime end, Resolution? resolution = null, PyObject selector = null)
+        public IndicatorHistory IndicatorHistory(PyObject indicator, PyObject symbol, DateTime start, DateTime end, Resolution? resolution = null, PyObject selector = null)
         {
             var symbols = symbol.ConvertToSymbolEnumerable();
             if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
             {
-                return Indicator(indicatorDataPoint, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return IndicatorHistory(indicatorDataPoint, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
             }
             else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
             {
-                return Indicator(indicatorBar, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return IndicatorHistory(indicatorBar, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
             }
             else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
             {
-                return Indicator(indicatorTradeBar, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return IndicatorHistory(indicatorTradeBar, symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
             }
-            return Indicator(WrapPythonIndicator(indicator), symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            return IndicatorHistory(WrapPythonIndicator(indicator), symbols, start, end, resolution, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>
@@ -1571,21 +1558,21 @@ namespace QuantConnect.Algorithm
         /// <param name="history">Historical data used to calculate the indicator</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
         /// <returns>pandas.DataFrame containing the historical data of <paramref name="indicator"/></returns>
-        public DataHistory<IndicatorValues> Indicator(PyObject indicator, IEnumerable<Slice> history, PyObject selector = null)
+        public IndicatorHistory IndicatorHistory(PyObject indicator, IEnumerable<Slice> history, PyObject selector = null)
         {
             if (indicator.TryConvert(out IndicatorBase<IndicatorDataPoint> indicatorDataPoint))
             {
-                return Indicator(indicatorDataPoint, history, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
+                return IndicatorHistory(indicatorDataPoint, history, selector?.ConvertToDelegate<Func<IBaseData, decimal>>());
             }
             else if (indicator.TryConvert(out IndicatorBase<IBaseDataBar> indicatorBar))
             {
-                return Indicator(indicatorBar, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
+                return IndicatorHistory(indicatorBar, history, selector?.ConvertToDelegate<Func<IBaseData, IBaseDataBar>>());
             }
             else if (indicator.TryConvert(out IndicatorBase<TradeBar> indicatorTradeBar))
             {
-                return Indicator(indicatorTradeBar, history, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
+                return IndicatorHistory(indicatorTradeBar, history, selector?.ConvertToDelegate<Func<IBaseData, TradeBar>>());
             }
-            return Indicator(WrapPythonIndicator(indicator), history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
+            return IndicatorHistory(WrapPythonIndicator(indicator), history, selector?.ConvertToDelegate<Func<IBaseData, IBaseData>>());
         }
 
         /// <summary>

@@ -76,7 +76,7 @@ namespace QuantConnect.Tests.Research.RegressionTemplates
             "Z\"    },    \"papermill\": {     \"duration\": 0.044872,     \"end_time\": \"2024-06-06T22:15:51.503757\",     \"exception\": false,     \"start_time" +
             "\": \"2024-06-06T22:15:51.458885\",     \"status\": \"completed\"    },    \"tags\": []   },   \"outputs\": [],   \"source\": [    \"# Example with BB" +
             ", it is a datapoint indicator\",    \"# Define the indicator\",    \"bb = BollingerBands(30, 2)\",    \"\",    \"# Gets historical data of indicator\"" +
-            ",    \"bbdf = qb.Indicator(bb, \\\"SPY\\\", startDate, endDate, Resolution.Daily).data_frame\",    \"\",    \"# drop undesired fields\",    \"bbdf = b" +
+            ",    \"bbdf = qb.IndicatorHistory(bb, \\\"SPY\\\", startDate, endDate, Resolution.Daily).data_frame\",    \"\",    \"# drop undesired fields\",    \"bbdf = b" +
             "bdf.drop('standarddeviation', axis=1)\",    \"\",    \"if bbdf.shape[0] < 1:\",    \"    raise Exception(\\\"Bollinger Bands resulted in no data\\\")\"" +
             "   ]  },  {   \"cell_type\": \"code\",   \"execution_count\": null,   \"id\": \"3095c061\",   \"metadata\": {    \"papermill\": {     \"duration\": 0." +
             "001003,     \"end_time\": \"2024-06-06T22:15:51.506759\",     \"exception\": false,     \"start_time\": \"2024-06-06T22:15:51.505756\",     \"status\"" +
