@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Algorithm
             // option
             var option = algo.AddSecurity(SecurityType.Option, "goog");
             Assert.AreEqual(1, option.Subscriptions.Count());
-            Assert.IsNotNull(GetMatchingSubscription(algo, option.Symbol, typeof(OptionsUniverse)));
+            Assert.IsNotNull(GetMatchingSubscription(algo, option.Symbol, typeof(OptionUniverse)));
 
             // cfd
             var cfd = algo.AddSecurity(SecurityType.Cfd, "abc");
