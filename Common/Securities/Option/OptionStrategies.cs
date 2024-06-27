@@ -949,6 +949,7 @@ namespace QuantConnect.Securities.Option
             return InvertStrategy(JellyRoll(canonicalOption, strike, nearExpiration, farExpiration), OptionStrategyDefinitions.ShortJellyRoll.Name);
         }
 
+        /// <summary>
         /// Method creates new Bear Call Ladder strategy, that consists of three calls with the same expiration but different strikes.
         /// The strike price of the short call is below the strikes of the two long calls.
         /// </summary>
@@ -998,6 +999,7 @@ namespace QuantConnect.Securities.Option
             };
         }
 
+        /// <summary>
         /// Method creates new Bear Put Ladder strategy, that consists of three puts with the same expiration but different strikes.
         /// The strike price of the long put is above the strikes of the two short puts.
         /// </summary>

@@ -2750,7 +2750,7 @@ namespace QuantConnect.Tests.Common.Securities
             var spyJun21_550Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 550, jun212024));
             spyJun21_550Call.SetMarketPrice(new Tick { Value = 0.01m });
             var spyJun21_554Call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Call, 554, jun212024));
-            spyJun21_554Call.SetMarketPrice(new Tick { Value = 0.00m });
+            spyJun21_554Call.SetMarketPrice(new Tick { Value = 1e-25m });
 
             var spyJun21_524Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 524, jun212024));
             spyJun21_524Put.SetMarketPrice(new Tick { Value = 0.827m });
@@ -2767,7 +2767,7 @@ namespace QuantConnect.Tests.Common.Securities
             var spyJul19_542Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 542, jul192024));
             spyJul19_542Put.SetMarketPrice(new Tick { Value = 6.075m });
             var spyJun21_544Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 544, jun212024));
-            spyJun21_544Put.SetMarketPrice(new Tick { Value = 0.00m });
+            spyJun21_544Put.SetMarketPrice(new Tick { Value = 1e-25m });
             var spyJun21_548Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 548, jun212024));
             spyJun21_548Put.SetMarketPrice(new Tick { Value = 0.02m });
             var spyJun21_552Put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", OptionRight.Put, 552, jun212024));
