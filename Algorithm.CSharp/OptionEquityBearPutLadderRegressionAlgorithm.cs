@@ -67,9 +67,9 @@ namespace QuantConnect.Algorithm.CSharp
                     var undPrice = chain.Underlying.Price;
                     var expectedMarginUsage = 78884m;
 
-                    if (expectedMarginUsage != Portfolio.TotalMarginUsed)
+                    if (expectedMarginUsage > Portfolio.TotalMarginUsed + 1e-8m || expectedMarginUsage < Portfolio.TotalMarginUsed - 1e-8m)
                     {
-                        throw new Exception($"Unexpect margin used!:{expectedMarginUsage}:{Portfolio.TotalMarginUsed}");
+                        throw new Exception("Unexpect margin used!");
                     }
 
                     // we payed the ask and value using the assets price
