@@ -948,7 +948,8 @@ namespace QuantConnect.Algorithm
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
         {
-            return CreateDateRangeHistoryRequests(symbols, typeof(BaseData), startAlgoTz, endAlgoTz, resolution, fillForward, extendedMarketHours,
+            symbols = symbols.ToArray();
+            return CreateDateRangeHistoryRequests(symbols, GetCustomDataTypeFromSymbols(symbols as Symbol[]) ?? typeof(BaseData), startAlgoTz, endAlgoTz, resolution, fillForward, extendedMarketHours,
                 dataMappingMode, dataNormalizationMode, contractDepthOffset);
         }
 

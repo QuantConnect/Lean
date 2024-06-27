@@ -903,8 +903,8 @@ namespace QuantConnect.Algorithm
                 return GetDataFrame(History(requests.Where(x => x != null)), type);
             }
 
-            var symbols = tickers.ConvertToSymbolEnumerable();
-            Type dataType = GetCustomDataTypeFromSymbols(symbols);
+            var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
+            var dataType = GetCustomDataTypeFromSymbols(symbols);
 
             return GetDataFrame(History(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset), dataType);
@@ -966,8 +966,8 @@ namespace QuantConnect.Algorithm
                 return GetDataFrame(History(requests.Where(x => x != null)), type);
             }
 
-            var symbols = tickers.ConvertToSymbolEnumerable();
-            Type dataType = GetCustomDataTypeFromSymbols(symbols);
+            var symbols = tickers.ConvertToSymbolEnumerable().ToArray();
+            var dataType = GetCustomDataTypeFromSymbols(symbols);
 
             return GetDataFrame(History(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
                 dataNormalizationMode, contractDepthOffset), dataType);
@@ -1609,12 +1609,16 @@ namespace QuantConnect.Algorithm
             return history;
         }
 
-        private Type GetCustomDataTypeFromSymbols(IEnumerable<Symbol> symbols)
+        private Type GetCustomDataTypeFromSymbols(Symbol[] symbols)
         {
-            var arraySymbols = symbols.ToArray();
-            if (arraySymbols.Any() && arraySymbols.All(x => Securities[x].IsCustomData()))
+            if (symbols.Any())
             {
-                SecurityIdentifier.TryGetCustomDataTypeInstance(arraySymbols[0].ID.Symbol, out var dataType);
+                SecurityIdentifier.TryGetCustomDataTypeInstance(symbols[0].ID.Symbol, out var dataType);
+                if (symbols.Any(x => !SecurityIdentifier.TryGetCustomDataTypeInstance(x.ID.Symbol, out var customDataType) || customDataType != dataType))
+                {
+                    return null;
+                }
+
                 return dataType;
             }
 

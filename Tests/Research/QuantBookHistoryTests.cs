@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Research;
 using QuantConnect.Logging;
+using QuantConnect.Data.Fundamental;
 
 namespace QuantConnect.Tests.Research
 {
@@ -564,6 +565,40 @@ def getHistory():
                 Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
                 Assert.IsFalse(pyHistory.HasAttr("data"));
             }
+        }
+
+        [Test]
+        public void HistoryDataDoesWorksCorrecltyWithoutAddingTheCustomDataInPython()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def getHistory():
+    qb = QuantBook()
+    symbol = qb.AddEquity(""AAPL"", Resolution.Daily).symbol
+    dataset_symbol = Symbol.CreateBase(FundamentalUniverse, symbol, symbol.ID.Market)
+    history = qb.History(dataset_symbol, datetime(2014, 3, 1), datetime(2014, 4, 1), Resolution.Daily)
+    return history
+");
+                dynamic getHistory = testModule.GetAttr("getHistory");
+                var pyHistory = getHistory() as PyObject;
+                dynamic isHistoryEmpty = (pyHistory as dynamic).empty;
+                Assert.IsFalse((isHistoryEmpty as PyObject).GetAndDispose<bool?>());
+                Assert.IsFalse(pyHistory.HasAttr("data"));
+            }
+        }
+
+        [Test]
+        public void HistoryDataWorksCorrecltyWithoutAddingTheCustomDataInCSharp()
+        {
+            var qb = new QuantBook();
+            var symbol = qb.AddEquity("AAPL", Resolution.Daily).Symbol;
+            var datasetSymbol = Symbol.CreateBase(typeof(FundamentalUniverse), symbol, symbol.ID.Market);
+            MarketHoursDatabase.Reset();
+            Assert.DoesNotThrow(() => qb.History(datasetSymbol, new DateTime(2014, 3, 1), new DateTime(2014, 4, 1), Resolution.Daily));
         }
 
         [Test]
