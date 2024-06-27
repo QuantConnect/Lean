@@ -33,8 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _firstOnDataCallDone;
         private int _securityChangesCallCount;
 
-        private DateTime _selectionTimeUtc;
-
+        private bool _firstSelectionDone;
         private int _selectedOptionsCount;
 
         public override void Initialize()
@@ -49,9 +48,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             option.SetFilter(universe =>
             {
-                if (_selectionTimeUtc == DateTime.MinValue)
+                if (!_firstSelectionDone)
                 {
-                    _selectionTimeUtc = universe.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
+                    _firstSelectionDone = true;
+
+                    if (universe.LocalTime.ConvertTo(option.Exchange.TimeZone, TimeZone) != StartDate)
+                    {
+                        throw new Exception("Option chain universe selection time was not the expected start date");
+                    }
 
                     if (_firstOnDataCallDone)
                     {
@@ -97,7 +101,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            Log($"{Time} :: {changes}");
+            Debug($"{Time} :: {changes}");
             _securityChangesCallCount++;
 
             if (_securityChangesCallCount == 1)
@@ -152,7 +156,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 14327;
+        public long DataPoints => 14325;
 
         /// <summary>
         /// Data Points count of the algorithm history
