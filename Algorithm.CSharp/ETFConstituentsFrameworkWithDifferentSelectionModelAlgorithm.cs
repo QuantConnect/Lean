@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Algorithm.Framework.Selection;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {

@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Algorithm.Framework.Selection;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -27,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverseSelection(new ETFConstituentsUniverseSelectionModel(symbol, universeFilterFunc: FilterETFConstituents));
         }
 
-        public override Language[] Languages { get; } = { Language.CSharp };
+        public List<Language> Languages { get; } = new List<Language>() { Language.CSharp };
 
         public override int AlgorithmHistoryDataPoints => 0;
 
