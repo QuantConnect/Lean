@@ -99,13 +99,10 @@ namespace QuantConnect.Data.UniverseSelection
                 return Unchanged;
             }
 
-            var underlyingData = data.Data.FirstOrDefault() as OptionUniverse;
-            // TODO: This can be removed once all options (including FOPs) universes are handled by OptionsUniverse
-            var availableContracts = (underlyingData != null ? data.Data.Skip(1) : data.Data).Select(x => x.Symbol).ToList();
+            var availableContracts = data.Data.Select(x => x.Symbol).ToList();
 
             // we will only update unique strikes when there is an exchange date change
-            // TODO: Once all options (including FOPs) universes are handled by OptionsUniverse, only pass underlyingData
-            _optionFilterUniverse.Refresh(availableContracts, underlyingData ?? data.Underlying, localEndTime);
+            _optionFilterUniverse.Refresh(availableContracts, data.Underlying, localEndTime);
 
             var results = Option.ContractFilter.Filter(_optionFilterUniverse);
             _cacheDate = exchangeDate;
