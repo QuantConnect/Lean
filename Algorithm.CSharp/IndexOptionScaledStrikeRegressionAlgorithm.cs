@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var index = AddIndex("NDX", Resolution.Hour).Symbol;
             var option = AddIndexOption(index, "NQX", Resolution.Hour);
-            option.SetFilter(universe => universe.IncludeWeeklys().Strikes(-2, 2).Expiration(0, 5));
+            option.SetFilter(universe => universe.IncludeWeeklys().Strikes(-1, 1).Expiration(0, 5));
 
             _nqx = option.Symbol;
         }
