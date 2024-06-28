@@ -753,12 +753,26 @@ namespace QuantConnect.Brokerages
         /// <param name="orderEvent">The event object containing order event details.</param>
         protected bool TryHandleRemainingCrossZeroOrder(Order leanOrder, OrderEvent orderEvent)
         {
-            if (leanOrder != null && orderEvent != null
-                && orderEvent.Status == OrderStatus.Filled && _leanOrderByBrokerageCrossingOrders.TryRemove(leanOrder.Id, out var brokerageOrder))
+            if (leanOrder != null && orderEvent != null && _leanOrderByBrokerageCrossingOrders.TryGetValue(leanOrder.Id, out var brokerageOrder))
             {
+                switch (orderEvent.Status)
+                {
+                    case OrderStatus.Filled:
                 // if we have a contingent that needs to be submitted then we can't respect the 'Filled' state from the order
                 // because the Lean order hasn't been technically filled yet, so mark it as 'PartiallyFilled'
                 orderEvent.Status = OrderStatus.PartiallyFilled;
+                        _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
+                        break;
+                    case OrderStatus.New:
+                    case OrderStatus.None:
+                    case OrderStatus.Submitted:
+                    case OrderStatus.PartiallyFilled:
+                        return false;
+                    default:
+                        _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
+                        return false;
+                };
+
                 OnOrderEvent(orderEvent);
 
                 Task.Run(() =>
