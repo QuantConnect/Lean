@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void Initialize()
         {
-            SetStartDate(2021, 1, 1);
+            SetStartDate(2021, 1, 4);
             SetEndDate(2021, 2, 1);
             SetCash(200000);
 
@@ -152,29 +152,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "-4.10%"},
-            {"Compounding Annual Return", "18.628%"},
+            {"Compounding Annual Return", "24.075%"},
             {"Drawdown", "1.900%"},
             {"Expectancy", "0"},
             {"Start Equity", "200000"},
             {"End Equity", "201354"},
             {"Net Profit", "0.677%"},
-            {"Sharpe Ratio", "1.022"},
-            {"Sortino Ratio", "0.846"},
-            {"Probabilistic Sharpe Ratio", "49.760%"},
+            {"Sharpe Ratio", "5.76"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "89.644%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.097"},
-            {"Beta", "0.227"},
-            {"Annual Standard Deviation", "0.133"},
-            {"Annual Variance", "0.018"},
-            {"Information Ratio", "-0.228"},
-            {"Tracking Error", "0.155"},
-            {"Treynor Ratio", "0.598"},
+            {"Alpha", "0.946"},
+            {"Beta", "-0.354"},
+            {"Annual Standard Deviation", "0.123"},
+            {"Annual Variance", "0.015"},
+            {"Information Ratio", "0.211"},
+            {"Tracking Error", "0.176"},
+            {"Treynor Ratio", "-2.004"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$1700000.00"},
             {"Lowest Capacity Asset", "SPX XL80P3HB5O6M|SPX 31"},
-            {"Portfolio Turnover", "0.28%"},
+            {"Portfolio Turnover", "0.35%"},
             {"OrderListHash", "2917a6c396e5ea4f4eea1220ad422d54"}
         };
     }
