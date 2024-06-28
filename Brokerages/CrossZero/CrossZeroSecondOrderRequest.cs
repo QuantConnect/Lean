@@ -28,6 +28,14 @@ namespace QuantConnect.Brokerages.CrossZero
         public CrossZeroFirstOrderRequest FirstPartCrossZeroOrder { get; }
 
         /// <summary>
+        /// Gets the type of order, converted to stop-crossing order type.
+        /// </summary>
+        /// <returns>
+        /// The converted stop-crossing order type.
+        /// </returns>
+        public new OrderType OrderType => ConvertStopCrossingOrderType(base.OrderType);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CrossZeroFirstOrderRequest"/> struct.
         /// </summary>
         /// <param name="leanOrder">The lean order.</param>
@@ -38,7 +46,7 @@ namespace QuantConnect.Brokerages.CrossZero
         /// <param name="crossZeroFirstOrder">The first part of the cross zero order.</param>
         public CrossZeroSecondOrderRequest(Order leanOrder, OrderType orderType, decimal orderQuantity, decimal orderQuantityHolding,
             OrderPosition orderPosition, CrossZeroFirstOrderRequest crossZeroFirstOrder)
-            : base(leanOrder, ConvertStopCrossingOrderType(orderType), orderQuantity, orderQuantityHolding, orderPosition)
+            : base(leanOrder, orderType, orderQuantity, orderQuantityHolding, orderPosition)
         {
             FirstPartCrossZeroOrder = crossZeroFirstOrder;
         }
