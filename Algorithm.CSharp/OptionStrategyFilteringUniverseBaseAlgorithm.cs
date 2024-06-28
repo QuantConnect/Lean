@@ -21,6 +21,8 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -45,6 +47,16 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set our strategy filter for this option chain
             option.SetFilter(_func);
+        }
+
+        protected void AssertOptionStrategyIsPresent(string name, int? quantity = null)
+        {
+            if (Portfolio.Positions.Groups.Where(group => group.BuyingPowerModel is OptionStrategyPositionGroupBuyingPowerModel)
+                .Count(group => ((OptionStrategyPositionGroupBuyingPowerModel)@group.BuyingPowerModel).ToString() == name
+                    && (!quantity.HasValue || Math.Abs(group.Quantity) == quantity)) != 1)
+            {
+                throw new RegressionTestException($"Option strategy: '{name}' was not found!");
+            }
         }
 
         public override void OnData(Slice slice)
@@ -83,6 +95,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// Data Points count of the algorithm history
         /// </summary>
         public virtual int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm

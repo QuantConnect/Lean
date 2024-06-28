@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -67,13 +68,17 @@ namespace QuantConnect.Algorithm.CSharp
                 x.Strike == lowerStrike &&
                 x.Expiry == expiry
             );
-            if (otmCall == null || itmCall == null || itmPut == null || otmPut == null)
+            if (itmCall == null || otmCall == null || itmPut == null || otmPut == null)
             {
                 throw new Exception($"No contract returned match condition");
             }
 
-            var strategy = OptionStrategies.BoxSpread(_optionSymbol, higherStrike, lowerStrike, expiry);
-            Buy(strategy, 1);
+            MarketOrder(itmCall.Symbol, +1);
+            MarketOrder(otmCall.Symbol, -1);
+            MarketOrder(itmPut.Symbol, +1);
+            MarketOrder(otmPut.Symbol, -1);
+
+            AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BoxSpread.Name, 1);
         }
 
         /// <summary>

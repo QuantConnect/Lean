@@ -699,12 +699,10 @@ namespace QuantConnect.Securities
         private DateTime GetExpiry(IEnumerable<Symbol> symbols, int minDaysTillExpiry)
         {
             var leastExpiryAccepted = _lastExchangeDate.AddDays(minDaysTillExpiry);
-            var accepted = symbols.Where(x => x.ID.Date >= leastExpiryAccepted);
-            if (!accepted.Any())
-            {
-                return DateTime.MaxValue;
-            }
-            return accepted.OrderBy(x => x.ID.Date).First().ID.Date;
+            return symbols.Select(x => x.ID.Date)
+                .Where(x => x >= leastExpiryAccepted)
+                .OrderBy(x => x)
+                .FirstOrDefault(DateTime.MaxValue);
         }
 
         private decimal GetStrike(IEnumerable<Symbol> symbols, decimal strikeFromAtm)

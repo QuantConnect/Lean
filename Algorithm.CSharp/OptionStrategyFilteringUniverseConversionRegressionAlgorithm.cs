@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -61,8 +62,11 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"No contract returned match condition");
             }
 
-            var strategy = OptionStrategies.ReverseConversion(_optionSymbol, strike, expiry);
-            Buy(strategy, 1);
+            MarketOrder(putContract.Symbol, -1);
+            MarketOrder(chain.Underlying.Symbol, -1 * Securities[_optionSymbol].SymbolProperties.ContractMultiplier);
+            MarketOrder(callContract.Symbol, +1);
+
+            AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ReverseConversion.Name, 1);
         }
 
         /// <summary>
