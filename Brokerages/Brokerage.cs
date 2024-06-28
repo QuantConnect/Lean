@@ -735,18 +735,13 @@ namespace QuantConnect.Brokerages
                 {
                     switch (leanOrderStatus)
                     {
-                        // If the order is partially filled || New || Submitted, retrieve it from the collection
-                        case OrderStatus.New:
-                        case OrderStatus.None:
-                        case OrderStatus.Submitted:
-                        case OrderStatus.PartiallyFilled:
-                            return true;
-                        // Remove the order if it has already been Filled || Canceled || Invalid
                         case OrderStatus.Filled:
-                        default:
+                        case OrderStatus.Canceled:
+                        case OrderStatus.Invalid:
                             _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
-                            return true;
+                            break;
                     };
+                    return true;
                 }
                 // Return false if the brokerage order ID does not correspond to a cross-zero order
                 return false;
@@ -770,13 +765,11 @@ namespace QuantConnect.Brokerages
                         orderEvent.Status = OrderStatus.PartiallyFilled;
                         _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
                         break;
-                    case OrderStatus.New:
-                    case OrderStatus.None:
-                    case OrderStatus.Submitted:
-                    case OrderStatus.PartiallyFilled:
+                    case OrderStatus.Canceled:
+                    case OrderStatus.Invalid:
+                        _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
                         return false;
                     default:
-                        _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
                         return false;
                 };
 
