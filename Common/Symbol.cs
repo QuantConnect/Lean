@@ -225,6 +225,34 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides a convenience method for creating an option Symbol from its SecurityIdentifier and alias.
+        /// </summary>
+        /// <param name="sid">The option SID</param>
+        /// <param name="value">The alias</param>
+        /// <returns>A new Symbol object for the specified option</returns>
+        public static Symbol CreateOption(SecurityIdentifier sid, string value)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            if (!sid.SecurityType.IsOption())
+            {
+                throw new ArgumentException(Messages.Symbol.SidNotForOption(sid), nameof(value));
+            }
+
+            if (sid.SecurityType == SecurityType.IndexOption || IsCanonical(sid))
+            {
+                return new Symbol(sid, value);
+            }
+
+            SymbolRepresentation.TryDecomposeOptionTickerOSI(value, out var underlyingValue, out var _, out var _, out var _);
+            var underlying = new Symbol(sid.Underlying, underlyingValue);
+            return new Symbol(sid, value, underlying);
+        }
+
+        /// <summary>
         /// Simple method to create the canonical option symbol for any given underlying symbol
         /// </summary>
         /// <param name="underlyingSymbol">Underlying of this option</param>
@@ -284,10 +312,7 @@ namespace QuantConnect
         /// <returns>true, if symbol is a derivative canonical symbol</returns>
         public bool IsCanonical()
         {
-            return
-                (ID.SecurityType == SecurityType.Future ||
-                (ID.SecurityType.IsOption() && HasUnderlying)) &&
-                ID.Date == SecurityIdentifier.DefaultDate;
+            return IsCanonical(ID);
         }
 
         /// <summary>
@@ -817,6 +842,14 @@ namespace QuantConnect
                 default:
                     return null;
             }
+        }
+
+        private static bool IsCanonical(SecurityIdentifier sid)
+        {
+            return
+                (sid.SecurityType == SecurityType.Future ||
+                (sid.SecurityType.IsOption() && sid.HasUnderlying)) &&
+                sid.Date == SecurityIdentifier.DefaultDate;
         }
     }
 }
