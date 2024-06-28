@@ -62,16 +62,16 @@ namespace QuantConnect.Algorithm.CSharp
                         && contract.Strike == atTheMoneyPut.Strike * 2 - outOfTheMoneyPut.Strike);
 
                     var initialMargin = Portfolio.MarginRemaining;
-                    MarketOrder(outOfTheMoneyPut.Symbol, +10);
-                    MarketOrder(atTheMoneyPut.Symbol, -10);
+                    MarketOrder(outOfTheMoneyPut.Symbol, -10);
+                    MarketOrder(atTheMoneyPut.Symbol, +10);
 
-                    MarketOrder(atTheMoneyCall.Symbol, -10);
-                    MarketOrder(outOfTheMoneyCall.Symbol, +10);
+                    MarketOrder(atTheMoneyCall.Symbol, +10);
+                    MarketOrder(outOfTheMoneyCall.Symbol, -10);
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ShortIronButterfly.Name, 10);
 
                     var freeMarginPostTrade = Portfolio.MarginRemaining;
-                    var expectedMarginUsage = (atTheMoneyPut.Strike - outOfTheMoneyPut.Strike) * Securities[atTheMoneyPut.Symbol].SymbolProperties.ContractMultiplier * 10;
+                    var expectedMarginUsage = 0;
                     if (expectedMarginUsage != Portfolio.TotalMarginUsed)
                     {
                         throw new Exception("Unexpect margin used!");
@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "200000"},
-            {"End Equity", "198074"},
+            {"End Equity", "197174"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -126,10 +126,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$26.00"},
-            {"Estimated Strategy Capacity", "$500000.00"},
+            {"Estimated Strategy Capacity", "$150000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZFMML01JA|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "26.45%"},
-            {"OrderListHash", "b92ac4977a039360c4b09232ebe9e60f"}
+            {"Portfolio Turnover", "26.63%"},
+            {"OrderListHash", "2e8aabda630eb75675b202456d2b085a"}
         };
     }
 }

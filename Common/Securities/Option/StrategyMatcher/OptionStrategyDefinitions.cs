@@ -351,32 +351,32 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             );
 
         /// <summary>
-        /// Iron Butterfly strategy consists of a long ATM call, a long ATM put, a short OTM call, and a short OTM put.
+        /// Iron Butterfly strategy consists of a short ATM call, a short ATM put, a long OTM call, and a long OTM put.
         /// The strike spread between ATM and OTM call and put are the same. All at the same expiration date.
         /// </summary>
         public static OptionStrategyDefinition IronButterfly { get; }
             = OptionStrategyDefinition.Create("Iron Butterfly",
-                OptionStrategyDefinition.PutLeg(+1),
-                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike < legs[0].Strike,
-                    (legs, p) => p.Expiration == legs[0].Expiration),
-                OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike == legs[0].Strike,
-                    (legs, c) => c.Expiration == legs[0].Expiration),
-                OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike == legs[0].Strike * 2 - legs[1].Strike,
-                    (legs, c) => c.Expiration == legs[0].Expiration)
-            );
-
-        /// <summary>
-        /// Short Iron Butterfly strategy consists of a short ATM call, a short ATM put, a long OTM call, and a long OTM put.
-        /// The strike spread between ATM and OTM call and put are the same. All at the same expiration date.
-        /// </summary>
-        public static OptionStrategyDefinition ShortIronButterfly { get; }
-            = OptionStrategyDefinition.Create("Short Iron Butterfly",
                 OptionStrategyDefinition.PutLeg(-1),
                 OptionStrategyDefinition.PutLeg(+1, (legs, p) => p.Strike < legs[0].Strike,
                     (legs, p) => p.Expiration == legs[0].Expiration),
                 OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike == legs[0].Strike,
                     (legs, c) => c.Expiration == legs[0].Expiration),
                 OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike == legs[0].Strike * 2 - legs[1].Strike,
+                    (legs, c) => c.Expiration == legs[0].Expiration)
+            );
+
+        /// <summary>
+        /// Short Iron Butterfly strategy consists of a long ATM call, a long ATM put, a short OTM call, and a short OTM put.
+        /// The strike spread between ATM and OTM call and put are the same. All at the same expiration date.
+        /// </summary>
+        public static OptionStrategyDefinition ShortIronButterfly { get; }
+            = OptionStrategyDefinition.Create("Short Iron Butterfly",
+                OptionStrategyDefinition.PutLeg(+1),
+                OptionStrategyDefinition.PutLeg(-1, (legs, p) => p.Strike < legs[0].Strike,
+                    (legs, p) => p.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(+1, (legs, c) => c.Strike == legs[0].Strike,
+                    (legs, c) => c.Expiration == legs[0].Expiration),
+                OptionStrategyDefinition.CallLeg(-1, (legs, c) => c.Strike == legs[0].Strike * 2 - legs[1].Strike,
                     (legs, c) => c.Expiration == legs[0].Expiration)
             );
 

@@ -828,24 +828,25 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(4, strategy.OptionLegs.Count);
             Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
 
-            var shortPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike1);
-            Assert.AreEqual(OptionRight.Put, shortPutLeg.Right);
+            var longPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike1);
+            Assert.AreEqual(OptionRight.Put, longPutLeg.Right);
+            Assert.AreEqual(expiration, longPutLeg.Expiration);
+            Assert.AreEqual(+1, longPutLeg.Quantity);
+
+            var shortPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Put);
             Assert.AreEqual(expiration, shortPutLeg.Expiration);
             Assert.AreEqual(-1, shortPutLeg.Quantity);
 
-            var longPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Put);
-            Assert.AreEqual(expiration, longPutLeg.Expiration);
-            Assert.AreEqual(1, longPutLeg.Quantity);
-
-            var longCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Call);
-            Assert.AreEqual(expiration, longCallLeg.Expiration);
-            Assert.AreEqual(1, longCallLeg.Quantity);
-
-            var shortCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike3);
-            Assert.AreEqual(OptionRight.Call, shortCallLeg.Right);
+            var shortCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Call);
             Assert.AreEqual(expiration, shortCallLeg.Expiration);
             Assert.AreEqual(-1, shortCallLeg.Quantity);
+
+            var longCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike3);
+            Assert.AreEqual(OptionRight.Call, longCallLeg.Right);
+            Assert.AreEqual(expiration, longCallLeg.Expiration);
+            Assert.AreEqual(+1, longCallLeg.Quantity);
         }
+
 
         [Test]
         public void BuildsShortIronButterflyStrategy()
@@ -866,25 +867,24 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(4, strategy.OptionLegs.Count);
             Assert.AreEqual(0, strategy.UnderlyingLegs.Count);
 
-            var longPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike1);
-            Assert.AreEqual(OptionRight.Put, longPutLeg.Right);
-            Assert.AreEqual(expiration, longPutLeg.Expiration);
-            Assert.AreEqual(+1, longPutLeg.Quantity);
-
-            var shortPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Put);
+            var shortPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike1);
+            Assert.AreEqual(OptionRight.Put, shortPutLeg.Right);
             Assert.AreEqual(expiration, shortPutLeg.Expiration);
             Assert.AreEqual(-1, shortPutLeg.Quantity);
 
-            var shortCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Call);
+            var longPutLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Put);
+            Assert.AreEqual(expiration, longPutLeg.Expiration);
+            Assert.AreEqual(1, longPutLeg.Quantity);
+
+            var longCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike2 && x.Right == OptionRight.Call);
+            Assert.AreEqual(expiration, longCallLeg.Expiration);
+            Assert.AreEqual(1, longCallLeg.Quantity);
+
+            var shortCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike3);
+            Assert.AreEqual(OptionRight.Call, shortCallLeg.Right);
             Assert.AreEqual(expiration, shortCallLeg.Expiration);
             Assert.AreEqual(-1, shortCallLeg.Quantity);
-
-            var longCallLeg = strategy.OptionLegs.Single(x => x.Strike == strike3);
-            Assert.AreEqual(OptionRight.Call, longCallLeg.Right);
-            Assert.AreEqual(expiration, longCallLeg.Expiration);
-            Assert.AreEqual(+1, longCallLeg.Quantity);
         }
-
         [Test]
         public void FailsBuildingIronCondorStrategy()
         {

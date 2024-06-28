@@ -819,7 +819,7 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Creates a new Iron Butterfly strategy which consists of a long ATM call, a long ATM put, a short OTM call, and a short OTM put,
+        /// Creates a new Iron Butterfly strategy which consists of a short ATM call, a short ATM put, a long OTM call, and a long OTM put.
         /// all with the same expiration date and with increasing strikes prices in the mentioned order.
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
@@ -835,14 +835,16 @@ namespace QuantConnect.Securities.Option
             {
                 throw new ArgumentException("IronButterfly: intervals between exercise prices must be equal");
             }
-
-            return InvertStrategy(IronCondor(canonicalOption, otmPutStrike, atmStrike, atmStrike, otmCallStrike, expiration),
-                OptionStrategyDefinitions.IronButterfly.Name);
+            
+            var strategy = IronCondor(canonicalOption, otmPutStrike, atmStrike, atmStrike, otmCallStrike, expiration);
+            strategy.Name = OptionStrategyDefinitions.IronButterfly.Name;
+            return strategy;
         }
 
         /// <summary>
-        /// Creates a new Short Iron Butterfly strategy which consists of a short ATM call, a short ATM put, a long OTM call, and a long OTM put.
-        /// It is the inverse of an Iron Butterfly.
+        /// Creates a new Short Iron Butterfly strategy which consists of a long ATM call, a long ATM put, a short OTM call, and a short OTM put,
+        /// all with the same expiration date and with increasing strikes prices in the mentioned order.
+        /// <remarks>It is the inverse of an <see cref="IronButterfly" />.</remarks>
         /// </summary>
         /// <param name="canonicalOption">Option symbol</param>
         /// <param name="otmCallStrike">OTM call option strike price</param>
