@@ -373,37 +373,70 @@ namespace QuantConnect
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
         public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType, OptionStyle optionStyle, string market)
         {
-            var match = _optionTickerRegex.Match(ticker);
-            if (!match.Success)
+            if (!TryDecomposeOptionTickerOSI(ticker, out var optionTicker, out var expiry, out var right, out var strike))
             {
-                throw new FormatException($"Invalid ticker format {ticker}");
+                throw new FormatException(Messages.SymbolRepresentation.InvalidOSITickerFormat(ticker));
             }
 
-            var optionTicker = match.Groups[1].Value;
-            var expiration = DateTime.ParseExact(match.Groups[2].Value, DateFormat.SixCharacter, null);
-            OptionRight right = match.Groups[3].Value.ToUpper() == "C" ? OptionRight.Call : OptionRight.Put;
-            var strike = decimal.Parse(match.Groups[4].Value) / 1000m;
-
             SecurityIdentifier underlyingSid;
+            string underlyingSymbolValue;
             if (securityType == SecurityType.Option)
             {
                 underlyingSid = SecurityIdentifier.GenerateEquity(optionTicker, market);
-                // Reset optionTicker for default handling
+                // We have the mapped symbol in the OSI ticker
+                underlyingSymbolValue = optionTicker;
+                // let it fallback to it's default handling, which include mapping
                 optionTicker = null;
             }
-            else if (securityType == SecurityType.IndexOption)
+            else if(securityType == SecurityType.IndexOption)
             {
                 underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
+                underlyingSymbolValue = underlyingSid.Symbol;
             }
             else
             {
                 throw new NotImplementedException($"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}");
             }
-
-            var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, optionTicker, market, strike, right, optionStyle);
-            return new Symbol(sid, ticker, new Symbol(underlyingSid, underlyingSid.Symbol));
+            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSid, optionTicker, market, strike, right, optionStyle);
+            return new Symbol(sid, ticker, new Symbol(underlyingSid, underlyingSymbolValue));
         }
-    
+
+        /// <summary>
+        /// Tries to decompose the specified OSI options ticker into its components
+        /// </summary>
+        /// <param name="ticker">The OSI option ticker</param>
+        /// <param name="optionTicker">The option ticker extracted from the OSI symbol</param>
+        /// <param name="expiry">The option contract expiry date</param>
+        /// <param name="right">The option contract right</param>
+        /// <param name="strike">The option contract strike price</param>
+        /// <returns>True if the OSI symbol was in the right format and could be decomposed</returns>
+        public static bool TryDecomposeOptionTickerOSI(string ticker, out string optionTicker, out DateTime expiry,
+            out OptionRight right, out decimal strike)
+        {
+            optionTicker = null;
+            expiry = default;
+            right = OptionRight.Call;
+            strike = decimal.Zero;
+
+            if (string.IsNullOrEmpty(ticker))
+            {
+                return false;
+            }
+
+            var match = _optionTickerRegex.Match(ticker);
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            optionTicker = match.Groups[1].Value;
+            expiry = DateTime.ParseExact(match.Groups[2].Value, DateFormat.SixCharacter, null);
+            right = match.Groups[3].Value.ToUpperInvariant() == "C" ? OptionRight.Call : OptionRight.Put;
+            strike = Parse.Decimal(match.Groups[4].Value) / 1000m;
+
+            return true;
+        }
+
         /// <summary>
         /// Function returns option ticker from IQFeed option ticker
         /// For example CSCO1220V19 Cisco October Put at 19.00 Expiring on 10/20/12
