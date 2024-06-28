@@ -64,8 +64,13 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"No contract returned match condition");
             }
 
+            var strategy = OptionStrategies.BullPutSpread(_optionSymbol, higherStrike, lowerStrike, expiry);
+            Buy(strategy, 1);
+
+            /* we can obtain the same result from market orders
             MarketOrder(lowerStrikeContract.Symbol, +1);
             MarketOrder(higherStrikeContract.Symbol, -1);
+            */
 
             AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullPutSpread.Name, 1);
         }
@@ -111,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$2000000.00"},
             {"Lowest Capacity Asset", "GOOCV 306JVPPH5QXMU|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "1.60%"},
-            {"OrderListHash", "7cacd5ecd627fb261eb94b8ddcd1e685"}
+            {"OrderListHash", "7600923ed8d7dae66e7827fde5421cbe"}
         };
     }
 }
