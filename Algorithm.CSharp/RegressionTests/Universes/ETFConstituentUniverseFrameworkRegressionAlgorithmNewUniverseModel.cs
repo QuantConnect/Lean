@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverseSelection(new ETFConstituentsUniverseSelectionModel(symbol, universeFilterFunc: FilterETFConstituents));
         }
 
-        public List<Language> Languages { get; } = new() { Language.CSharp };
+        public override List<Language> Languages { get; } = new() { Language.CSharp };
 
         public override int AlgorithmHistoryDataPoints => 0;
 
