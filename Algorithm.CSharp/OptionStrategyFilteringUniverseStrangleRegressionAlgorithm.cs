@@ -19,17 +19,18 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm of filtering with Protective Collar option strategy and asserting it's being detected by Lean and works as expected
+    /// Regression algorithm of filtering with Strangle option strategy and asserting it's being detected by Lean and works as expected
     /// </summary>
-    public class OptionStrategyFilteringUniverseProtectiveCollarRegressionAlgorithm : OptionStrategyFilteringUniverseBaseAlgorithm
+    public class OptionStrategyFilteringUniverseStrangleRegressionAlgorithm : OptionStrategyFilteringUniverseBaseAlgorithm
     {
         public override void Initialize()
         {
-            _func = u => u.IncludeWeeklys().ProtectiveCollar(28, 10, 5);
+            _func = u => u.IncludeWeeklys().Strangle(28, 5, -10);
             _expectedCount = 2;
 
             base.Initialize();
@@ -43,8 +44,8 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"Number of contract returned does not match expectation, {count}, {_expectedCount}");
             }
 
-            var callStrike = 757.50m;
-            var putStrike = 752.50m;
+            var callStrike = 752.50m;
+            var putStrike = 737.50m;
             var expiry = new DateTime(2016, 1, 22);
 
             var callContract = chain.SingleOrDefault(x => 
@@ -62,8 +63,10 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new Exception($"No contract returned match condition");
             }
 
-            var strategy = OptionStrategies.ProtectiveCollar(_optionSymbol, callStrike, putStrike, expiry);
-            Buy(strategy, 1);
+            MarketOrder(putContract.Symbol, +1);
+            MarketOrder(callContract.Symbol, +1);
+
+            AssertOptionStrategyIsPresent(OptionStrategyDefinitions.Strangle.Name, 1);
         }
 
         /// <summary>
@@ -81,14 +84,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "3"},
+            {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "200000"},
-            {"End Equity", "199644"},
+            {"End Equity", "199653"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -103,11 +106,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$39000000.00"},
-            {"Lowest Capacity Asset", "GOOCV 306JVPQ5YT51I|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "39.24%"},
-            {"OrderListHash", "6bbae139ff483b232448a003383f296a"}
+            {"Total Fees", "$2.00"},
+            {"Estimated Strategy Capacity", "$2000000.00"},
+            {"Lowest Capacity Asset", "GOOCV 306JVPPH5QXMU|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "1.64%"},
+            {"OrderListHash", "dcae5f3a4eadd9acf5a72f6cf4b386a1"}
         };
     }
 }
