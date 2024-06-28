@@ -294,22 +294,17 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             var csv = line.Split(',');
-            Symbol symbol;
+            var sid = SecurityIdentifier.Parse(csv[0]);
+            var symbolValue = csv[1];
 
-            if (!string.IsNullOrEmpty(_underlyingSid))
+            Symbol symbol;
+            if (sid.HasUnderlying)
             {
-                var optionSid = SecurityIdentifier.Parse(csv[0]);
-                symbol = Symbol.CreateOption(_underlyingSymbol, optionSid.Symbol, optionSid.Market, optionSid.OptionStyle, optionSid.OptionRight,
-                    optionSid.StrikePrice, optionSid.Date);
+                symbol = Symbol.CreateOption(sid, symbolValue);
             }
             else
             {
-                _underlyingSid = csv[0];
-                var sid = SecurityIdentifier.Parse(_underlyingSid);
-                var symbolValue = csv[1];
-
-                _underlyingSymbol = new Symbol(sid, symbolValue);
-                symbol = _underlyingSymbol;
+                symbol = new Symbol(sid, symbolValue);
             }
 
             return new OptionUniverse(date, symbol, csv);
@@ -346,13 +341,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public string ToCsv()
         {
-            var sid = Symbol.ID.ToString();
-            if (Symbol.SecurityType.IsOption())
-            {
-                sid = sid.Replace($"|{Symbol.Underlying.ID}", "", StringComparison.InvariantCultureIgnoreCase);
-            }
-
-            return $"{sid},{Symbol.Value},{Open},{High},{Low},{Close},{Volume}," +
+            return $"{Symbol.ID},{Symbol.Value},{Open},{High},{Low},{Close},{Volume}," +
                 $"{_openInterest},{_impliedVolatility},{_greeks?.Delta},{_greeks?.Gamma},{_greeks?.Vega},{_greeks?.Theta},{_greeks?.Rho}";
         }
 

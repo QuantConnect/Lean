@@ -800,6 +800,12 @@ namespace QuantConnect
             {
                 return Invariant($"No underlying type exists for option SecurityType: {securityType}");
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string SidNotForOption(QuantConnect.SecurityIdentifier sid)
+            {
+                return Invariant($"The provided SecurityIdentifier is not for an option: {sid}");
+            }
         }
 
         /// <summary>

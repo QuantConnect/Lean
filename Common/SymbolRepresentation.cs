@@ -338,9 +338,58 @@ namespace QuantConnect
         /// <returns>Symbol object for the specified OSI option ticker string</returns>
         public static Symbol ParseOptionTickerOSI(string ticker, SecurityType securityType, OptionStyle optionStyle, string market)
         {
-            var optionTicker = ticker.Substring(0, 6).Trim();
-            var expiration = DateTime.ParseExact(ticker.Substring(6, 6), DateFormat.SixCharacter, null);
-            OptionRight right;
+            if (!TryDecomposeOptionTickerOSI(ticker, out var optionTicker, out var expiry, out var right, out var strike))
+            {
+                throw new FormatException(Messages.SymbolRepresentation.UnexpectedOptionRightFormatForParseOptionTickerOSI(ticker));
+            }
+
+            SecurityIdentifier underlyingSid;
+            string underlyingSymbolValue;
+            if (securityType == SecurityType.Option)
+            {
+                underlyingSid = SecurityIdentifier.GenerateEquity(optionTicker, market);
+                // We have the mapped symbol in the OSI ticker
+                underlyingSymbolValue = optionTicker;
+                // let it fallback to it's default handling, which include mapping
+                optionTicker = null;
+            }
+            else if(securityType == SecurityType.IndexOption)
+            {
+                underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
+                underlyingSymbolValue = underlyingSid.Symbol;
+            }
+            else
+            {
+                throw new NotImplementedException($"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}");
+            }
+            var sid = SecurityIdentifier.GenerateOption(expiry, underlyingSid, optionTicker, market, strike, right, optionStyle);
+            return new Symbol(sid, ticker, new Symbol(underlyingSid, underlyingSymbolValue));
+        }
+
+        /// <summary>
+        /// Tries to decompose the specified OSI options ticker into its components
+        /// </summary>
+        /// <param name="ticker">The OSI option ticker</param>
+        /// <param name="optionTicker">The option ticker extracted from the OSI symbol</param>
+        /// <param name="expiry">The option contract expiry date</param>
+        /// <param name="right">The option contract right</param>
+        /// <param name="strike">The option contract strike price</param>
+        /// <returns>True if the OSI symbol was in the right format and could be decomposed</returns>
+        public static bool TryDecomposeOptionTickerOSI(string ticker, out string optionTicker, out DateTime expiry,
+            out OptionRight right, out decimal strike)
+        {
+            optionTicker = null;
+            expiry = default;
+            right = OptionRight.Call;
+            strike = decimal.Zero;
+
+            if (string.IsNullOrEmpty(ticker))
+            {
+                return false;
+            }
+
+            optionTicker = ticker.Substring(0, 6).Trim();
+            expiry = DateTime.ParseExact(ticker.Substring(6, 6), DateFormat.SixCharacter, null);
             if (ticker[12] == 'C' || ticker[12] == 'c')
             {
                 right = OptionRight.Call;
@@ -351,26 +400,12 @@ namespace QuantConnect
             }
             else
             {
-                throw new FormatException(Messages.SymbolRepresentation.UnexpectedOptionRightFormatForParseOptionTickerOSI(ticker));
+                return false;
             }
-            var strike = Parse.Decimal(ticker.Substring(13, 8)) / 1000m;
-            SecurityIdentifier underlyingSid;
-            if (securityType == SecurityType.Option)
-            {
-                underlyingSid = SecurityIdentifier.GenerateEquity(optionTicker, market);
-                // let it fallback to it's default handling, which include mapping
-                optionTicker = null;
-            }
-            else if(securityType == SecurityType.IndexOption)
-            {
-                underlyingSid = SecurityIdentifier.GenerateIndex(OptionSymbol.MapToUnderlying(optionTicker, securityType), market);
-            }
-            else
-            {
-                throw new NotImplementedException($"ParseOptionTickerOSI(): {Messages.SymbolRepresentation.SecurityTypeNotImplemented(securityType)}");
-            }
-            var sid = SecurityIdentifier.GenerateOption(expiration, underlyingSid, optionTicker, market, strike, right, optionStyle);
-            return new Symbol(sid, ticker, new Symbol(underlyingSid, underlyingSid.Symbol));
+
+            strike = Parse.Decimal(ticker.Substring(13, 8)) / 1000m;
+
+            return true;
         }
 
         /// <summary>
