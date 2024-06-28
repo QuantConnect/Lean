@@ -18,7 +18,6 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
-using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -44,19 +43,6 @@ namespace QuantConnect.Algorithm.CSharp
             _tradableDates = QuantConnect.Time.EachTradeableDay(aapl, StartDate, EndDate).ToList();
 
             SetBenchmark(x => 0);
-
-            // -------------------------------------------------------
-
-            //var sid = contracts.First().ID.ToString();
-            //var sid1 = contracts[1].ID.ToString();
-            //var sid2 = contracts[2].ID.ToString();
-            //var sid3 = contracts[3].ID.ToString();
-            //var sid4 = contracts[4].ID.ToString();
-
-            //var underlying = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
-            //var underlyingSid = underlying.ID.ToString();
-            //var sidddd = SecurityIdentifier.Parse($"AAPL VXBK4Q9ZIFD2|{underlyingSid}");
-            //var symbol = new QuantConnect.Symbol(sidddd, sidddd.Symbol);
         }
 
         public override void OnData(Slice slice)
@@ -93,7 +79,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 24;
+        public long DataPoints => 310965;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -124,8 +110,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-9.486"},
-            {"Tracking Error", "0.008"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
