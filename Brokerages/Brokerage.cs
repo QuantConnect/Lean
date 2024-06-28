@@ -731,15 +731,22 @@ namespace QuantConnect.Brokerages
         {
             lock (_lockCrossZeroObject)
             {
-                // Remove the order if it has already been filled
-                if (leanOrderStatus == OrderStatus.Filled && LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out leanOrder))
+                if (LeanOrderByZeroCrossBrokerageOrderId.TryGetValue(brokerageOrderId, out leanOrder))
                 {
-                    return true;
-                }
-                // If the order is partially filled, retrieve it from the collection
-                else if (LeanOrderByZeroCrossBrokerageOrderId.TryGetValue(brokerageOrderId, out leanOrder))
-                {
-                    return true;
+                    switch (leanOrderStatus)
+                    {
+                        // If the order is partially filled || New || Submitted, retrieve it from the collection
+                        case OrderStatus.New:
+                        case OrderStatus.None:
+                        case OrderStatus.Submitted:
+                        case OrderStatus.PartiallyFilled:
+                            return true;
+                        // Remove the order if it has already been Filled || Canceled || Invalid
+                        case OrderStatus.Filled:
+                        default:
+                            _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
+                            return true;
+                    };
                 }
                 // Return false if the brokerage order ID does not correspond to a cross-zero order
                 return false;
@@ -758,9 +765,9 @@ namespace QuantConnect.Brokerages
                 switch (orderEvent.Status)
                 {
                     case OrderStatus.Filled:
-                // if we have a contingent that needs to be submitted then we can't respect the 'Filled' state from the order
-                // because the Lean order hasn't been technically filled yet, so mark it as 'PartiallyFilled'
-                orderEvent.Status = OrderStatus.PartiallyFilled;
+                        // if we have a contingent that needs to be submitted then we can't respect the 'Filled' state from the order
+                        // because the Lean order hasn't been technically filled yet, so mark it as 'PartiallyFilled'
+                        orderEvent.Status = OrderStatus.PartiallyFilled;
                         _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
                         break;
                     case OrderStatus.New:
