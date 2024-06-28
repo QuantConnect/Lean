@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         public bool CanRunLocally => false;
-        public Language[] Languages => new[] {Language.CSharp};
+        public List<Language> Languages => new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

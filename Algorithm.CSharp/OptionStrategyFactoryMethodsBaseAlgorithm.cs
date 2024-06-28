@@ -111,7 +111,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public abstract Language[] Languages { get; }
+        public abstract List<Language> Languages { get; }
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

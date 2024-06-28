@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         public abstract bool CanRunLocally { get; }
-        public abstract Language[] Languages { get; }
+        public abstract List<Language> Languages { get; }
         public abstract long DataPoints { get; }
         public abstract int AlgorithmHistoryDataPoints { get; }
         public abstract AlgorithmStatus AlgorithmStatus { get; }
