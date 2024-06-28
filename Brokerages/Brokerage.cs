@@ -738,7 +738,7 @@ namespace QuantConnect.Brokerages
                         case OrderStatus.Filled:
                         case OrderStatus.Canceled:
                         case OrderStatus.Invalid:
-                            _leanOrderByBrokerageCrossingOrders.Remove(leanOrder.Id, out var _);
+                            LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out var _);
                             break;
                     };
                     return true;
