@@ -114,7 +114,6 @@ namespace QuantConnect.Data
             return request;
         }
 
-
         /// <summary>
         /// Gets the start time required for the specified bar count in terms of the algorithm's time zone
         /// </summary>
@@ -129,6 +128,32 @@ namespace QuantConnect.Data
         /// </param>
         /// <returns>The start time that would provide the specified number of bars ending at the algorithm's current time</returns>
         public DateTime GetStartTimeAlgoTz(
+            Symbol symbol,
+            int periods,
+            Resolution resolution,
+            SecurityExchangeHours exchange,
+            DateTimeZone dataTimeZone,
+            bool? extendedMarketHours = null)
+        {
+            return GetStartTimeAlgoTz(_algorithm.UtcTime, symbol, periods, resolution, exchange, dataTimeZone, extendedMarketHours);
+        }
+
+        /// <summary>
+        /// Gets the start time required for the specified bar count in terms of the algorithm's time zone
+        /// </summary>
+        /// <param name="referenceUtcTime">The end time in utc</param>
+        /// <param name="symbol">The symbol to select proper <see cref="SubscriptionDataConfig"/> config</param>
+        /// <param name="periods">The number of bars requested</param>
+        /// <param name="resolution">The length of each bar</param>
+        /// <param name="exchange">The exchange hours used for market open hours</param>
+        /// <param name="dataTimeZone">The time zone in which data are stored</param>
+        /// <param name="extendedMarketHours">
+        /// True to include extended market hours data, false otherwise.
+        /// If not passed, the config will be used to determined whether to include extended market hours.
+        /// </param>
+        /// <returns>The start time that would provide the specified number of bars ending at the algorithm's current time</returns>
+        public DateTime GetStartTimeAlgoTz(
+            DateTime referenceUtcTime,
             Symbol symbol,
             int periods,
             Resolution resolution,
@@ -159,7 +184,7 @@ namespace QuantConnect.Data
 
             var localStartTime = Time.GetStartTimeForTradeBars(
                 exchange,
-                _algorithm.UtcTime.ConvertFromUtc(exchange.TimeZone),
+                referenceUtcTime.ConvertFromUtc(exchange.TimeZone),
                 timeSpan,
                 periods,
                 isExtendedMarketHours,

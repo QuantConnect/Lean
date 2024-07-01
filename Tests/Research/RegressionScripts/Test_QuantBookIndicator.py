@@ -1,4 +1,4 @@
-﻿# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 # Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,15 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from clr import AddReference
-AddReference("QuantConnect.Research")
-AddReference("QuantConnect.Indicators")
-
-from System import *
-from QuantConnect import *
-from QuantConnect.Data import *
-from QuantConnect.Research import *
-from QuantConnect.Indicators import *
+from AlgorithmImports import *
 
 class IndicatorTest():
     def __init__(self, start_date, security_type, symbol):
@@ -32,12 +24,24 @@ class IndicatorTest():
 
     def test_bollinger_bands(self, symbol, start, end, resolution):
         ind = BollingerBands(10, 2)
-        return self.qb.Indicator(ind, symbol, start, end, resolution)
+        return self.qb.IndicatorHistory(ind, symbol, start, end, resolution)
 
     def test_average_true_range(self, symbol, start, end, resolution):
         ind = AverageTrueRange(14)
-        return self.qb.Indicator(ind, symbol, start, end, resolution)
+        return self.qb.IndicatorHistory(ind, symbol, start, end, resolution)
 
     def test_on_balance_volume(self, symbol, start, end, resolution):
+        ind = OnBalanceVolume(symbol)
+        return self.qb.IndicatorHistory(ind, symbol, start, end, resolution)
+    
+    def test_bollinger_bands_backwards_compatibility(self, symbol, start, end, resolution):
+        ind = BollingerBands(10, 2)
+        return self.qb.Indicator(ind, symbol, start, end, resolution)
+
+    def test_average_true_range_backwards_compatibility(self, symbol, start, end, resolution):
+        ind = AverageTrueRange(14)
+        return self.qb.Indicator(ind, symbol, start, end, resolution)
+
+    def test_on_balance_volume_backwards_compatibility(self, symbol, start, end, resolution):
         ind = OnBalanceVolume(symbol)
         return self.qb.Indicator(ind, symbol, start, end, resolution)

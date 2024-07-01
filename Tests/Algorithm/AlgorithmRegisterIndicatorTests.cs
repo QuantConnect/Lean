@@ -160,7 +160,7 @@ namespace QuantConnect.Tests.Algorithm
         public void RegisterPythonCustomIndicatorProperly()
         {
             const string code = @"
-class GoodCustomIndicator :
+class GoodCustomIndicator:
     def __init__(self):
         self.IsReady = True
         self.Value = 0

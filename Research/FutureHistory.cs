@@ -13,43 +13,33 @@
  * limitations under the License.
 */
 
+using System;
+using System.Linq;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Python;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Research
 {
     /// <summary>
     /// Class to manage information from History Request of Futures
     /// </summary>
-    public class FutureHistory : IEnumerable<Slice>
+    public class FutureHistory : DataHistory<Slice>
     {
-        private IEnumerable<Slice> _data;
-        private PandasConverter _converter;
-        private PyObject _dataframe;
-
         /// <summary>
         /// Create a new instance of <see cref="FutureHistory"/>.
         /// </summary>
         /// <param name="data"></param>
-        public FutureHistory(IEnumerable<Slice> data)
+        public FutureHistory(IEnumerable<Slice> data) : base(data, new Lazy<PyObject>(() => new PandasConverter().GetDataFrame(data)))
         {
-            _data = data;
-            _converter = new PandasConverter();
-            _dataframe = _converter.GetDataFrame(_data);
         }
 
         /// <summary>
         /// Gets all data from the History Request that are written in a pandas.DataFrame
         /// </summary>
-        /// <returns></returns>
-        public PyObject GetAllData()
-        {
-            return _dataframe;
-        }
+        [Obsolete("Please use the 'DataFrame' property")]
+        public PyObject GetAllData() => DataFrame;
 
         /// <summary>
         /// Gets all expity dates in the future history
@@ -57,34 +47,11 @@ namespace QuantConnect.Research
         /// <returns></returns>
         public PyObject GetExpiryDates()
         {
-            var expiry = _data.SelectMany(x => x.FuturesChains.SelectMany(y => y.Value.Contracts.Keys.Select(z => z.ID.Date).Distinct()));
+            var expiry = Data.SelectMany(x => x.FuturesChains.SelectMany(y => y.Value.Contracts.Keys.Select(z => z.ID.Date).Distinct()));
             using (Py.GIL())
             {
                 return expiry.Distinct().ToList().ToPython();
             }
         }
-
-        /// <summary>
-        /// Returns a string that represent the current object
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return _converter.ToString();
-        }
-
-        #region IEnumerable implementation
-
-        public IEnumerator<Slice> GetEnumerator()
-        {
-            return _data.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        #endregion
     }
 }
