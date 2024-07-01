@@ -30,8 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            _func = u => u.IncludeWeeklys().Conversion(28, -5);
-            _expectedCount = 2;
+            FilterFunc = u => u.IncludeWeeklys().Conversion(28, -5);
+            ExpectedCount = 2;
 
             base.Initialize();
         }
@@ -39,9 +39,9 @@ namespace QuantConnect.Algorithm.CSharp
         protected override void TestFiltering(OptionChain chain)
         {
             var count = chain.Count();
-            if (count != _expectedCount)
+            if (count != ExpectedCount)
             {
-                throw new Exception($"Number of contract returned does not match expectation, {count}, {_expectedCount}");
+                throw new RegressionTestException($"Number of contract returned does not match expectation, {count}, {ExpectedCount}");
             }
 
             var strike = 742.50m;
@@ -59,10 +59,10 @@ namespace QuantConnect.Algorithm.CSharp
             );
             if (callContract == null || putContract == null)
             {
-                throw new Exception($"No contract returned match condition");
+                throw new RegressionTestException($"No contract returned match condition");
             }
 
-            var strategy = OptionStrategies.ReverseConversion(_optionSymbol, strike, expiry);
+            var strategy = OptionStrategies.Conversion(OptionSymbol, strike, expiry);
             Buy(strategy, 1);
 
             /* we can obtain the same result from market orders
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
             MarketOrder(callContract.Symbol, +1);
             */
 
-            AssertOptionStrategyIsPresent(OptionStrategyDefinitions.ReverseConversion.Name, 1);
+            AssertOptionStrategyIsPresent(OptionStrategyDefinitions.Conversion.Name, 1);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "200000"},
-            {"End Equity", "199601"},
+            {"End Equity", "199559"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -112,10 +112,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$41000000.00"},
+            {"Estimated Strategy Capacity", "$15000000.00"},
             {"Lowest Capacity Asset", "GOOCV W7FVK9Q85UPY|GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "39.36%"},
-            {"OrderListHash", "6c25e68e11265e955a193336421c5019"}
+            {"Portfolio Turnover", "39.39%"},
+            {"OrderListHash", "6fb9441bb0f49a1af2fb73dac30c5982"}
         };
     }
 }

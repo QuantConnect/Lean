@@ -30,8 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            _func = u => u.IncludeWeeklys().Straddle(28);
-            _expectedCount = 2;
+            FilterFunc = u => u.IncludeWeeklys().Straddle(28);
+            ExpectedCount = 2;
 
             base.Initialize();
         }
@@ -39,9 +39,9 @@ namespace QuantConnect.Algorithm.CSharp
         protected override void TestFiltering(OptionChain chain)
         {
             var count = chain.Count();
-            if (count != _expectedCount)
+            if (count != ExpectedCount)
             {
-                throw new Exception($"Number of contract returned does not match expectation, {count}, {_expectedCount}");
+                throw new RegressionTestException($"Number of contract returned does not match expectation, {count}, {ExpectedCount}");
             }
 
             var strike = 747.50m;
@@ -59,10 +59,10 @@ namespace QuantConnect.Algorithm.CSharp
             );
             if (callContract == null || putContract == null)
             {
-                throw new Exception($"No contract returned match condition");
+                throw new RegressionTestException($"No contract returned match condition");
             }
 
-            var strategy = OptionStrategies.Straddle(_optionSymbol, strike, expiry);
+            var strategy = OptionStrategies.Straddle(OptionSymbol, strike, expiry);
             Buy(strategy, 1);
 
             /* we can obtain the same result from market orders

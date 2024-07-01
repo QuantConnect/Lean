@@ -15,14 +15,13 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
 using QuantConnect.Securities.Option;
-using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -31,9 +30,20 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public abstract class OptionStrategyFilteringUniverseBaseAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected Func<OptionFilterUniverse, OptionFilterUniverse> _func;
-        protected Symbol _optionSymbol;
-        protected int _expectedCount = 0;
+        /// <summary>
+        /// The filter function
+        /// </summary>
+        protected Func<OptionFilterUniverse, OptionFilterUniverse> FilterFunc { get; set; }
+
+        /// <summary>
+        /// The option symbol
+        /// </summary>
+        protected Symbol OptionSymbol { get; set; }
+
+        /// <summary>
+        /// Expected data count
+        /// </summary>
+        protected int ExpectedCount { get; set; }
 
         public override void Initialize()
         {
@@ -43,10 +53,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             var equity = AddEquity("GOOG", leverage: 4);
             var option = AddOption(equity.Symbol);
-            _optionSymbol = option.Symbol;
+            OptionSymbol = option.Symbol;
 
             // set our strategy filter for this option chain
-            option.SetFilter(_func);
+            option.SetFilter(FilterFunc);
         }
 
         protected void AssertOptionStrategyIsPresent(string name, int? quantity = null)
@@ -64,17 +74,14 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 OptionChain chain;
-                if (slice.OptionChains.TryGetValue(_optionSymbol, out chain) && chain.Any())
+                if (slice.OptionChains.TryGetValue(OptionSymbol, out chain) && chain.Any())
                 {
                     TestFiltering(chain);
                 }
             }
         }
 
-        protected virtual void TestFiltering(OptionChain chain)
-        {
-            throw new Exception("TestFiltering method must be implemented.");
-        }
+        protected abstract void TestFiltering(OptionChain chain);
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.

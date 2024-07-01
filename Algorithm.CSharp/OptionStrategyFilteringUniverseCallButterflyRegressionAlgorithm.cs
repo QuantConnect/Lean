@@ -30,8 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            _func = u => u.IncludeWeeklys().CallButterfly(28, 5);
-            _expectedCount = 3;
+            FilterFunc = u => u.IncludeWeeklys().CallButterfly(28, 5);
+            ExpectedCount = 3;
 
             base.Initialize();
         }
@@ -39,9 +39,9 @@ namespace QuantConnect.Algorithm.CSharp
         protected override void TestFiltering(OptionChain chain)
         {
             var count = chain.Count();
-            if (count != _expectedCount)
+            if (count != ExpectedCount)
             {
-                throw new Exception($"Number of contract returned does not match expectation, {count}, {_expectedCount}");
+                throw new RegressionTestException($"Number of contract returned does not match expectation, {count}, {ExpectedCount}");
             }
 
             var right = OptionRight.Call;
@@ -67,10 +67,10 @@ namespace QuantConnect.Algorithm.CSharp
             );
             if (otmContract == null || atmContract == null || itmContract == null)
             {
-                throw new Exception($"No contract returned match condition");
+                throw new RegressionTestException($"No contract returned match condition");
             }
 
-            var strategy = OptionStrategies.CallButterfly(_optionSymbol, otmStrike, atmStrike, itmStrike, expiry);
+            var strategy = OptionStrategies.CallButterfly(OptionSymbol, otmStrike, atmStrike, itmStrike, expiry);
             Buy(strategy, 1);
 
             /* we can obtain the same result from market orders

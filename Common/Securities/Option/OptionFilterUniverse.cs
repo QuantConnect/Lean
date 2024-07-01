@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Logging;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
@@ -253,18 +252,18 @@ namespace QuantConnect.Securities
         private OptionFilterUniverse SingleContract(OptionRight right, int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
         {
             // Select the expiry as the nearest to set days later
-            var expiry = GetExpiry(AllSymbols, minDaysTillExpiry);
-            var contracts = AllSymbols.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right).ToList();
+            var contractsForExpiry = GetContractsForExpiry(AllSymbols, minDaysTillExpiry);
+            var contracts = contractsForExpiry.Where(x => x.ID.OptionRight == right).ToList();
             if (contracts.Count == 0)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
 
             // Select strike price
             var strike = GetStrike(contracts, strikeFromAtm);
             var selected = contracts.Single(x => x.ID.StrikePrice == strike);
 
-            return this.WhereContains(new List<Symbol> { selected });
+            return SymbolList(new List<Symbol> { selected });
         }
 
         /// <summary>
@@ -307,27 +306,26 @@ namespace QuantConnect.Securities
             }
 
             // Select the expiry as the nearest to set days later
-            var expiry = GetExpiry(AllSymbols, minDaysTillExpiry);
-            var contracts = AllSymbols.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right).ToList();
+            var contractsForExpiry = GetContractsForExpiry(AllSymbols, minDaysTillExpiry);
+            var contracts = contractsForExpiry.Where(x => x.ID.OptionRight == right).ToList();
             if (contracts.Count == 0)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
 
             // Select the strike prices with the set spread range
             var lowerStrike = GetStrike(contracts, (decimal)lowerStrikeFromAtm);
             var lowerStrikeContract = contracts.Single(x => x.ID.StrikePrice == lowerStrike);
             var higherStrikeContracts = contracts.Where(x => x.ID.StrikePrice > lowerStrike).ToList();
-            
             if (higherStrikeContracts.Count == 0)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
 
             var higherStrike = GetStrike(higherStrikeContracts, higherStrikeFromAtm);
             var higherStrikeContract = higherStrikeContracts.Single(x => x.ID.StrikePrice == higherStrike);
 
-            return this.WhereContains(new List<Symbol> { lowerStrikeContract, higherStrikeContract });
+            return SymbolList(new List<Symbol> { lowerStrikeContract, higherStrikeContract });
         }
 
         /// <summary>
@@ -368,25 +366,26 @@ namespace QuantConnect.Securities
             {
                 throw new ArgumentException("CalendarSpread(): near expiry argument must be positive.");
             }
-            
+
             // Select the set strike
             var strike = GetStrike(AllSymbols, strikeFromAtm);
             var contracts = AllSymbols.Where(x => x.ID.StrikePrice == strike && x.ID.OptionRight == right).ToList();
 
             // Select the expiries
-            var nearExpiry = GetExpiry(contracts, minNearDaysTillExpiry);
-            var nearExpiryContract = contracts.SingleOrDefault(x => x.ID.Date == nearExpiry);
-
-            var furtherContracts = contracts.Where(x => x.ID.Date > nearExpiry).ToList();
-            var farExpiry = GetExpiry(furtherContracts, minFarDaysTillExpiry);
-            var farExpiryContract = furtherContracts.SingleOrDefault(x => x.ID.Date == farExpiry);
-
-            if (nearExpiryContract == null || farExpiryContract == null)
+            var nearExpiryContract = GetContractsForExpiry(contracts, minNearDaysTillExpiry).SingleOrDefault();
+            if (nearExpiryContract == null)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
 
-            return this.WhereContains(new List<Symbol> { nearExpiryContract, farExpiryContract });
+            var furtherContracts = contracts.Where(x => x.ID.Date > nearExpiryContract.ID.Date).ToList();
+            var farExpiryContract = GetContractsForExpiry(furtherContracts, minFarDaysTillExpiry).SingleOrDefault();
+            if (farExpiryContract == null)
+            {
+                return Empty();
+            }
+
+            return SymbolList(new List<Symbol> { nearExpiryContract, farExpiryContract });
         }
 
         /// <summary>
@@ -445,7 +444,7 @@ namespace QuantConnect.Securities
             var putStrike = filtered.Single(x => x.ID.OptionRight == OptionRight.Put).ID.StrikePrice;
             if (callStrike <= putStrike)
             {
-                return filtered.WhereContains( new List<Symbol> () );
+                return Empty();
             }
 
             return filtered;
@@ -466,12 +465,11 @@ namespace QuantConnect.Securities
         private OptionFilterUniverse CallPutSpread(int minDaysTillExpiry, decimal callStrikeFromAtm, decimal putStrikeFromAtm, bool otm = false)
         {
             // Select the expiry as the nearest to set days later
-            var expiry = GetExpiry(AllSymbols, minDaysTillExpiry);
-            var contracts = AllSymbols.Where(x => x.ID.Date == expiry).ToList();
+            var contracts = GetContractsForExpiry(AllSymbols, minDaysTillExpiry).ToList();
 
             var calls = contracts.Where(x => x.ID.OptionRight == OptionRight.Call).ToList();
             var puts = contracts.Where(x => x.ID.OptionRight == OptionRight.Put).ToList();
-            
+
             if (otm)
             {
                 calls = calls.Where(x => x.ID.StrikePrice > Underlying.Price).ToList();
@@ -480,7 +478,7 @@ namespace QuantConnect.Securities
 
             if (calls.Count == 0 || puts.Count == 0)
             {
-                return this.WhereContains( new List<Symbol> () );
+                return Empty();
             }
 
             // Select the strike prices with the set spread range
@@ -490,7 +488,7 @@ namespace QuantConnect.Securities
             var put = puts.Single(x => x.ID.StrikePrice == putStrike);
 
             // Select the contracts
-            return this.WhereContains( new List<Symbol> { call, put } );
+            return SymbolList(new List<Symbol> { call, put });
         }
 
         /// <summary>
@@ -525,11 +523,11 @@ namespace QuantConnect.Securities
             }
 
             // Select the expiry as the nearest to set days later
-            var expiry = GetExpiry(AllSymbols, minDaysTillExpiry);
-            var contracts = AllSymbols.Where(x => x.ID.Date == expiry && x.ID.OptionRight == right).ToList();
+            var contractsForExpiry = GetContractsForExpiry(AllSymbols, minDaysTillExpiry);
+            var contracts = contractsForExpiry.Where(x => x.ID.OptionRight == right).ToList();
             if (contracts.Count == 0)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
 
             // Select the strike prices with the set spread range
@@ -543,11 +541,11 @@ namespace QuantConnect.Securities
 
             // Select the contracts
             var filtered = this.Where(x =>
-                x.ID.Date == expiry && x.ID.OptionRight == right &&
+                x.ID.Date == contracts[0].ID.Date && x.ID.OptionRight == right &&
                 (x.ID.StrikePrice == atmStrike || x.ID.StrikePrice == lowerStrike || x.ID.StrikePrice == upperStrike));
             if (filtered.Count() != 3)
             {
-                return this.WhereContains( new List<Symbol> () );
+                return Empty();
             }
             return filtered;
         }
@@ -567,14 +565,13 @@ namespace QuantConnect.Securities
             }
 
             // Select the expiry as the nearest to set days later
-            var expiry = GetExpiry(AllSymbols, minDaysTillExpiry);
-            var contracts = AllSymbols.Where(x => x.ID.Date == expiry).ToList();
+            var contracts = GetContractsForExpiry(AllSymbols, minDaysTillExpiry).ToList();
             var calls = contracts.Where(x => x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice > Underlying.Price).ToList();
             var puts = contracts.Where(x => x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice < Underlying.Price).ToList();
 
             if (calls.Count == 0 || puts.Count == 0)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
 
             // Select the strike prices with the set spread range
@@ -587,14 +584,14 @@ namespace QuantConnect.Securities
             }
 
             var filtered = this.Where(x =>
-                x.ID.Date == expiry && (
+                x.ID.Date == contracts[0].ID.Date && (
                 x.ID.StrikePrice == atmStrike ||
                 (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == otmCallStrike) ||
                 (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == otmPutStrike)
             ));
             if (filtered.Count() != 4)
             {
-                return this.WhereContains( new List<Symbol> () );
+                return Empty();
             }
             return filtered;
         }
@@ -623,16 +620,15 @@ namespace QuantConnect.Securities
             }
 
             // Select the expiry as the nearest to set days later
-            var expiry = GetExpiry(AllSymbols, minDaysTillExpiry);
-            var contracts = AllSymbols.Where(x => x.ID.Date == expiry).ToList();
+            var contracts = GetContractsForExpiry(AllSymbols, minDaysTillExpiry).ToList();
             var calls = contracts.Where(x => x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice > Underlying.Price).ToList();
             var puts = contracts.Where(x => x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice < Underlying.Price).ToList();
 
             if (calls.Count == 0 || puts.Count == 0)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
-            
+
             // Select the strike prices with the set spread range
             var nearCallStrike = GetStrike(calls, nearStrikeSpread);
             var nearPutStrike = GetStrike(puts, -nearStrikeSpread);
@@ -645,7 +641,7 @@ namespace QuantConnect.Securities
 
             // Select the contracts
             var filtered = this.Where(x =>
-                x.ID.Date == expiry && (
+                x.ID.Date == contracts[0].ID.Date && (
                 (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == nearCallStrike) ||
                 (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == nearPutStrike) ||
                 (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == farCallStrike) ||
@@ -653,7 +649,7 @@ namespace QuantConnect.Securities
             ));
             if (filtered.Count() != 4)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
             return filtered;
         }
@@ -674,11 +670,10 @@ namespace QuantConnect.Securities
             }
 
             // Select the expiry as the nearest to set days later
-            var expiry = GetExpiry(AllSymbols, minDaysTillExpiry);
-            var contracts = AllSymbols.Where(x => x.ID.Date == expiry).ToList();
+            var contracts = GetContractsForExpiry(AllSymbols, minDaysTillExpiry).ToList();
             if (contracts.Count == 0)
             {
-                return this.WhereContains( new List<Symbol>() );
+                return Empty();
             }
 
             // Select the strike prices with the set spread range
@@ -686,32 +681,57 @@ namespace QuantConnect.Securities
             var lowerStrike = GetStrike(contracts.Where(x => x.ID.StrikePrice < higherStrike && x.ID.StrikePrice < Underlying.Price), -strikeSpread);
 
             // Select the contracts
-            var filtered = this.Where(x => 
+            var filtered = this.Where(x =>
                 (x.ID.StrikePrice == higherStrike || x.ID.StrikePrice == lowerStrike) &&
-                x.ID.Date == expiry);
+                x.ID.Date == contracts[0].ID.Date);
             if (filtered.Count() != 4)
             {
-                return this.WhereContains(new List<Symbol>());
+                return Empty();
             }
             return filtered;
         }
 
-        private DateTime GetExpiry(IEnumerable<Symbol> symbols, int minDaysTillExpiry)
+        /// <summary>
+        /// Will provide all contracts that respect a specific expiration filter
+        /// </summary>
+        /// <param name="symbols">Symbols source to use</param>
+        /// <param name="minDaysTillExpiry">The desired minimum days till expiry</param>
+        /// <returns>All symbols that respect a single expiration date</returns>
+        private IEnumerable<Symbol> GetContractsForExpiry(IEnumerable<Symbol> symbols, int minDaysTillExpiry)
         {
             var leastExpiryAccepted = _lastExchangeDate.AddDays(minDaysTillExpiry);
-            return symbols.Select(x => x.ID.Date)
-                .Where(x => x >= leastExpiryAccepted)
-                .OrderBy(x => x)
-                .FirstOrDefault(DateTime.MaxValue);
+            return symbols.Where(x => x.ID.Date >= leastExpiryAccepted)
+                .GroupBy(x => x.ID.Date)
+                .OrderBy(x => x.Key)
+                .FirstOrDefault()
+                // let's order the symbols too, to guarantee determinism
+                ?.OrderBy(x => x.ID) ?? Enumerable.Empty<Symbol>();
+        }
+
+        /// <summary>
+        /// Helper method that will select no contract
+        /// </summary>
+        private OptionFilterUniverse Empty()
+        {
+            AllSymbols = Enumerable.Empty<Symbol>();
+            return this;
+        }
+
+        /// <summary>
+        /// Helper method that will select the given contract list
+        /// </summary>
+        private OptionFilterUniverse SymbolList(List<Symbol> contracts)
+        {
+            AllSymbols = contracts;
+            return this;
         }
 
         private decimal GetStrike(IEnumerable<Symbol> symbols, decimal strikeFromAtm)
         {
-            if (!symbols.Any())
-            {
-                return decimal.MaxValue;
-            }
-            return symbols.OrderBy(x => Math.Abs(Underlying.Price + strikeFromAtm - x.ID.StrikePrice)).First().ID.StrikePrice;
+            return symbols.OrderBy(x => Math.Abs(Underlying.Price + strikeFromAtm - x.ID.StrikePrice))
+                .Select(x => x.ID.StrikePrice)
+                .DefaultIfEmpty(decimal.MaxValue)
+                .First();
         }
     }
 
