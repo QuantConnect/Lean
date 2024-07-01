@@ -3037,6 +3037,12 @@ namespace QuantConnect.Securities.Future
                     var market = Market.COMEX;
                     var symbol = Futures.Metals.MicroGold;
                     var holidays = FuturesExpiryUtilityFunctions.GetHolidays(market, symbol);
+                    // Four bi-monthly contracts (Feb/2, Apr/4, Jun/6, Aug/8, Oct/10, Dec/12 cycle)
+                    while (!FutureExpirationCycles.GJMQVZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
                     // Monthly contracts
                     // Trading terminates on the third last business day of the contract month.
                     var lastBusinessDay = FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 3, holidays);
