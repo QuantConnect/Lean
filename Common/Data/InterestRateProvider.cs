@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -55,10 +54,7 @@ namespace QuantConnect.Data
 
                 lock (_lock)
                 {
-                    if (_riskFreeRateProvider == null)
-                    {
-                        LoadInterestRateProvider();
-                    }
+                    _riskFreeRateProvider ??= GetInterestRateProvider();
                     return _riskFreeRateProvider;
                 }
             }
@@ -84,25 +80,27 @@ namespace QuantConnect.Data
         /// <summary>
         /// Generate the daily historical US primary credit rate
         /// </summary>
-        protected void LoadInterestRateProvider()
+        protected static Dictionary<DateTime, decimal> GetInterestRateProvider()
         {
             var directory = Path.Combine(Globals.DataFolder, "alternative", "interest-rate", "usa",
                 "interest-rate.csv");
-            _riskFreeRateProvider = FromCsvFile(directory, out var previousInterestRate);
+            var riskFreeRateProvider = FromCsvFile(directory, out var previousInterestRate);
 
             _lastInterestRateDate = DateTime.UtcNow.Date;
 
             // Sparse the discrete data points into continuous credit rate data for every day
             for (var date = _firstInterestRateDate; date <= _lastInterestRateDate; date = date.AddDays(1))
             {
-                if (!_riskFreeRateProvider.TryGetValue(date, out var currentRate))
+                if (!riskFreeRateProvider.TryGetValue(date, out var currentRate))
                 {
-                    _riskFreeRateProvider[date] = previousInterestRate;
+                    riskFreeRateProvider[date] = previousInterestRate;
                     continue;
                 }
 
                 previousInterestRate = currentRate;
             }
+
+            return riskFreeRateProvider;
         }
 
         /// <summary>
