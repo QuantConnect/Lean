@@ -27,22 +27,22 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Runtime error message from the exception
         /// </summary>
-        public string Message;
+        public string Message { get; set; }
 
         /// <summary>
         /// Algorithm id which generated this runtime error
         /// </summary>
-        public string AlgorithmId;
+        public string AlgorithmId { get; set; }
 
         /// <summary>
         /// Error stack trace information string passed through from the Lean exception
         /// </summary>
-        public string StackTrace;
+        public string StackTrace { get; set; }
 
         /// <summary>
         /// User Id associated with the backtest that threw the error
         /// </summary>
-        public int UserId = 0;
+        public int UserId { get; set; }
 
         /// <summary>
         /// Default constructor for JSON

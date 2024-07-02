@@ -28,47 +28,47 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Deploy Id for this live algorithm.
         /// </summary>
-        public string DeployId = "";
+        public string DeployId { get; set; } = "";
 
         /// <summary>
         /// String name of the brokerage we're trading with
         /// </summary>
-        public string Brokerage = "";
+        public string Brokerage { get; set; } = "";
 
         /// <summary>
         /// String-String Dictionary of Brokerage Data for this Live Job
         /// </summary>
-        public Dictionary<string, string> BrokerageData = new Dictionary<string, string>();
+        public Dictionary<string, string> BrokerageData { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// String name of the DataQueueHandler or LiveDataProvider we're running with
         /// </summary>
-        public string DataQueueHandler = "";
+        public string DataQueueHandler { get; set; } = "";
 
         /// <summary>
         /// String name of the DataChannelProvider we're running with
         /// </summary>
-        public string DataChannelProvider = "";
+        public string DataChannelProvider { get; set; } = "";
 
         /// <summary>
         /// Gets flag indicating whether or not the message should be acknowledged and removed from the queue
         /// </summary>
-        public bool DisableAcknowledgement;
+        public bool DisableAcknowledgement { get; set; }
 
         /// <summary>
         /// A list of event types to generate notifications for, which will use <see cref="NotificationTargets"/>
         /// </summary>
-        public HashSet<string> NotificationEvents;
+        public HashSet<string> NotificationEvents { get; set; }
 
         /// <summary>
         /// A list of notification targets to use
         /// </summary>
-        public List<Notification> NotificationTargets;
+        public List<Notification> NotificationTargets { get; set; }
 
         /// <summary>
         /// List of real time data types available in the live trading environment
         /// </summary>
-        public HashSet<string> LiveDataTypes;
+        public HashSet<string> LiveDataTypes { get; set; }
 
         /// <summary>
         /// Algorithm running mode.

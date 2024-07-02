@@ -38,7 +38,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The percentage used to determine the required unused buying power for the account.
         /// </summary>
-        protected decimal RequiredFreeBuyingPowerPercent;
+        protected decimal RequiredFreeBuyingPowerPercent { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BuyingPowerModel"/> with no leverage (1x)

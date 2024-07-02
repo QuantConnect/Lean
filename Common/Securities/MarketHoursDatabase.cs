@@ -342,11 +342,11 @@ namespace QuantConnect.Securities
             /// <summary>
             /// Gets the raw data time zone for this entry
             /// </summary>
-            public readonly DateTimeZone DataTimeZone;
+            public DateTimeZone DataTimeZone { get; set; }
             /// <summary>
             /// Gets the exchange hours for this entry
             /// </summary>
-            public readonly SecurityExchangeHours ExchangeHours;
+            public SecurityExchangeHours ExchangeHours { get; set; }
             /// <summary>
             /// Initializes a new instance of the <see cref="Entry"/> class
             /// </summary>

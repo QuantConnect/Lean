@@ -96,12 +96,12 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Calendar Start
         /// </summary>
-        public readonly DateTime Start;
+        public DateTime Start { get; init; }
 
         /// <summary>
         /// Consolidation Period
         /// </summary>
-        public readonly TimeSpan Period;
+        public TimeSpan Period { get; init; }
 
         /// <summary>
         /// Calendar End

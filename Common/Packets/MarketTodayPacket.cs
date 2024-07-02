@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -34,25 +34,25 @@ namespace QuantConnect.Packets
         /// Given the dates and times above, what is the current market status - open or closed.
         /// </summary>
         [JsonProperty(PropertyName = "status")]
-        public string Status = "";
+        public string Status { get; set; } = "";
 
         /// <summary>
         /// Premarket hours for today
         /// </summary>
         [JsonProperty(PropertyName = "premarket")]
-        public MarketHours PreMarket;
+        public MarketHours PreMarket { get; set; }
 
         /// <summary>
         /// Normal trading market hours for today
         /// </summary>
         [JsonProperty(PropertyName = "open")]
-        public MarketHours Open;
+        public MarketHours Open { get; set; }
 
         /// <summary>
         /// Post market hours for today
         /// </summary>
         [JsonProperty(PropertyName = "postmarket")]
-        public MarketHours PostMarket;
+        public MarketHours PostMarket { get; set; }
 
         /// <summary>
         /// Default constructor (required for JSON serialization)
@@ -70,13 +70,13 @@ namespace QuantConnect.Packets
         /// Start time for this market hour category
         /// </summary>
         [JsonProperty(PropertyName = "start")]
-        public DateTime Start;
+        public DateTime Start { get; set; }
 
         /// <summary>
         /// End time for this market hour category
         /// </summary>
         [JsonProperty(PropertyName = "end")]
-        public DateTime End;
+        public DateTime End { get; set; }
 
         /// <summary>
         /// Market hours initializer given an hours since midnight measure for the market hours today

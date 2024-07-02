@@ -28,37 +28,37 @@ namespace QuantConnect.Packets
         /// Current algorithm status
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))]
-        public AlgorithmStatus Status;
+        public AlgorithmStatus Status { get; set; }
 
         /// <summary>
         /// Chart we're subscribed to for live trading.
         /// </summary>
-        public string ChartSubscription;
+        public string ChartSubscription { get; set; }
 
         /// <summary>
         /// Optional message or reason for state change.
         /// </summary>
-        public string Message;
+        public string Message { get; set; }
 
         /// <summary>
         /// Algorithm Id associated with this status packet
         /// </summary>
-        public string AlgorithmId;
+        public string AlgorithmId { get; set; }
 
         /// <summary>
         /// OptimizationId for this result packet if any
         /// </summary>
-        public string OptimizationId;
+        public string OptimizationId { get; set; }
 
         /// <summary>
         /// Project Id associated with this status packet
         /// </summary>
-        public int ProjectId;
+        public int ProjectId { get; set; }
 
         /// <summary>
         /// The current state of the channel
         /// </summary>
-        public string ChannelStatus;
+        public string ChannelStatus { get; set; }
 
         /// <summary>
         /// Default constructor for JSON

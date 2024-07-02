@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Packets
+
 {
     /// <summary>
     /// Specifies values used to control algorithm limits
@@ -28,57 +29,57 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The maximum runtime in minutes
         /// </summary>
-        public int MaximumRuntimeMinutes;
+        public int MaximumRuntimeMinutes { get; set; }
 
         /// <summary>
         /// The maximum number of minute symbols
         /// </summary>
-        public int MinuteLimit;
+        public int MinuteLimit { get; set; }
 
         /// <summary>
         /// The maximum number of second symbols
         /// </summary>
-        public int SecondLimit;
+        public int SecondLimit { get; set; }
 
         /// <summary>
         /// The maximum number of tick symbol
         /// </summary>
-        public int TickLimit;
+        public int TickLimit { get; set; }
 
         /// <summary>
         /// Ram allocation for this algorithm in MB
         /// </summary>
-        public int RamAllocation;
+        public int RamAllocation { get; set; }
 
         /// <summary>
         /// CPU allocation for this algorithm
         /// </summary>
-        public decimal CpuAllocation;
+        public decimal CpuAllocation {  get; set; }
 
         /// <summary>
         /// The user live log limit
         /// </summary>
-        public int LiveLogLimit;
+        public int LiveLogLimit { get; set; }
 
         /// <summary>
         /// The user backtesting log limit
         /// </summary>
-        public int BacktestLogLimit;
+        public int BacktestLogLimit { get; set; }
 
         /// <summary>
         /// The daily log limit of a user
         /// </summary>
-        public int DailyLogLimit;
+        public int DailyLogLimit { get; set; }
 
         /// <summary>
         /// The remaining log allowance for a user
         /// </summary>
-        public int RemainingLogAllowance;
+        public int RemainingLogAllowance { get; set; }
 
         /// <summary>
         /// Maximimum number of insights we'll store and score in a single backtest
         /// </summary>
-        public int BacktestingMaxInsights;
+        public int BacktestingMaxInsights { get; set; }
 
         /// <summary>
         /// Maximimum number of orders we'll allow in a backtest.
@@ -88,49 +89,49 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Limits the amount of data points per chart series. Applies only for backtesting
         /// </summary>
-        public int MaximumDataPointsPerChartSeries;
+        public int MaximumDataPointsPerChartSeries { get; set; }
 
         /// <summary>
         /// Limits the amount of chart series. Applies only for backtesting
         /// </summary>
-        public int MaximumChartSeries;
+        public int MaximumChartSeries { get; set; }
 
         /// <summary>
         /// The amount seconds used for timeout limits
         /// </summary>
-        public int SecondTimeOut;
+        public int SecondTimeOut { get; set; }
 
         /// <summary>
         /// Sets parameters used for determining the behavior of the leaky bucket algorithm that
         /// controls how much time is available for an algorithm to use the training feature.
         /// </summary>
-        public LeakyBucketControlParameters TrainingLimits;
+        public LeakyBucketControlParameters TrainingLimits { get; set; }
 
         /// <summary>
         /// Limits the total size of storage used by <see cref="IObjectStore"/>
         /// </summary>
-        public long StorageLimit;
+        public long StorageLimit { get; set; }
 
         /// <summary>
         /// Limits the number of files to be held under the <see cref="IObjectStore"/>
         /// </summary>
-        public int StorageFileCount;
+        public int StorageFileCount { get; set; }
 
         /// <summary>
         /// Holds the permissions for the object store
         /// </summary>
-        public FileAccess StoragePermissions;
+        public FileAccess StoragePermissions { get; set; }
 
         /// <summary>
         /// The interval over which the <see cref="IObjectStore"/> will persistence the contents of
         /// the object store
         /// </summary>
-        public int PersistenceIntervalSeconds;
+        public int PersistenceIntervalSeconds { get; set; }
 
         /// <summary>
         /// The cost associated with running this job
         /// </summary>
-        public decimal CreditCost;
+        public decimal CreditCost { get; set; }
 
         /// <summary>
         /// Initializes a new default instance of the <see cref="Controls"/> class

@@ -32,37 +32,37 @@ namespace QuantConnect.Packets
         /// <summary>
         /// User Id sending result packet
         /// </summary>
-        public int UserId = 0;
+        public int UserId { get; set; }
 
         /// <summary>
         /// Project Id of the result packet
         /// </summary>
-        public int ProjectId = 0;
+        public int ProjectId { get; set; }
 
         /// <summary>
         /// User session Id who issued the result packet
         /// </summary>
-        public string SessionId = "";
+        public string SessionId { get; set; } = "";
 
         /// <summary>
         /// Live Algorithm Id (DeployId) for this result packet
         /// </summary>
-        public string DeployId = "";
+        public string DeployId { get; set; } = "";
 
         /// <summary>
         /// Compile Id algorithm which generated this result packet
         /// </summary>
-        public string CompileId = "";
+        public string CompileId { get; set; } = "";
 
         /// <summary>
         /// Result data object for this result packet
         /// </summary>
-        public LiveResult Results = new LiveResult();
+        public LiveResult Results { get; set; } = new LiveResult();
 
         /// <summary>
         /// Processing time / running time for the live algorithm.
         /// </summary>
-        public double ProcessingTime = 0;
+        public double ProcessingTime { get; set; }
 
         /// <summary>
         /// Default constructor for JSON Serialization
@@ -147,7 +147,7 @@ namespace QuantConnect.Packets
         /// Holdings dictionary of algorithm holdings information
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, Holding> Holdings;
+        public IDictionary<string, Holding> Holdings { get; set; }
 
         /// <summary>
         /// Cashbook for the algorithm's live results.
@@ -173,19 +173,19 @@ namespace QuantConnect.Packets
         /// Cash for the algorithm's live results.
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public Dictionary<string, Cash> Cash;
+        public Dictionary<string, Cash> Cash { get; set; }
 
         /// <summary>
         /// The algorithm's account currency
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string AccountCurrency;
+        public string AccountCurrency { get; set; }
 
         /// <summary>
         /// The algorithm's account currency
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string AccountCurrencySymbol;
+        public string AccountCurrencySymbol { get; set; }
 
         /// <summary>
         /// Default Constructor

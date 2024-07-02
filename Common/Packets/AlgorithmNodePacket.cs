@@ -36,28 +36,28 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The host name to use if any
         /// </summary>
-        public string HostName;
+        public string HostName { get; set; }
 
         /// <summary>
         /// User Id placing request
         /// </summary>
-        public int UserId = 0;
+        public int UserId { get; set; }
 
         /// User API Token
-        public string UserToken = "";
+        public string UserToken { get; set; } = "";
 
         /// User Organization Id
-        public string OrganizationId = "";
+        public string OrganizationId { get; set; } = "";
 
         /// <summary>
         /// Project Id of the request
         /// </summary>
-        public int ProjectId = 0;
+        public int ProjectId { get; set; }
 
         /// <summary>
         /// Project name of the request
         /// </summary>
-        public string ProjectName;
+        public string ProjectName { get; set; }
 
         /// <summary>
         /// Algorithm Id - BacktestId or DeployId - Common Id property between packets.
@@ -77,43 +77,43 @@ namespace QuantConnect.Packets
         /// <summary>
         /// User session Id for authentication
         /// </summary>
-        public string SessionId = "";
+        public string SessionId { get; set; } = "";
 
         /// <summary>
         /// Language flag: Currently represents IL code or Dynamic Scripted Types.
         /// </summary>
-        public Language Language = Language.CSharp;
+        public Language Language { get; set; } = Language.CSharp;
 
         /// <summary>
         /// Server type for the deployment (512, 1024, 2048)
         /// </summary>
-        public ServerType ServerType = ServerType.Server512;
+        public ServerType ServerType { get; set; } = ServerType.Server512;
 
         /// <summary>
         /// Unique compile id of this backtest
         /// </summary>
-        public string CompileId = "";
+        public string CompileId { get; set; } = "";
 
         /// <summary>
         /// Version number identifier for the lean engine.
         /// </summary>
-        public string Version;
+        public string Version { get; set; }
 
         /// <summary>
         /// An algorithm packet which has already been run and is being redelivered on this node.
         /// In this event we don't want to relaunch the task as it may result in unexpected behaviour for user.
         /// </summary>
-        public bool Redelivered = false;
+        public bool Redelivered { get; set; }
 
         /// <summary>
         /// Algorithm binary with zip of contents
         /// </summary>
-        public byte[] Algorithm = new byte[] { };
+        public byte[] Algorithm { get; set; }
 
         /// <summary>
         /// Request source - Web IDE or API - for controling result handler behaviour
         /// </summary>
-        public string RequestSource = "WebIDE";
+        public string RequestSource { get; set; } = "WebIDE";
 
         /// <summary>
         /// The maximum amount of RAM (in MB) this algorithm is allowed to utilize
@@ -125,17 +125,17 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Specifies values to control algorithm limits
         /// </summary>
-        public Controls Controls;
+        public Controls Controls { get; set; }
 
         /// <summary>
         /// The parameter values used to set algorithm parameters
         /// </summary>
-        public Dictionary<string, string> Parameters = new Dictionary<string, string>();
+        public Dictionary<string, string> Parameters { get; init; }
 
         /// <summary>
         /// String name of the HistoryProvider we're running with
         /// </summary>
-        public string HistoryProvider = "";
+        public string HistoryProvider { get; set; } = "";
 
         /// <summary>
         /// Algorithm running mode.
@@ -147,7 +147,7 @@ namespace QuantConnect.Packets
         /// Deployment target, either local or cloud.
         /// </summary>
         [JsonIgnore]
-        public DeploymentTarget DeploymentTarget;
+        public DeploymentTarget DeploymentTarget { get; set; }
 
         /// <summary>
         /// Gets a unique name for the algorithm defined by this packet

@@ -34,7 +34,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// The decorated universe instance
         /// </summary>
-        protected readonly Universe Universe;
+        protected Universe Universe { get; init; }
 
         /// <summary>
         /// Gets the settings used for subscriptions added for this universe

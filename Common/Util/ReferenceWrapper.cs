@@ -27,7 +27,7 @@ namespace QuantConnect.Util
         /// <summary>
         /// The current value
         /// </summary>
-        public readonly T Value;
+        public T Value { get; init; }
 
         /// <summary>
         /// Creates a new instance

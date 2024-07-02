@@ -47,12 +47,12 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Local access to the securities collection for the portfolio summation.
         /// </summary>
-        public SecurityManager Securities;
+        public SecurityManager Securities { get; init; }
 
         /// <summary>
         /// Local access to the transactions collection for the portfolio summation and updates.
         /// </summary>
-        public SecurityTransactionManager Transactions;
+        public SecurityTransactionManager Transactions { get; init; }
 
         /// <summary>
         /// Local access to the position manager

@@ -40,13 +40,13 @@ namespace QuantConnect.Data.Market
         /// Type of the Tick: Trade or Quote.
         /// </summary>
         [ProtoMember(10)]
-        public TickType TickType = TickType.Trade;
+        public TickType TickType { get; set; } = TickType.Trade;
 
         /// <summary>
         /// Quantity exchanged in a trade.
         /// </summary>
         [ProtoMember(11)]
-        public decimal Quantity = 0;
+        public decimal Quantity { get; set; } = 0;
 
         /// <summary>
         /// Exchange code this tick came from <see cref="Exchanges"/>
@@ -94,7 +94,7 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// Sale condition for the tick.
         /// </summary>
-        public string SaleCondition = "";
+        public string SaleCondition { get; set; } = "";
 
         /// <summary>
         /// For performance parsed sale condition for the tick.
@@ -125,19 +125,19 @@ namespace QuantConnect.Data.Market
         /// Bool whether this is a suspicious tick
         /// </summary>
         [ProtoMember(14)]
-        public bool Suspicious = false;
+        public bool Suspicious { get; set; } = false;
 
         /// <summary>
         /// Bid Price for Tick
         /// </summary>
         [ProtoMember(15)]
-        public decimal BidPrice = 0;
+        public decimal BidPrice { get; set; } = 0;
 
         /// <summary>
         /// Asking price for the Tick quote.
         /// </summary>
         [ProtoMember(16)]
-        public decimal AskPrice = 0;
+        public decimal AskPrice { get; set; } = 0;
 
         /// <summary>
         /// Alias for "Value" - the last sale for this asset.
@@ -154,13 +154,13 @@ namespace QuantConnect.Data.Market
         /// Size of bid quote.
         /// </summary>
         [ProtoMember(17)]
-        public decimal BidSize = 0;
+        public decimal BidSize { get; set; } = 0;
 
         /// <summary>
         /// Size of ask quote.
         /// </summary>
         [ProtoMember(18)]
-        public decimal AskSize = 0;
+        public decimal AskSize { get; set; } = 0;
 
         //In Base Class: Alias of Closing:
         //public decimal Price;

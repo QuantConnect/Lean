@@ -20,6 +20,7 @@ using QuantConnect.Orders;
 namespace QuantConnect.Packets
 {
     /// <summary>
+    /// 
     /// Order event packet for passing updates on the state of an order to the portfolio. 
     /// </summary>
     /// <remarks>As an order is updated in pieces/partial fills the order fill price is passed back to the Algorithm Portfolio method</remarks>
@@ -28,12 +29,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Order event object
         /// </summary>
-        public OrderEvent Event;
+        public OrderEvent Event { get; set; }
 
         /// <summary>
         /// Algorithm id for this order event
         /// </summary>
-        public string AlgorithmId;
+        public string AlgorithmId { get; set; }
 
         /// <summary>
         /// Default constructor for JSON

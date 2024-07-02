@@ -47,18 +47,18 @@ namespace QuantConnect.Notifications
         /// Optional email headers
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, string> Headers;
+        public Dictionary<string, string> Headers { get; }
 
         /// <summary>
         /// Send a notification message to this web address
         /// </summary>
-        public string Address;
+        public string Address { get; }
 
         /// <summary>
         /// Object data to send.
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public object Data;
+        public object Data { get; }
 
         /// <summary>
         /// Constructor for sending a notification SMS to a specified phone number
@@ -82,14 +82,13 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Send a notification message to this phone number
         /// </summary>
-        public string PhoneNumber;
+        public string PhoneNumber { get; }
 
         /// <summary>
         /// Message to send. Limited to 160 characters
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Message;
-
+        public string Message { get; }
         /// <summary>
         /// Constructor for sending a notification SMS to a specified phone number
         /// </summary>
@@ -111,29 +110,29 @@ namespace QuantConnect.Notifications
         /// Optional email headers
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, string> Headers;
+        public Dictionary<string, string> Headers { get; set; }
 
         /// <summary>
         /// Send to address:
         /// </summary>
-        public string Address;
+        public string Address { get; }
 
         /// <summary>
         /// Email subject
         /// </summary>
-        public string Subject;
+        public string Subject { get; }
 
         /// <summary>
         /// Message to send.
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Message;
+        public string Message { get; }
 
         /// <summary>
         /// Email Data
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Data;
+        public string Data { get; set; }
 
         /// <summary>
         /// Default constructor for sending an email notification
@@ -168,19 +167,19 @@ namespace QuantConnect.Notifications
         /// Send a notification message to this user on Telegram
         /// Can be either a personal ID or Group ID.
         /// </summary>
-        public string Id;
+        public string Id { get; }
 
         /// <summary>
         /// Message to send. Limited to 4096 characters
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Message;
+        public string Message { get; }
 
         /// <summary>
         /// Token to use
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Token;
+        public string Token { get; }
 
         /// <summary>
         /// Constructor for sending a telegram notification to a specific User ID

@@ -141,11 +141,30 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         public class CoarseFundamentalSource : CoarseFundamental
         {
-            public long VolumeSetter;
-            public double DollarVolumeSetter;
-            public decimal PriceFactorSetter = 1;
-            public decimal SplitFactorSetter = 1;
-            public bool HasFundamentalDataSetter;
+            /// <summary>
+            /// Property to set the volume of the Coarse Fundamental
+            /// </summary>
+            public long VolumeSetter { get; init; }
+
+            /// <summary>
+            /// Property to set the dollar volume of the Coarse Fundamental
+            /// </summary>
+            public double DollarVolumeSetter { get; init; }
+
+            /// <summary>
+            /// Property to set the price factor of the Coarse Fundamental
+            /// </summary>
+            public decimal PriceFactorSetter { get; set; } = 1;
+
+            /// <summary>
+            /// Property to set the split factor of the Coarse Fundamental
+            /// </summary>
+            public decimal SplitFactorSetter { get; set; } = 1;
+
+            /// <summary>
+            /// Property to indicate if the Coarse Fundamental has fundamental data
+            /// </summary>
+            public bool HasFundamentalDataSetter { get; set; }
 
             /// <summary>
             /// Gets the day's dollar volume for this symbol

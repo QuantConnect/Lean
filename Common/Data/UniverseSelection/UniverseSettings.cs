@@ -27,28 +27,28 @@ namespace QuantConnect.Data.UniverseSelection
         /// <summary>
         /// The resolution to be used
         /// </summary>
-        public Resolution Resolution;
+        public Resolution Resolution { get; set; }
 
         /// <summary>
         /// The leverage to be used
         /// </summary>
-        public decimal Leverage;
+        public decimal Leverage { get; set; }
 
         /// <summary>
         /// True to fill data forward, false otherwise
         /// </summary>
-        public bool FillForward;
+        public bool FillForward { get; set; }
 
         /// <summary>
         /// If configured, will be used to determine universe selection schedule and filter or skip selection data
         /// that does not fit the schedule
         /// </summary>
-        public Schedule Schedule;
+        public Schedule Schedule { get; set; }
 
         /// <summary>
         /// True to allow extended market hours data, false otherwise
         /// </summary>
-        public bool ExtendedMarketHours;
+        public bool ExtendedMarketHours { get; set; }
 
         /// <summary>
         /// Defines the minimum amount of time a security must be in
@@ -57,34 +57,34 @@ namespace QuantConnect.Data.UniverseSelection
         /// <remarks>When selection takes place, the actual members time in the universe
         /// will be rounded based on this TimeSpan, so that relative small differences do not
         /// cause an unexpected behavior <see cref="Universe.CanRemoveMember"/></remarks>
-        public TimeSpan MinimumTimeInUniverse;
+        public TimeSpan MinimumTimeInUniverse {  get; set; }
 
         /// <summary>
         /// Defines how universe data is normalized before being send into the algorithm
         /// </summary>
-        public DataNormalizationMode DataNormalizationMode;
+        public DataNormalizationMode DataNormalizationMode { get; set; }
 
         /// <summary>
         /// Defines how universe data is mapped together
         /// </summary>
         /// <remarks>This is particular useful when generating continuous futures</remarks>
-        public DataMappingMode DataMappingMode;
+        public DataMappingMode DataMappingMode { get; init; }
 
         /// <summary>
         /// The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contra
         /// </summary>
-        public int ContractDepthOffset;
+        public int ContractDepthOffset { get; init; }
 
         /// <summary>
         /// Allows a universe to specify which data types to add for a selected symbol
         /// </summary>
-        public List<Tuple<Type, TickType>> SubscriptionDataTypes;
+        public List<Tuple<Type, TickType>> SubscriptionDataTypes { get; init; }
 
         /// <summary>
         /// True if universe selection can run asynchronous
         /// </summary>
-        public bool? Asynchronous;
+        public bool? Asynchronous { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSettings"/> class
