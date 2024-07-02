@@ -31,11 +31,11 @@ namespace QuantConnect
         /// <summary>
         /// Name of the Chart
         /// </summary>
-        public string Name { get; } = "";
+        public string Name { get; set; } = "";
 
         /// Type of the Chart, Overlayed or Stacked.
         [Obsolete("ChartType is now obsolete. Please use Series indexes instead by setting index in the series constructor.")]
-        public ChartType ChartType { get; } = ChartType.Overlay;
+        public ChartType ChartType { get; set; } = ChartType.Overlay;
 
         /// List of Series Objects for this Chart:
         [JsonConverter(typeof(ChartSeriesJsonConverter))]

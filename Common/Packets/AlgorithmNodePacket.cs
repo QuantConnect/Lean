@@ -130,7 +130,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The parameter values used to set algorithm parameters
         /// </summary>
-        public Dictionary<string, string> Parameters { get; init; }
+        public Dictionary<string, string> Parameters { get; init; } = new Dictionary<string, string>();
 
         /// <summary>
         /// String name of the HistoryProvider we're running with

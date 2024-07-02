@@ -37,7 +37,7 @@ namespace QuantConnect
         /// <summary>
         /// List of tags associated with the algorithm
         /// </summary>
-        public ISet<string> Tags { get; }
+        public ISet<string> Tags { get; set; }
 
         /// <summary>
         /// The algorithm's account currency
