@@ -33,7 +33,6 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateFuturesConsolidationAlgorithm : QCAlgorithm
     {
         private const string RootSP500 = Futures.Indices.SP500EMini;
-        public Symbol SP500 { get; set; } = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.CME);
         private HashSet<Symbol> _futureContracts = new HashSet<Symbol>();
 
         public override void Initialize()

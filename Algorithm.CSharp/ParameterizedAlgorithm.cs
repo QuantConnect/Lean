@@ -33,13 +33,13 @@ namespace QuantConnect.Algorithm.CSharp
         // their values from the job. The values 100 and 200 are just default values that
         // are only used if the parameters do not exist.
         [Parameter("ema-fast")]
-        public int FastPeriod { get; set; } = 100;
+        private int _fastPeriod = 100;
 
         [Parameter("ema-slow")]
-        public int SlowPeriod { get; set; } = 200;
+        private int _slowPeriod = 200;
 
-        public ExponentialMovingAverage Fast { get; set; }
-        public ExponentialMovingAverage Slow { get; set; }
+        private ExponentialMovingAverage _fast;
+        private ExponentialMovingAverage _slow;
 
         public override void Initialize()
         {
@@ -49,20 +49,20 @@ namespace QuantConnect.Algorithm.CSharp
 
             AddSecurity(SecurityType.Equity, "SPY");
 
-            Fast = EMA("SPY", FastPeriod);
-            Slow = EMA("SPY", SlowPeriod);
+            _fast = EMA("SPY", _fastPeriod);
+            _slow = EMA("SPY", _slowPeriod);
         }
 
         public override void OnData(Slice data)
         {
             // wait for our indicators to ready
-            if (!Fast.IsReady || !Slow.IsReady) return;
+            if (!_fast.IsReady || !_slow.IsReady) return;
 
-            if (Fast > Slow*1.001m)
+            if (_fast > _slow*1.001m)
             {
                 SetHoldings("SPY", 1);
             }
-            else if (Fast < Slow*0.999m)
+            else if (_fast < _slow*0.999m)
             {
                 Liquidate("SPY");
             }

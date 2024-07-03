@@ -109,11 +109,11 @@ namespace QuantConnect.Tests
         public class AlgorithmStatisticsTestParameters
         {
             public string Algorithm { get; init; }
-            public Dictionary<string, string> Statistics { get; set; }
-            public Language Language { get; set; }
-            public AlgorithmStatus ExpectedFinalStatus { get; set; }
-            public long DataPoints { get; set; }
-            public int AlgorithmHistoryDataPoints { get; set; }
+            public Dictionary<string, string> Statistics { get; init; }
+            public Language Language { get; init; }
+            public AlgorithmStatus ExpectedFinalStatus { get; init; }
+            public long DataPoints { get; init; }
+            public int AlgorithmHistoryDataPoints { get; init; }
 
             public AlgorithmStatisticsTestParameters(
                 string algorithm,

@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private const string UnderlyingTicker = "SPY";
         public Symbol Underlying { get; init; } = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public Symbol OptionSymbol { get; init; } = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        private readonly Symbol _optionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
         private OptionContract _optionContract;
         private List<Delisting> _delistings = new List<Delisting>();
 
@@ -45,9 +45,9 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice slice)
         {
             OptionChain chain;
-            if (!Portfolio.Invested && IsMarketOpen(OptionSymbol))
+            if (!Portfolio.Invested && IsMarketOpen(_optionSymbol))
             {
-                if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     _optionContract = chain.FirstOrDefault(c => c.Expiry.Date == new DateTime(2014, 04, 19) && c.OpenInterest > 0);
                     if (_optionContract != null) MarketOrder(_optionContract.Symbol, 1);

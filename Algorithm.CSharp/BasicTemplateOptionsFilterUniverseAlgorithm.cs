@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateOptionsFilterUniverseAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        public Symbol OptionSymbol { get; set; }
+        private Symbol _optionSymbol;
 
         public override void Initialize()
         {
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var equity = AddEquity(UnderlyingTicker);
             var option = AddOption(UnderlyingTicker);
-            OptionSymbol = option.Symbol;
+            _optionSymbol = option.Symbol;
 
             // Set our custom universe filter, Expires today, is a call, and is within 10 dollars of the current price
             option.SetFilter(universe => from symbol in universe.WeeklysOnly().Expiration(0, 1)
@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 OptionChain chain;
-                if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     // Get the first ITM call expiring today
                     var contract = (

@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class EmaPortfolioRebalance100 : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        public List<SymbolData> Data { get; set; }
+        private List<SymbolData> _data;
 
         public override void Initialize()
         {
@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetWarmup(1000);
             SetCash(100000);
 
-            Data = new List<SymbolData> {
+            _data = new List<SymbolData> {
                 new SymbolData(this, AddEquity("AADR", Resolution.Minute).Symbol),
                 new SymbolData(this, AddEquity("AAMC", Resolution.Minute).Symbol),
                 new SymbolData(this, AddEquity("AAU", Resolution.Minute).Symbol),
@@ -143,7 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
         {
             var fastFactor = 0.005m;
 
-            foreach (var sd in Data)
+            foreach (var sd in _data)
             {
                 if (!Portfolio.Invested && sd.Fast * (1 + fastFactor) > sd.Slow)
                 {

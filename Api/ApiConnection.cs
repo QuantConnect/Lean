@@ -33,7 +33,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Authorized client to use for requests.
         /// </summary>
-        public RestClient Client { get; }
+        public RestClient Client { get; set; }
 
         // Authorization Credentials
         private readonly string _userId;
