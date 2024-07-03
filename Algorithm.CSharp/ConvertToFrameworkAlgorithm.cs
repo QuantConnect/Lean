@@ -38,8 +38,8 @@ namespace QuantConnect.Algorithm.CSharp
         private MovingAverageConvergenceDivergence _macd;
         private readonly string _symbol = "SPY";
 
-        public readonly int FastEmaPeriod = 12;
-        public readonly int SlowEmaPeriod = 26;
+        public int FastEmaPeriod { get; init; } = 12;
+        public int SlowEmaPeriod { get; init; } = 26;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.

@@ -31,28 +31,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         /// <remarks>This is useful for performance, it allows consumers to skip re enumerating the entire data
         /// list to filter any fill forward data</remarks>
-        public readonly bool? ContainsFillForwardData;
+        public bool? ContainsFillForwardData { get; init; }
 
         /// <summary>
         /// The target, such as a security or subscription data config
         /// </summary>
-        public readonly T Target;
+        public T Target { get; init; }
 
         /// <summary>
         /// The data used to update the target
         /// </summary>
-        public readonly IReadOnlyList<BaseData> Data;
+        public IReadOnlyList<BaseData> Data { get; init; }
 
         /// <summary>
         /// The type of data in the data list
         /// </summary>
-        public readonly Type DataType;
+        public Type DataType { get; init; }
 
         /// <summary>
         /// True if this update data corresponds to an internal subscription
         /// such as currency or security benchmark
         /// </summary>
-        public readonly bool IsInternalConfig;
+        public bool IsInternalConfig { get; init; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UpdateData{T}"/> class

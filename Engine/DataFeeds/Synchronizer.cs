@@ -34,22 +34,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// The algorithm instance
         /// </summary>
-        protected IAlgorithm Algorithm;
+        protected IAlgorithm Algorithm { get; set; }
 
         /// <summary>
         /// The subscription manager
         /// </summary>
-        protected IDataFeedSubscriptionManager SubscriptionManager;
+        protected IDataFeedSubscriptionManager SubscriptionManager { get; set; }
 
         /// <summary>
         /// The subscription synchronizer
         /// </summary>
-        protected SubscriptionSynchronizer SubscriptionSynchronizer;
+        protected SubscriptionSynchronizer SubscriptionSynchronizer { get; set; }
 
         /// <summary>
         /// The time slice factory
         /// </summary>
-        protected TimeSliceFactory TimeSliceFactory;
+        protected TimeSliceFactory TimeSliceFactory { get; set; }
 
         /// <summary>
         /// Continuous UTC time provider, only valid for live trading see <see cref="LiveSynchronizer"/>

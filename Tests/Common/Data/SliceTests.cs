@@ -1378,7 +1378,7 @@ def Test(slice, symbol):
 
     public class PublicArrayTest
     {
-        public int[] items;
+        public int[] items { get; set; }
 
         public PublicArrayTest()
         {

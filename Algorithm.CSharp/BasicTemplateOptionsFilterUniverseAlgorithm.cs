@@ -36,7 +36,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateOptionsFilterUniverseAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        public Symbol OptionSymbol;
+        public Symbol OptionSymbol { get; set; }
 
         public override void Initialize()
         {

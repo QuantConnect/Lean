@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class EmaPortfolioRebalance100 : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        public List<SymbolData> Data;
+        public List<SymbolData> Data { get; set; }
 
         public override void Initialize()
         {
@@ -158,9 +158,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         public class SymbolData
         {
-            public Symbol Symbol;
-            public ExponentialMovingAverage Fast;
-            public ExponentialMovingAverage Slow;
+            public Symbol Symbol { get; set; }
+            public ExponentialMovingAverage Fast { get; set; }
+            public ExponentialMovingAverage Slow { get; set; }
             public bool IsCrossed => Fast > Slow;
 
             public SymbolData(QCAlgorithm algorithm, Symbol symbol) {

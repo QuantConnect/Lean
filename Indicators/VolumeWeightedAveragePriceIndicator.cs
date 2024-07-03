@@ -33,17 +33,17 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Indentity indicator for price
         /// </summary>
-        protected readonly Identity Price;
+        protected Identity Price { get; }
 
         /// <summary>
         /// Identity indicator for volume
         /// </summary>
-        protected readonly Identity Volume;
+        protected Identity Volume { get; }
 
         /// <summary>
         /// Volume Weighted Average Price
         /// </summary>
-        protected CompositeIndicator VWAP;
+        protected CompositeIndicator VWAP { get; }
 
         /// <summary>
         /// Initializes a new instance of the VWAP class with the default name and period

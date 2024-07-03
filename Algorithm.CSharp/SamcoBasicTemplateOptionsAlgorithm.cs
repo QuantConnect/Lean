@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class SamcoBasicTemplateOptionsAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "NIFTY";
-        public Symbol OptionSymbol;
+        public Symbol OptionSymbol { get; set; }
 
         public override void Initialize()
         {

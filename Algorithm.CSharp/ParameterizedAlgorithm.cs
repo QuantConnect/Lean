@@ -33,13 +33,13 @@ namespace QuantConnect.Algorithm.CSharp
         // their values from the job. The values 100 and 200 are just default values that
         // are only used if the parameters do not exist.
         [Parameter("ema-fast")]
-        public int FastPeriod = 100;
+        public int FastPeriod { get; set; } = 100;
 
         [Parameter("ema-slow")]
-        public int SlowPeriod = 200;
+        public int SlowPeriod { get; set; } = 200;
 
-        public ExponentialMovingAverage Fast;
-        public ExponentialMovingAverage Slow;
+        public ExponentialMovingAverage Fast { get; set; }
+        public ExponentialMovingAverage Slow { get; set; }
 
         public override void Initialize()
         {

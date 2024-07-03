@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -26,7 +26,7 @@ namespace QuantConnect.Tests.Indicators
     public abstract class CommonIndicatorTests<T>
         where T : IBaseData
     {
-        protected Symbol Symbol = Symbols.SPY;
+        protected Symbol Symbol { get; set; } = Symbols.SPY;
         [Test]
         public virtual void ComparesAgainstExternalData()
         {
@@ -255,11 +255,11 @@ namespace QuantConnect.Tests.Indicators
         /// <summary>
         /// Returns the BarSize for the RenkoBar test, namely, AcceptsRenkoBarsAsInput()
         /// </summary>
-        protected decimal RenkoBarSize = 10m;
+        protected decimal RenkoBarSize { get; set; } = 10m;
 
         /// <summary>
         /// Returns the BarSize for the VolumeRenkoBar test, namely, AcceptsVolumeRenkoBarsAsInput()
         /// </summary>
-        protected decimal VolumeRenkoBarSize = 500000m;
+        protected decimal VolumeRenkoBarSize { get; set; } = 500000m;
     }
 }

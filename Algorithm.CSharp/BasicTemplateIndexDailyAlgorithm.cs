@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         // two complete weeks starting from the 5th. The 18th bar is not included since it is a holiday
         protected virtual int ExpectedBarCount => 2 * 5;
-        protected int BarCounter = 0;
+        protected int BarCounter { get; set; }
 
         /// <summary>
         /// Purchase a contract when we are not invested, liquidate otherwise

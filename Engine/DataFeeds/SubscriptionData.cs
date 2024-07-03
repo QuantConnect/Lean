@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Data
         /// </summary>
-        protected BaseData _data;
+        protected BaseData _data { get; set; }
 
         /// <summary>
         /// Gets the data

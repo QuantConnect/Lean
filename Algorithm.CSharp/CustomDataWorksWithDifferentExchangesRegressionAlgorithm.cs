@@ -127,11 +127,11 @@ namespace QuantConnect.Algorithm.CSharp
 
     public class ExampleCustomData : BaseData
     {
-        private int _hours = 0;
-        public decimal Open;
-        public decimal High;
-        public decimal Low;
-        public decimal Close;
+        private int _hours { get; set; }
+        public decimal Open { get; set; }
+        public decimal High { get; set; }
+        public decimal Low { get; set; }
+        public decimal Close { get; set; }
 
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {

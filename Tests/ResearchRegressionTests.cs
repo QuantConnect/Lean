@@ -97,10 +97,10 @@ namespace QuantConnect.Tests
 
         public class ResearchRegressionTestParameters
         {
-            public readonly string NotebookName;
-            public readonly string NotebookPath;
-            public readonly string ExpectedOutput;
-            public readonly string NotebookOutputPath;
+            public string NotebookName { get; set; }
+            public string NotebookPath { get; set; }
+            public string ExpectedOutput { get; set; }
+            public string NotebookOutputPath { get; set; }
 
             public ResearchRegressionTestParameters(string notebookName, string notebookPath, string expectedOutput)
             {

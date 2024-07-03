@@ -29,11 +29,11 @@ namespace QuantConnect.Tests.Optimizer.Strategies
 {
     public abstract class OptimizationStrategyTests
     {
-        protected IOptimizationStrategy Strategy;
-        protected static Func<ParameterSet, decimal> _profit = parameterSet => parameterSet.Value.Where(pair => pair.Key != "skipFromResultSum").Sum(arg => arg.Value.ToDecimal());
-        protected static Func<ParameterSet, decimal> _drawdown = parameterSet => parameterSet.Value.Where(pair => pair.Key != "skipFromResultSum").Sum(arg => arg.Value.ToDecimal()) / 100.0m;
-        protected static Func<string, string, decimal> _parse = (dump, parameter) => JObject.Parse(dump).SelectToken($"Statistics.{parameter}").Value<decimal>();
-        protected static Func<decimal, decimal, string> _stringify = (profit, drawdown) => BacktestResult.Create(profit, drawdown).ToJson();
+        protected IOptimizationStrategy Strategy { get; set; }
+        protected static Func<ParameterSet, decimal> _profit { get; set; } = parameterSet => parameterSet.Value.Where(pair => pair.Key != "skipFromResultSum").Sum(arg => arg.Value.ToDecimal());
+        protected static Func<ParameterSet, decimal> _drawdown { get; set; } = parameterSet => parameterSet.Value.Where(pair => pair.Key != "skipFromResultSum").Sum(arg => arg.Value.ToDecimal()) / 100.0m;
+        protected static Func<string, string, decimal> _parse { get; set; } = (dump, parameter) => JObject.Parse(dump).SelectToken($"Statistics.{parameter}").Value<decimal>();
+        protected static Func<decimal, decimal, string> _stringify { get; set; } = (profit, drawdown) => BacktestResult.Create(profit, drawdown).ToJson();
 
         private Queue<OptimizationResult> _pendingOptimizationResults;
 

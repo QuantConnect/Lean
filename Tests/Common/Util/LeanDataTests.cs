@@ -940,17 +940,17 @@ namespace QuantConnect.Tests.Common.Util
 
         public class LeanDataTestParameters
         {
-            public readonly string Name;
-            public readonly Symbol Symbol;
-            public readonly DateTime Date;
-            public readonly Resolution Resolution;
-            public readonly TickType TickType;
-            public readonly Type BaseDataType;
-            public readonly SubscriptionDataConfig Config;
-            public readonly string ExpectedZipFileName;
-            public readonly string ExpectedZipEntryName;
-            public readonly string ExpectedRelativeZipFilePath;
-            public readonly string ExpectedZipFilePath;
+            public string Name { get; init; }
+            public Symbol Symbol { get; init; }
+            public DateTime Date { get; init; }
+            public Resolution Resolution { get; init; }
+            public TickType TickType { get; init; }
+            public Type BaseDataType { get; init; }
+            public SubscriptionDataConfig Config { get; init; }
+            public string ExpectedZipFileName { get; init; }
+            public string ExpectedZipEntryName { get; init; }
+            public string ExpectedRelativeZipFilePath { get; init; }
+            public string ExpectedZipFilePath { get; init; }
             public SecurityType SecurityType { get { return Symbol.ID.SecurityType; } }
 
             public LeanDataTestParameters(Symbol symbol, DateTime date, Resolution resolution, TickType tickType, string expectedZipFileName, string expectedZipEntryName, string expectedRelativeZipFileDirectory = "")
@@ -977,13 +977,13 @@ namespace QuantConnect.Tests.Common.Util
 
         public class LeanDataLineTestParameters
         {
-            public readonly string Name;
-            public readonly BaseData Data;
-            public readonly SecurityType SecurityType;
-            public readonly Resolution Resolution;
-            public readonly string ExpectedLine;
-            public readonly SubscriptionDataConfig Config;
-            public readonly TickType TickType;
+            public string Name { get; init; }
+            public BaseData Data { get; init; }
+            public SecurityType SecurityType { get; init; }
+            public Resolution Resolution { get; init; }
+            public string ExpectedLine { get; init; }
+            public SubscriptionDataConfig Config { get; init; }
+            public TickType TickType { get; init; }
 
             public LeanDataLineTestParameters(BaseData data, SecurityType securityType, Resolution resolution, string expectedLine)
             {

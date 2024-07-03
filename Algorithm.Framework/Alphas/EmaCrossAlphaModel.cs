@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <summary>
         /// This is made protected for testing purposes
         /// </summary>
-        protected readonly Dictionary<Symbol, SymbolData> SymbolDataBySymbol;
+        protected Dictionary<Symbol, SymbolData> SymbolDataBySymbol { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EmaCrossAlphaModel"/> class

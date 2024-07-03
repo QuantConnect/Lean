@@ -30,7 +30,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         // S&P 500 EMini futures
         private const string RootSP500 = Futures.Indices.SP500EMini;
-        public Symbol SP500 = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.CME);
+        public Symbol SP500 { get; set; } = QuantConnect.Symbol.Create(RootSP500, SecurityType.Future, Market.CME);
 
         protected List<DateTime> ContinuousWarmupTimes { get; } = new();
         protected List<DateTime> ChainWarmupTimes { get; } = new();

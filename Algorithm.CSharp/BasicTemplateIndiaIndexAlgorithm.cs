@@ -31,8 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indexes" />
     public class BasicTemplateIndiaIndexAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected Symbol Nifty;
-        protected Symbol NiftyETF;
+        protected Symbol Nifty { get; set; }
+        protected Symbol NiftyETF { get; set; }
         private ExponentialMovingAverage _emaSlow;
         private ExponentialMovingAverage _emaFast;
 

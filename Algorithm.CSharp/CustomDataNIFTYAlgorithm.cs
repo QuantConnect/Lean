@@ -135,19 +135,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Opening Price
         /// </summary>
-        public decimal Open;
+        public decimal Open { get; set; }
         /// <summary>
         /// High Price
         /// </summary>
-        public decimal High;
+        public decimal High { get; set; }
         /// <summary>
         /// Low Price
         /// </summary>
-        public decimal Low;
+        public decimal Low { get; set; }
         /// <summary>
         /// Closing Price
         /// </summary>
-        public decimal Close;
+        public decimal Close { get; set; }
 
         /// <summary>
         /// Default initializer for NIFTY.
@@ -205,19 +205,19 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Open Price
         /// </summary>
-        public decimal Open = 0;
+        public decimal Open { get; set; } = 0;
         /// <summary>
         /// High Price
         /// </summary>
-        public decimal High = 0;
+        public decimal High { get; set; } = 0;
         /// <summary>
         /// Low Price
         /// </summary>
-        public decimal Low = 0;
+        public decimal Low { get; set; } = 0;
         /// <summary>
         /// Closing Price
         /// </summary>
-        public decimal Close;
+        public decimal Close { get; set; }
 
         /// <summary>
         /// Default constructor for the custom data class.
@@ -268,17 +268,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Date of the correlation pair
         /// </summary>
-        public DateTime Date;
+        public DateTime Date { get; set; }
 
         /// <summary>
         /// Nifty price for this correlation pair
         /// </summary>
-        public double NiftyPrice;
+        public double NiftyPrice { get; set; }
 
         /// <summary>
         /// Currency price for this correlation pair
         /// </summary>
-        public double CurrencyPrice;
+        public double CurrencyPrice { get; set; }
 
         /// <summary>
         /// Default initializer

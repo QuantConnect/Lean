@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateOptionEquityStrategyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected Symbol _optionSymbol;
+        protected Symbol _optionSymbol { get; set; }
 
         public override void Initialize()
         {

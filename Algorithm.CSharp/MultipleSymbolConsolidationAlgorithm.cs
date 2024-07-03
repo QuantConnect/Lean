@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,23 +35,23 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is the period of bars we'll be creating
         /// </summary>
-        public readonly TimeSpan BarPeriod = TimeSpan.FromMinutes(10);
+        public TimeSpan BarPeriod { get; init; } = TimeSpan.FromMinutes(10);
         /// <summary>
         /// This is the period of our sma indicators
         /// </summary>
-        public readonly int SimpleMovingAveragePeriod = 10;
+        public int SimpleMovingAveragePeriod { get; init; } = 10;
         /// <summary>
         /// This is the number of consolidated bars we'll hold in symbol data for reference
         /// </summary>
-        public readonly int RollingWindowSize = 10;
+        public int RollingWindowSize { get; init; } = 10;
         /// <summary>
         /// Holds all of our data keyed by each symbol
         /// </summary>
-        public readonly Dictionary<string, SymbolData> Data = new Dictionary<string, SymbolData>();
+        public Dictionary<string, SymbolData> Data { get; init; } = new Dictionary<string, SymbolData>();
         /// <summary>
         /// Contains all of our equity symbols
         /// </summary>
-        public readonly IReadOnlyList<string> EquitySymbols = new List<string>
+        public IReadOnlyList<string> EquitySymbols { get; init; } = new List<string>
         {
             "AAPL",
             "SPY",
@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Contains all of our forex symbols
         /// </summary>
-        public readonly IReadOnlyList<string> ForexSymbols = new List<string>
+        public IReadOnlyList<string> ForexSymbols { get; init; } = new List<string>
         {
             "EURUSD",
             "USDJPY",
@@ -172,22 +172,22 @@ namespace QuantConnect.Algorithm.CSharp
             /// <summary>
             /// This symbol the other data in this class is associated with
             /// </summary>
-            public readonly Symbol Symbol;
+            public Symbol Symbol { get; init; }
             /// <summary>
             /// A rolling window of data, data needs to be pumped into Bars by using Bars.Update( tradeBar ) and
             /// can be accessed like:
             ///  mySymbolData.Bars[0] - most first recent piece of data
             ///  mySymbolData.Bars[5] - the sixth most recent piece of data (zero based indexing)
             /// </summary>
-            public readonly RollingWindow<IBaseDataBar> Bars;
+            public RollingWindow<IBaseDataBar> Bars { get; init; }
             /// <summary>
             /// The period used when populating the Bars rolling window.
             /// </summary>
-            public readonly TimeSpan BarPeriod;
+            public TimeSpan BarPeriod { get; init; }
             /// <summary>
             /// The simple moving average indicator for our symbol
             /// </summary>
-            public SimpleMovingAverage SMA;
+            public SimpleMovingAverage SMA { get; set; }
 
             /// <summary>
             /// Initializes a new instance of SymbolData

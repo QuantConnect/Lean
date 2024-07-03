@@ -25,8 +25,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class OptionExpiryDateOnHolidayCase : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "SPY";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        public Symbol Underlying { get; init; } = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
+        public Symbol OptionSymbol { get; init; } = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
         private OptionContract _optionContract;
         private List<Delisting> _delistings = new List<Delisting>();
 

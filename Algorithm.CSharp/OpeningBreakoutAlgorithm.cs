@@ -78,17 +78,17 @@ namespace QuantConnect.Algorithm.CSharp
         private const decimal StdVolatilityThresholdPercent = 0.005m;
 
         // this is the security we're trading
-        public Security Security;
+        public Security Security { get; set; }
 
         // define our indicators used for trading decisions
-        public AverageTrueRange ATR14;
-        public StandardDeviation STD14;
-        public AverageDirectionalIndex ADX14;
-        public ParabolicStopAndReverse PSARMin;
+        public AverageTrueRange ATR14 { get; set; }
+        public StandardDeviation STD14 { get; set; }
+        public AverageDirectionalIndex ADX14 { get; set; }
+        public ParabolicStopAndReverse PSARMin { get; set; }
 
         // smoothed values
-        public ExponentialMovingAverage SmoothedSTD14;
-        public ExponentialMovingAverage SmoothedATR14;
+        public ExponentialMovingAverage SmoothedSTD14 { get; set; }
+        public ExponentialMovingAverage SmoothedATR14 { get; set; }
 
         // working variable to control our algorithm
 

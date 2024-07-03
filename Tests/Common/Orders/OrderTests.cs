@@ -232,10 +232,10 @@ namespace QuantConnect.Tests.Common.Orders
 
         public class ValueTestParameters
         {
-            public readonly string Name;
-            public readonly Security Security;
-            public readonly Order Order;
-            public readonly decimal ExpectedValue;
+            public string Name { get; init; }
+            public Security Security { get; init; }
+            public Order Order { get; init; }
+            public decimal ExpectedValue { get; init; }
 
             public ValueTestParameters(string name, Security security, Order order, decimal expectedValue)
             {

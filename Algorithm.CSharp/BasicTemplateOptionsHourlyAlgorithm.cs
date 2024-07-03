@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateOptionsHourlyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "AAPL";
-        public Symbol OptionSymbol;
+        public Symbol OptionSymbol { get; set; }
 
         public override void Initialize()
         {

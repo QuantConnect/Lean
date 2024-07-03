@@ -34,8 +34,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class OptionChainConsistencyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        public Symbol Underlying { get; init; } = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
+        public Symbol OptionSymbol { get; init; } = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
 
         public override void Initialize()
         {

@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class OptionDelistedDataRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        public readonly Symbol OptionSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        public Symbol OptionSymbol { get; init; } = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
         private readonly List<Symbol> _delisted = new List<Symbol>();
         private readonly List<Symbol> _toBeDelisted = new List<Symbol>();
         private bool _executed;

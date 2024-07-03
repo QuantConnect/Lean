@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Dictionary<Symbol, int> _interestPerSymbol = new();
         private decimal _amountAfterTrade;
 
-        protected CryptoFuture AdaUsdt;
+        protected CryptoFuture AdaUsdt { get; set; }
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.

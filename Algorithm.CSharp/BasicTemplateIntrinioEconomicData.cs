@@ -32,8 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateIntrinioEconomicData : QCAlgorithm
     {
         // Set your Intrinio user and password.
-        public string _user = "";
-        public string _password = "";
+        public string _user { get; set; } = string.Empty;
+        public string _password { get; set; } = string.Empty;
 
         private Symbol _uso; // United States Oil Fund LP
         private Symbol _bno; // United States Brent Oil Fund LP

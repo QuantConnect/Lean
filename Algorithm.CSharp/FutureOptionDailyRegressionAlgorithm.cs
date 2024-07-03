@@ -29,8 +29,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FutureOptionDailyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected OrderTicket Ticket;
-        protected Symbol DcOption;
+        protected OrderTicket Ticket { get; set; }
+        protected Symbol DcOption { get; set; }
         protected virtual Resolution Resolution => Resolution.Daily;
 
         public override void Initialize()
