@@ -298,6 +298,22 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(indicator.IsReady);
         }
 
+        [Test]
+        public void IndicatorUpdatedWithSymbol()
+        {
+            var time = new DateTime(2014, 06, 07);
+
+            var put = Symbols.CreateOptionSymbol("AAPL", OptionRight.Call, 250m, new DateTime(2016, 01, 15));
+            var call = Symbols.CreateOptionSymbol("AAPL", OptionRight.Put, 250m, new DateTime(2016, 01, 15));
+            var indicator = new Delta(option: put, mirrorOption: call);
+            _algorithm.SetDateTime(time);
+
+            var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { put, call, put.Underlying }, 60 * 10, resolution: Resolution.Minute);
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(389, indicatorValues.Count);
+        }
+
         [TestCase(1)]
         [TestCase(2)]
         public void PythonCustomIndicator(int testCases)
