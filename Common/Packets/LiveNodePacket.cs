@@ -28,12 +28,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Deploy Id for this live algorithm.
         /// </summary>
-        public string DeployId { get; set; } = "";
+        public string DeployId { get; set; } = string.Empty;
 
         /// <summary>
         /// String name of the brokerage we're trading with
         /// </summary>
-        public string Brokerage { get; set; } = "";
+        public string Brokerage { get; set; } = string.Empty;
 
         /// <summary>
         /// String-String Dictionary of Brokerage Data for this Live Job
@@ -43,12 +43,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// String name of the DataQueueHandler or LiveDataProvider we're running with
         /// </summary>
-        public string DataQueueHandler { get; set; } = "";
+        public string DataQueueHandler { get; set; } = string.Empty;
 
         /// <summary>
         /// String name of the DataChannelProvider we're running with
         /// </summary>
-        public string DataChannelProvider { get; set; } = "";
+        public string DataChannelProvider { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets flag indicating whether or not the message should be acknowledged and removed from the queue

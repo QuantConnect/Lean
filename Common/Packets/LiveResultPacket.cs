@@ -42,17 +42,17 @@ namespace QuantConnect.Packets
         /// <summary>
         /// User session Id who issued the result packet
         /// </summary>
-        public string SessionId { get; set; } = "";
+        public string SessionId { get; set; } = string.Empty;
 
         /// <summary>
         /// Live Algorithm Id (DeployId) for this result packet
         /// </summary>
-        public string DeployId { get; set; } = "";
+        public string DeployId { get; set; } = string.Empty;
 
         /// <summary>
         /// Compile Id algorithm which generated this result packet
         /// </summary>
-        public string CompileId { get; set; } = "";
+        public string CompileId { get; set; } = string.Empty;
 
         /// <summary>
         /// Result data object for this result packet

@@ -50,7 +50,7 @@ namespace QuantConnect
         /// Trade profit and loss information since the last algorithm result packet
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<DateTime, decimal> ProfitLoss { get; init; }
+        public IDictionary<DateTime, decimal> ProfitLoss { get; set; }
 
         /// <summary>
         /// Statistics information sent during the algorithm operations.
@@ -81,7 +81,7 @@ namespace QuantConnect
         /// The algorithm's configuration required for report generation
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public AlgorithmConfiguration AlgorithmConfiguration { get; }
+        public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
 
         /// <summary>
         /// Creates new empty instance

@@ -16,7 +16,6 @@
 using System;
 using Newtonsoft.Json;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
 using System.Runtime.CompilerServices;
@@ -532,12 +531,12 @@ namespace QuantConnect
         /// <summary>
         /// Register this control packet as not defaults.
         /// </summary>
-        public bool Initialized { get; }
+        public bool Initialized { get; set; }
 
         /// <summary>
         /// Current run status of the algorithm id.
         /// </summary>
-        public AlgorithmStatus Status { get; }
+        public AlgorithmStatus Status { get; set; }
 
         /// <summary>
         /// Currently requested chart.

@@ -34,7 +34,7 @@ namespace QuantConnect.Packets
         /// Given the dates and times above, what is the current market status - open or closed.
         /// </summary>
         [JsonProperty(PropertyName = "status")]
-        public string Status { get; set; } = "";
+        public string Status { get; set; } = string.Empty;
 
         /// <summary>
         /// Premarket hours for today

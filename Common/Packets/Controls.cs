@@ -15,11 +15,9 @@
 */
 
 using System.IO;
-using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Packets
-
 {
     /// <summary>
     /// Specifies values used to control algorithm limits

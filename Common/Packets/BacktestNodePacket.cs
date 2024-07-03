@@ -34,7 +34,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Name of the backtest as randomly defined in the IDE.
         /// </summary>
-        public string Name { get; set; } = "";
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// BacktestId / Algorithm Id for this task

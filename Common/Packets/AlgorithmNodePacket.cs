@@ -44,10 +44,10 @@ namespace QuantConnect.Packets
         public int UserId { get; set; }
 
         /// User API Token
-        public string UserToken { get; set; } = "";
+        public string UserToken { get; set; } = string.Empty;
 
         /// User Organization Id
-        public string OrganizationId { get; set; } = "";
+        public string OrganizationId { get; set; } = string.Empty;
 
         /// <summary>
         /// Project Id of the request
@@ -77,7 +77,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// User session Id for authentication
         /// </summary>
-        public string SessionId { get; set; } = "";
+        public string SessionId { get; set; } = string.Empty;
 
         /// <summary>
         /// Language flag: Currently represents IL code or Dynamic Scripted Types.
@@ -92,7 +92,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Unique compile id of this backtest
         /// </summary>
-        public string CompileId { get; set; } = "";
+        public string CompileId { get; set; } = string.Empty;
 
         /// <summary>
         /// Version number identifier for the lean engine.

@@ -14,13 +14,11 @@
  *
 */
 
-using Newtonsoft.Json;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
 {
     /// <summary>
-    /// 
     /// Order event packet for passing updates on the state of an order to the portfolio. 
     /// </summary>
     /// <remarks>As an order is updated in pieces/partial fills the order fill price is passed back to the Algorithm Portfolio method</remarks>
