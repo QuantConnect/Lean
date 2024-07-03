@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using static QuantConnect.StringExtensions;
@@ -108,7 +109,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Algorithm binary with zip of contents
         /// </summary>
-        public byte[] Algorithm { get; set; }
+        public byte[] Algorithm { get; set; } = Array.Empty<byte>();
 
         /// <summary>
         /// Request source - Web IDE or API - for controling result handler behaviour
@@ -130,12 +131,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The parameter values used to set algorithm parameters
         /// </summary>
-        public Dictionary<string, string> Parameters { get; init; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// String name of the HistoryProvider we're running with
         /// </summary>
-        public string HistoryProvider { get; set; } = "";
+        public string HistoryProvider { get; set; } = string.Empty;
 
         /// <summary>
         /// Algorithm running mode.

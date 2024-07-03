@@ -14,8 +14,6 @@
  *
 */
 
-using Newtonsoft.Json;
-
 namespace QuantConnect.Packets
 {
     /// <summary>
@@ -31,7 +29,7 @@ namespace QuantConnect.Packets
 
         /// <summary>
         /// Algorithm id which generated this runtime error
-        /// </summary
+        /// </summary>
         public string AlgorithmId { get; set; }
 
         /// <summary>

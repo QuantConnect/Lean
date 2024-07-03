@@ -68,18 +68,18 @@ namespace QuantConnect.Data.UniverseSelection
         /// Defines how universe data is mapped together
         /// </summary>
         /// <remarks>This is particular useful when generating continuous futures</remarks>
-        public DataMappingMode DataMappingMode { get; init; }
+        public DataMappingMode DataMappingMode { get; set; }
 
         /// <summary>
         /// The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contra
         /// </summary>
-        public int ContractDepthOffset { get; init; }
+        public int ContractDepthOffset { get; set; }
 
         /// <summary>
         /// Allows a universe to specify which data types to add for a selected symbol
         /// </summary>
-        public List<Tuple<Type, TickType>> SubscriptionDataTypes { get; init; }
+        public List<Tuple<Type, TickType>> SubscriptionDataTypes { get; set; }
 
         /// <summary>
         /// True if universe selection can run asynchronous

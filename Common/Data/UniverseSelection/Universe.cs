@@ -426,7 +426,7 @@ namespace QuantConnect.Data.UniverseSelection
             /// <summary>
             /// The security that was added
             /// </summary>
-            public Security Security { get; set; }
+            public Security Security { get; init; }
 
             /// <summary>
             /// True if the security was added as internal by this universe
