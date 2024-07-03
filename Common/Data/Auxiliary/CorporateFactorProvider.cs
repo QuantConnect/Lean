@@ -1,4 +1,4 @@
-﻿/*
+/*
 * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
 * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
 *
@@ -48,9 +48,9 @@ namespace QuantConnect.Data.Auxiliary
 
             var factor = 1m;
 
-            for (var i = 0; i < _reversedFactorFileDates.Count; i++)
+            for (var i = 0; i < ReversedFactorFileDates.Count; i++)
             {
-                var factorDate = _reversedFactorFileDates[i];
+                var factorDate = ReversedFactorFileDates[i];
                 if (factorDate.Date < searchDate.Date)
                 {
                     break;
@@ -83,7 +83,7 @@ namespace QuantConnect.Data.Auxiliary
             var factors = new CorporateFactorRow(searchDate, 1m, 1m, 0m);
 
             // Iterate backwards to find the most recent factors
-            foreach (var splitDate in _reversedFactorFileDates)
+            foreach (var splitDate in ReversedFactorFileDates)
             {
                 if (splitDate.Date < searchDate.Date) break;
                 factors = SortedFactorFileData[splitDate][0];

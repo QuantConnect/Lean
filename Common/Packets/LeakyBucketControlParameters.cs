@@ -34,17 +34,17 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Default capacity for leaky bucket
         /// </summary>
-        public static int DefaultCapacity = Config.GetInt("scheduled-event-leaky-bucket-capacity", 2 * 60);
+        public static int DefaultCapacity { get; set; } = Config.GetInt("scheduled-event-leaky-bucket-capacity", 2 * 60);
 
         /// <summary>
         /// Default time interval
         /// </summary>
-        public static int DefaultTimeInterval = Config.GetInt("scheduled-event-leaky-bucket-time-interval-minutes", 1440);
+        public static int DefaultTimeInterval { get; set; } = Config.GetInt("scheduled-event-leaky-bucket-time-interval-minutes", 1440);
 
         /// <summary>
         /// Default refill amount
         /// </summary>
-        public static int DefaultRefillAmount = Config.GetInt("scheduled-event-leaky-bucket-refill-amount", (int)Math.Ceiling(DefaultCapacity/7.0));
+        public static int DefaultRefillAmount { get; set; } = Config.GetInt("scheduled-event-leaky-bucket-refill-amount", (int)Math.Ceiling(DefaultCapacity/7.0));
 
         /// <summary>
         /// Sets the total capacity of the bucket in a leaky bucket algorithm. This is the maximum
@@ -52,7 +52,7 @@ namespace QuantConnect.Packets
         /// instantaneous usage of 'units'. In reality, the usage of 'units' takes times, and so it
         /// is possible for the bucket to incrementally refill while consuming from the bucket.
         /// </summary>
-        public int Capacity;
+        public int Capacity { get; set; }
 
         /// <summary>
         /// Sets the refill amount of the bucket. This defines the quantity of 'units' that become available
@@ -60,7 +60,7 @@ namespace QuantConnect.Packets
         /// equal to one, then each time interval one new 'unit' will be made available for a consumer that is
         /// throttled by the leaky bucket.
         /// </summary>
-        public int RefillAmount;
+        public int RefillAmount { get; set; }
 
         /// <summary>
         /// Sets the time interval for the refill amount of the bucket, in minutes. After this amount of wall-clock
@@ -69,7 +69,7 @@ namespace QuantConnect.Packets
         /// every 30 minutes, 10 more 'units' become available for a consumer. The available 'units' will
         /// continue to increase until the bucket capacity is reached.
         /// </summary>
-        public int TimeIntervalMinutes;
+        public int TimeIntervalMinutes { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LeakyBucketControlParameters"/> using default values

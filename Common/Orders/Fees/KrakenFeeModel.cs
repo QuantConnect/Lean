@@ -48,7 +48,7 @@ namespace QuantConnect.Orders.Fees
         /// <summary>
         /// Fiats and stablecoins list that have own fee.
         /// </summary>
-        public readonly List<string> FxStablecoinList = new() {"CAD", "EUR", "GBP", "JPY", "USD", "USDT", "DAI", "USDC"};
+        public List<string> FxStablecoinList { get; init; } = new() {"CAD", "EUR", "GBP", "JPY", "USD", "USDT", "DAI", "USDC"};
  
         /// <summary>
         /// Get the fee for this order.

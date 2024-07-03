@@ -14,7 +14,6 @@
  *
 */
 
-using Newtonsoft.Json;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Packets
@@ -28,12 +27,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Order event object
         /// </summary>
-        public OrderEvent Event;
+        public OrderEvent Event { get; set; }
 
         /// <summary>
         /// Algorithm id for this order event
         /// </summary>
-        public string AlgorithmId;
+        public string AlgorithmId { get; set; }
 
         /// <summary>
         /// Default constructor for JSON

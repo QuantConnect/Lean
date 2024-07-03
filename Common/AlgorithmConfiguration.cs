@@ -32,62 +32,62 @@ namespace QuantConnect
         /// <summary>
         /// The algorithm's name
         /// </summary>
-        public string Name;
+        public string Name { get; set; }
 
         /// <summary>
         /// List of tags associated with the algorithm
         /// </summary>
-        public ISet<string> Tags;
+        public ISet<string> Tags { get; set; }
 
         /// <summary>
         /// The algorithm's account currency
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string AccountCurrency;
+        public string AccountCurrency { get; set; }
 
         /// <summary>
         /// The algorithm's brokerage model
         /// </summary>
         /// <remarks> Required to set the correct brokerage model on report generation.</remarks>
-        public BrokerageName Brokerage;
+        public BrokerageName Brokerage { get; set; }
 
         /// <summary>
         /// The algorithm's account type
         /// </summary>
         /// <remarks> Required to set the correct brokerage model on report generation.</remarks>
-        public AccountType AccountType;
+        public AccountType AccountType { get; set; }
 
         /// <summary>
         /// The parameters used by the algorithm
         /// </summary>
-        public IReadOnlyDictionary<string, string> Parameters;
+        public IReadOnlyDictionary<string, string> Parameters { get; set; }
 
         /// <summary>
         /// Backtest maximum end date
         /// </summary>
-        public DateTime? OutOfSampleMaxEndDate;
+        public DateTime? OutOfSampleMaxEndDate { get; set; }
 
         /// <summary>
         /// The backtest out of sample day count
         /// </summary>
-        public int OutOfSampleDays;
+        public int OutOfSampleDays { get; set; }
 
         /// <summary>
         /// The backtest start date
         /// </summary>
         [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
-        public DateTime StartDate;
+        public DateTime StartDate { get; set; }
 
         /// <summary>
         /// The backtest end date
         /// </summary>
         [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
-        public DateTime EndDate;
+        public DateTime EndDate { get; set; }
 
         /// <summary>
         /// Number of trading days per year for Algorithm's portfolio statistics.
         /// </summary>
-        public int TradingDaysPerYear;
+        public int TradingDaysPerYear { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgorithmConfiguration"/> class

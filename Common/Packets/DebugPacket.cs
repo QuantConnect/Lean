@@ -26,28 +26,28 @@ namespace QuantConnect.Packets
         /// <summary>
         /// String debug message to send to the users console
         /// </summary>
-        public string Message;
+        public string Message { get; set; }
 
         /// <summary>
         /// Associated algorithm Id.
         /// </summary>
-        public string AlgorithmId;
+        public string AlgorithmId { get; set; }
 
         /// <summary>
         /// Compile id of the algorithm sending this message
         /// </summary>
-        public string CompileId;
+        public string CompileId { get; set; }
 
         /// <summary>
         /// Project Id for this message
         /// </summary>
-        public int ProjectId;
+        public int ProjectId { get; set; }
 
         /// <summary>
         /// True to emit message as a popup notification (toast),
         /// false to emit message in console as text
         /// </summary>
-        public bool Toast;
+        public bool Toast { get; set; }
 
         /// <summary>
         /// Default constructor for JSON

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,32 +26,32 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// End time for these prices
         /// </summary>
-        public readonly DateTime EndTime;
+        public DateTime EndTime { get; init; }
 
         /// <summary>
         /// Current price
         /// </summary>
-        public readonly decimal Current;
+        public decimal Current { get; init; }
 
         /// <summary>
         /// Open price
         /// </summary>
-        public readonly decimal Open;
+        public decimal Open { get; init; }
 
         /// <summary>
         /// High price
         /// </summary>
-        public readonly decimal High;
+        public decimal High { get; init; }
 
         /// <summary>
         /// Low price
         /// </summary>
-        public readonly decimal Low;
+        public decimal Low { get; init; }
 
         /// <summary>
         /// Closing price
         /// </summary>
-        public readonly decimal Close;
+        public decimal Close { get; init; }
 
         /// <summary>
         /// Create an instance of Prices class with a data bar

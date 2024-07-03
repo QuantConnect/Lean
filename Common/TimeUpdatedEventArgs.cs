@@ -26,12 +26,12 @@ namespace QuantConnect
         /// <summary>
         /// Gets the new time
         /// </summary>
-        public readonly DateTime Time;
+        public DateTime Time { get; init; }
 
         /// <summary>
         /// Gets the time zone
         /// </summary>
-        public readonly DateTimeZone TimeZone;
+        public DateTimeZone TimeZone { get; init; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeUpdatedEventArgs"/> class
