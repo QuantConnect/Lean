@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,12 +27,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The queue where the data should be sent
         /// </summary>
-        public string QueueName;
+        public string QueueName { get; set; }
 
         /// <summary>
         /// The individual requests to be processed
         /// </summary>
-        public List<HistoryRequest> Requests = new List<HistoryRequest>();
+        public List<HistoryRequest> Requests { get; set; } = new List<HistoryRequest>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryPacket"/> class
@@ -53,27 +53,27 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The start time to request data in UTC
         /// </summary>
-        public DateTime StartTimeUtc;
+        public DateTime StartTimeUtc { get; set; }
 
         /// <summary>
         /// The end time to request data in UTC
         /// </summary>
-        public DateTime EndTimeUtc;
+        public DateTime EndTimeUtc { get; set; }
 
         /// <summary>
         /// The symbol to request data for
         /// </summary>
-        public Symbol Symbol;
+        public Symbol Symbol { get; set; }
 
         /// <summary>
         /// The requested resolution
         /// </summary>
-        public Resolution Resolution;
+        public Resolution Resolution { get; set; }
 
         /// <summary>
         /// The type of data to retrieve
         /// </summary>
-        public TickType TickType;
+        public TickType TickType { get; set; }
     }
 
     /// <summary>
@@ -131,12 +131,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The relative file path where the data should be written
         /// </summary>
-        public string Filepath;
+        public string Filepath { get; set; }
 
         /// <summary>
         /// The file's contents, this is a zipped csv file
         /// </summary>
-        public byte[] File;
+        public byte[] File { get; set; }
 
         /// <summary>
         /// Default constructor for serializers
@@ -181,7 +181,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Gets the error that was encountered
         /// </summary>
-        public string Message;
+        public string Message { get; set; }
 
         /// <summary>
         /// Default constructor for serializers
@@ -210,7 +210,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Gets the progress of the request
         /// </summary>
-        public int Progress;
+        public int Progress { get; set; }
 
         /// <summary>
         /// Default constructor for serializers

@@ -30,17 +30,17 @@ namespace QuantConnect.Securities
         /// <summary>
         /// The market. If null, ignore market filtering
         /// </summary>
-        public readonly string Market;
+        public string Market { get; init; }
 
         /// <summary>
         /// The symbol. If null, ignore symbol filtering
         /// </summary>
-        public readonly string Symbol;
+        public string Symbol { get; init; }
 
         /// <summary>
         /// The security type
         /// </summary>
-        public readonly SecurityType SecurityType;
+        public SecurityType SecurityType { get; init; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityDatabaseKey"/> class

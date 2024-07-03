@@ -32,56 +32,56 @@ namespace QuantConnect
         /// Charts updates for the live algorithm since the last result packet
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, Chart> Charts;
+        public IDictionary<string, Chart> Charts { get; set; }
 
         /// <summary>
         /// Order updates since the last result packet
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<int, Order> Orders;
+        public IDictionary<int, Order> Orders { get; set; }
 
         /// <summary>
         /// OrderEvent updates since the last result packet
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public List<OrderEvent> OrderEvents;
+        public List<OrderEvent> OrderEvents { get; set; }
 
         /// <summary>
         /// Trade profit and loss information since the last algorithm result packet
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<DateTime, decimal> ProfitLoss;
+        public IDictionary<DateTime, decimal> ProfitLoss { get; set; }
 
         /// <summary>
         /// Statistics information sent during the algorithm operations.
         /// </summary>
         /// <remarks>Intended for update mode -- send updates to the existing statistics in the result GUI. If statistic key does not exist in GUI, create it</remarks>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, string> Statistics;
+        public IDictionary<string, string> Statistics { get; set; }
 
         /// <summary>
         /// Runtime banner/updating statistics in the title banner of the live algorithm GUI.
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, string> RuntimeStatistics;
+        public IDictionary<string, string> RuntimeStatistics { get; set; }
 
         /// <summary>
         /// State of the result packet.
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, string> State;
+        public IDictionary<string, string> State { get; set; }
 
         /// <summary>
         /// Server status information, including CPU/RAM usage, ect...
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IDictionary<string, string> ServerStatistics;
+        public IDictionary<string, string> ServerStatistics { get; set; }
 
         /// <summary>
         /// The algorithm's configuration required for report generation
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public AlgorithmConfiguration AlgorithmConfiguration;
+        public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
 
         /// <summary>
         /// Creates new empty instance

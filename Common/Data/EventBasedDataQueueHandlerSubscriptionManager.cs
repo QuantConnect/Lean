@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -43,12 +43,12 @@ namespace QuantConnect.Data
         /// <summary>
         /// Subscription method implementation
         /// </summary>
-        public Func<IEnumerable<Symbol>, TickType, bool> SubscribeImpl;
+        public Func<IEnumerable<Symbol>, TickType, bool> SubscribeImpl { get; set; }
         
         /// <summary>
         /// Unsubscription method implementation
         /// </summary>
-        public Func<IEnumerable<Symbol>, TickType, bool> UnsubscribeImpl;
+        public Func<IEnumerable<Symbol>, TickType, bool> UnsubscribeImpl { get; set; }
 
         /// <summary>
         /// Socket channel name

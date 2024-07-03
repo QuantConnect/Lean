@@ -26,12 +26,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Log message to the users console:
         /// </summary>
-        public string Message;
+        public string Message { get; set; }
 
         /// <summary>
         /// Algorithm Id requesting this logging
         /// </summary>
-        public string AlgorithmId;
+        public string AlgorithmId { get; set; }
 
         /// <summary>
         /// Default constructor for JSON

@@ -32,7 +32,7 @@ namespace QuantConnect.Scheduling
         /// </summary>
         /// <remarks>This field is protected because it's used in a test class 
         /// in `IsolatorLimitResultProviderTests.cs</remarks>
-        protected readonly List<TimeConsumer> TimeConsumers;
+        protected List<TimeConsumer> TimeConsumers { get; init; }
 
         /// <summary>
         /// Returns the number of time consumers currently being monitored

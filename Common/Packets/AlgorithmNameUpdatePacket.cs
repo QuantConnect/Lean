@@ -27,12 +27,12 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Algorithm id for this order event
         /// </summary>
-        public string AlgorithmId;
+        public string AlgorithmId { get; set; }
 
         /// <summary>
         /// The new name
         /// </summary>
-        public string Name;
+        public string Name { get; set; }
 
         /// <summary>
         /// Default constructor for JSON

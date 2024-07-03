@@ -158,7 +158,7 @@ namespace QuantConnect.Indicators
             }
             else
             {
-                throw new ArgumentException("The given symbol was not target or reference symbol");
+                throw new ArgumentException($"The given symbol was not target, reference or underlying symbol: {inputSymbol}");
             }
 
             if (Price.Current.Time == UnderlyingPrice.Current.Time)

@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using Fasterflect;
 using MathNet.Numerics;
 using static QuantConnect.Messages;
 
@@ -36,7 +37,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _ema.IsReady;
+        public override bool IsReady => (Samples >= _lag + 1) && _ema.IsReady;
 
         /// <summary>
         /// Resets this indicator to its initial state
@@ -59,7 +60,7 @@ namespace QuantConnect.Indicators
             _period = period;
             _lag = (int)Math.Round((period - 1) / 2.0);
             _ema = new ExponentialMovingAverage(name + "_EMA", period);
-            _rolling_window = new RollingWindow<IndicatorDataPoint>(_lag);
+            _rolling_window = new RollingWindow<IndicatorDataPoint>(_lag + 1);
         }
 
         /// <summary>
@@ -79,23 +80,28 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            //Console.WriteLine("Samples: {0}", Samples);
-            //Console.WriteLine("_lag: {0}", _lag);
             _rolling_window.Add(input);
-            //window.Append(input);
-            //Console.WriteLine(_rolling_window);
 
-            if (_lag < _rolling_window.Samples)
+            if (Samples >= _lag + 1)
             {
                 _ema.Update(input.Time, input.Value + (input.Value - _rolling_window[_lag].Value));
+            } else {
+                return 0;
             }
 
-            return _ema.Current.Value;
+            if(_ema.IsReady)
+            {
+                return _ema.Current.Value;
+                
+            } else
+            {
+                return 0;
+            }
         }
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => Period;
+        public int WarmUpPeriod => _period + (int)Math.Floor(((float)_period) / 2);
     }
 }

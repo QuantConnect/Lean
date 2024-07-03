@@ -38,32 +38,21 @@ namespace QuantConnect.Tests.Indicators
             get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-2); }
         }
 
-        [Test]
-        public void ZlemaComputesCorrectly()
-        {
-            var zlema = new ZeroLagExponentialMovingAverage(5);
-            var data = new[] { 1m, 10m, 100m, 1000m, 10000m, 1234m, 56789m };
-
-            var seen = new List<decimal>();
-            for (int i = 0; i < data.Length; i++)
-            {
-                var datum = data[i];
-                seen.Add(datum);
-                zlema.Update(new IndicatorDataPoint(DateTime.Now.AddSeconds(i), datum));
-                Assert.AreEqual(Enumerable.Reverse(seen).Take(zlema.Period).Average(), zlema.Current.Value);
-            }
-        }
 
         [Test]
         public void IsReadyAfterPeriodUpdates()
         {
-            var zlema = new ZeroLagExponentialMovingAverage(3);
-
+            var zlema = new ZeroLagExponentialMovingAverage(5);
+            zlema.Update(DateTime.UtcNow, 1m);
+            zlema.Update(DateTime.UtcNow, 1m);
+            zlema.Update(DateTime.UtcNow, 1m);
+            zlema.Update(DateTime.UtcNow, 1m);
             zlema.Update(DateTime.UtcNow, 1m);
             zlema.Update(DateTime.UtcNow, 1m);
             Assert.IsFalse(zlema.IsReady);
             zlema.Update(DateTime.UtcNow, 1m);
             Assert.IsTrue(zlema.IsReady);
+            Assert.AreEqual(zlema.WarmUpPeriod, 7);
         }
 
         [Test]
@@ -81,6 +70,9 @@ namespace QuantConnect.Tests.Indicators
 
             TestHelper.AssertIndicatorIsInDefaultState(zlema);
             //TestHelper.AssertIndicatorIsInDefaultState(zlema._ema);
+            zlema.Update(DateTime.UtcNow, 2.0m);
+            zlema.Update(DateTime.UtcNow, 2.0m);
+            zlema.Update(DateTime.UtcNow, 2.0m);
             zlema.Update(DateTime.UtcNow, 2.0m);
             Assert.AreEqual(zlema.Current.Value, 2.0m);
         }

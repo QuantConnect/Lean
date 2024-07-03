@@ -52,7 +52,7 @@ namespace QuantConnect.Securities
         /// Expiration Types allowed through the filter
         /// Standards only by default
         /// </summary>
-        protected ContractExpirationType Type = ContractExpirationType.Standard;
+        protected ContractExpirationType Type { get; set; } = ContractExpirationType.Standard;
 
         /// <summary>
         /// The local exchange current time

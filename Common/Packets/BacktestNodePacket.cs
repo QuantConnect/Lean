@@ -34,52 +34,52 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Name of the backtest as randomly defined in the IDE.
         /// </summary>
-        public string Name = "";
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// BacktestId / Algorithm Id for this task
         /// </summary>
-        public string BacktestId = DefaultId;
+        public string BacktestId { get; set; } = DefaultId;
 
         /// <summary>
         /// Optimization Id for this task
         /// </summary>
-        public string OptimizationId;
+        public string OptimizationId { get; set; }
 
         /// <summary>
         /// Backtest start-date as defined in the Initialize() method.
         /// </summary>
-        public DateTime? PeriodStart;
+        public DateTime? PeriodStart { get; set; }
 
         /// <summary>
         /// Backtest end date as defined in the Initialize() method.
         /// </summary>
-        public DateTime? PeriodFinish;
+        public DateTime? PeriodFinish { get; set; }
 
         /// <summary>
         /// Backtest maximum end date
         /// </summary>
-        public DateTime? OutOfSampleMaxEndDate;
+        public DateTime? OutOfSampleMaxEndDate { get; set; }
 
         /// <summary>
         /// The backtest out of sample day count
         /// </summary>
-        public int OutOfSampleDays;
+        public int OutOfSampleDays { get; set; }
 
         /// <summary>
         /// Estimated number of trading days in this backtest task based on the start-end dates.
         /// </summary>
-        public int TradeableDates = 0;
+        public int TradeableDates { get; set; }
 
         /// <summary>
         /// True, if this is a debugging backtest
         /// </summary>
-        public bool Debugging;
+        public bool Debugging { get; set; }
 
         /// <summary>
         /// Optional initial cash amount if set
         /// </summary>
-        public CashAmount? CashAmount;
+        public CashAmount? CashAmount { get; set; }
 
         /// <summary>
         /// Algorithm running mode.

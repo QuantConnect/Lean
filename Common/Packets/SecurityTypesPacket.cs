@@ -27,7 +27,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// List of Security Type the user has requested (Equity, Forex, Futures etc).
         /// </summary>
-        public List<SecurityType> Types = new List<SecurityType>();
+        public List<SecurityType> Types { get; set; } = new List<SecurityType>();
 
         /// <summary>
         /// CSV formatted, lower case list of SecurityTypes for the web API.

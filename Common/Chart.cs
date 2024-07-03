@@ -31,15 +31,15 @@ namespace QuantConnect
         /// <summary>
         /// Name of the Chart
         /// </summary>
-        public string Name = "";
+        public string Name { get; set; } = string.Empty;
 
         /// Type of the Chart, Overlayed or Stacked.
         [Obsolete("ChartType is now obsolete. Please use Series indexes instead by setting index in the series constructor.")]
-        public ChartType ChartType = ChartType.Overlay;
+        public ChartType ChartType { get; set; } = ChartType.Overlay;
 
         /// List of Series Objects for this Chart:
         [JsonConverter(typeof(ChartSeriesJsonConverter))]
-        public Dictionary<string, BaseSeries> Series = new Dictionary<string, BaseSeries>();
+        public Dictionary<string, BaseSeries> Series { get; set; } = new();
 
         /// <summary>
         /// Associated symbol if any, making this an asset plot

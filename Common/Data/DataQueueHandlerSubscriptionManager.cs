@@ -30,7 +30,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Counter
         /// </summary>
-        protected ConcurrentDictionary<Channel, int> SubscribersByChannel = new ConcurrentDictionary<Channel, int>();
+        protected ConcurrentDictionary<Channel, int> SubscribersByChannel { get; init; } = new ConcurrentDictionary<Channel, int>();
 
         /// <summary>
         /// Increment number of subscribers for current <see cref="TickType"/>

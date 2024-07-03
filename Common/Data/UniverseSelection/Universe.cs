@@ -421,17 +421,17 @@ namespace QuantConnect.Data.UniverseSelection
             /// <summary>
             /// DateTime when added
             /// </summary>
-            public readonly DateTime Added;
+            public DateTime Added { get; init; }
 
             /// <summary>
             /// The security that was added
             /// </summary>
-            public readonly Security Security;
+            public Security Security { get; init; }
 
             /// <summary>
             /// True if the security was added as internal by this universe
             /// </summary>
-            public readonly bool IsInternal;
+            public bool IsInternal { get; init; }
 
             /// <summary>
             /// Initialize a new member for the universe
