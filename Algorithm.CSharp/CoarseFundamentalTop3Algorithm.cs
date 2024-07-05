@@ -100,9 +100,9 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"OnSecuritiesChanged({UtcTime:o}):: {changes}");
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Log($"OnOrderEvent({UtcTime:o}):: {newEvent}");
+            Log($"OnOrderEvent({UtcTime:o}):: {orderEvent}");
         }
 
         /// <summary>

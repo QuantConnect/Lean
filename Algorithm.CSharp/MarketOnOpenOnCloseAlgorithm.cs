@@ -65,10 +65,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            var order = Transactions.GetOrderById(newEvent.OrderId);
-            Console.WriteLine(Time + " - " + order.Type + " - " + newEvent.Status + ":: " + newEvent);
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            Console.WriteLine(Time + " - " + order.Type + " - " + orderEvent.Status + ":: " + orderEvent);
         }
     }
 }

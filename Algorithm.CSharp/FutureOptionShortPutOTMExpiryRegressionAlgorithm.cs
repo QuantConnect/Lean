@@ -96,34 +96,34 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status != OrderStatus.Filled)
+            if (orderEvent.Status != OrderStatus.Filled)
             {
                 // There's lots of noise with OnOrderEvent, but we're only interested in fills.
                 return;
             }
 
-            if (!Securities.ContainsKey(newEvent.Symbol))
+            if (!Securities.ContainsKey(orderEvent.Symbol))
             {
-                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {newEvent.Symbol}");
+                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
             }
 
-            var security = Securities[newEvent.Symbol];
+            var security = Securities[orderEvent.Symbol];
             if (security.Symbol == _es19m20)
             {
                 throw new RegressionTestException($"Expected no order events for underlying Symbol {security.Symbol}");
             }
             if (security.Symbol == _expectedContract)
             {
-                AssertFutureOptionContractOrder(newEvent, security);
+                AssertFutureOptionContractOrder(orderEvent, security);
             }
             else
             {
-                throw new RegressionTestException($"Received order event for unknown Symbol: {newEvent.Symbol}");
+                throw new RegressionTestException($"Received order event for unknown Symbol: {orderEvent.Symbol}");
             }
 
-            Log($"{newEvent}");
+            Log($"{orderEvent}");
         }
 
         private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)

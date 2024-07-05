@@ -159,21 +159,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (_immediateCancellations.Contains(newEvent.OrderId))
+            if (_immediateCancellations.Contains(orderEvent.OrderId))
             {
-                _immediateCancellations.Remove(newEvent.OrderId);
-                Transactions.CancelOrder(newEvent.OrderId);
+                _immediateCancellations.Remove(orderEvent.OrderId);
+                Transactions.CancelOrder(orderEvent.OrderId);
             }
 
-            if (newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
-                Log("FILLED:: " + Transactions.GetOrderById(newEvent.OrderId) + " FILL PRICE:: " + newEvent.FillPrice.SmartRounding());
+                Log("FILLED:: " + Transactions.GetOrderById(orderEvent.OrderId) + " FILL PRICE:: " + orderEvent.FillPrice.SmartRounding());
             }
             else
             {
-                Log(newEvent.ToString());
+                Log(orderEvent.ToString());
             }
         }
 

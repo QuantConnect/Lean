@@ -97,15 +97,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// Order fill event handler. On an order fill update the resulting information is passed to this method.
         /// </summary>
         /// <param name="orderEvent">Order event details containing details of the events</param>
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
                 var expected = _expectedEvents.Dequeue();
 
-                if (newEvent.ToString() != expected)
+                if (orderEvent.ToString() != expected)
                 {
-                    throw new RegressionTestException($"orderEvent {newEvent.Id} differed from {expected}. Actual {newEvent}");
+                    throw new RegressionTestException($"orderEvent {orderEvent.Id} differed from {expected}. Actual {orderEvent}");
                 }
             }
         }

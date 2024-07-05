@@ -95,34 +95,34 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status != OrderStatus.Filled)
+            if (orderEvent.Status != OrderStatus.Filled)
             {
                 // There's lots of noise with OnOrderEvent, but we're only interested in fills.
                 return;
             }
 
-            if (!Securities.ContainsKey(newEvent.Symbol))
+            if (!Securities.ContainsKey(orderEvent.Symbol))
             {
-                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {newEvent.Symbol}");
+                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
             }
 
-            var security = Securities[newEvent.Symbol];
+            var security = Securities[orderEvent.Symbol];
             if (security.Symbol == _es19m20)
             {
-                AssertFutureOptionOrderExercise(newEvent, security, Securities[_expectedContract]);
+                AssertFutureOptionOrderExercise(orderEvent, security, Securities[_expectedContract]);
             }
             else if (security.Symbol == _expectedContract)
             {
-                AssertFutureOptionContractOrder(newEvent, security);
+                AssertFutureOptionContractOrder(orderEvent, security);
             }
             else
             {
-                throw new RegressionTestException($"Received order event for unknown Symbol: {newEvent.Symbol}");
+                throw new RegressionTestException($"Received order event for unknown Symbol: {orderEvent.Symbol}");
             }
 
-            Log($"{Time:yyyy-MM-dd HH:mm:ss} -- {newEvent.Symbol} :: Price: {Securities[newEvent.Symbol].Holdings.Price} Qty: {Securities[newEvent.Symbol].Holdings.Quantity} Direction: {newEvent.Direction} Msg: {newEvent.Message}");
+            Log($"{Time:yyyy-MM-dd HH:mm:ss} -- {orderEvent.Symbol} :: Price: {Securities[orderEvent.Symbol].Holdings.Price} Qty: {Securities[orderEvent.Symbol].Holdings.Quantity} Direction: {orderEvent.Direction} Msg: {orderEvent.Message}");
         }
 
         private void AssertFutureOptionOrderExercise(OrderEvent orderEvent, Security future, Security optionContract)

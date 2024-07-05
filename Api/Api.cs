@@ -651,11 +651,11 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project for the backtest we want to update</param>
         /// <param name="backtestId">Backtest id we want to update</param>
-        /// <param name="backtestName">Name we'd like to assign to the backtest</param>
-        /// <param name="backtestNote">Note attached to the backtest</param>
+        /// <param name="name">Name we'd like to assign to the backtest</param>
+        /// <param name="note">Note attached to the backtest</param>
         /// <returns><see cref="RestResponse"/></returns>
 
-        public RestResponse UpdateBacktest(int projectId, string backtestId, string backtestName = "", string backtestNote = "")
+        public RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "")
         {
             var request = new RestRequest("backtests/update", Method.POST)
             {
@@ -666,8 +666,8 @@ namespace QuantConnect.Api
             {
                 projectId,
                 backtestId,
-                backtestName,
-                backtestNote
+                name,
+                note
             }), ParameterType.RequestBody);
 
             ApiConnection.TryRequest(request, out RestResponse result);

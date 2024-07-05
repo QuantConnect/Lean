@@ -233,20 +233,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            var order = Transactions.GetOrderById(newEvent.OrderId);
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
 
-            if (newEvent.Quantity == 0)
+            if (orderEvent.Quantity == 0)
             {
                 throw new RegressionTestException("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
             }
-            if (newEvent.Quantity != order.Quantity)
+            if (orderEvent.Quantity != order.Quantity)
             {
-                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {newEvent.Quantity
+                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity
                     }, expected {order.Quantity}");
             }
-            if (order is ComboLegLimitOrder && newEvent.LimitPrice == 0)
+            if (order is ComboLegLimitOrder && orderEvent.LimitPrice == 0)
             {
                 throw new RegressionTestException("OrderEvent.LimitPrice is not expected to be 0 for ComboLegLimitOrder");
             }

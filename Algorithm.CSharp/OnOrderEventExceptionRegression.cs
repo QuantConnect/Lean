@@ -56,8 +56,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnOrderEvent is called whenever an order is updated
         /// </summary>
-        /// <param name="newEvent">Order Event</param>
-        public override void OnOrderEvent(OrderEvent newEvent)
+        /// <param name="orderEvent">Order Event</param>
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
             throw new RegressionTestException("OnOrderEvent exception");
         }

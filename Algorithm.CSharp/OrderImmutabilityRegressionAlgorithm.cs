@@ -79,13 +79,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// This function will test that what we get from Transactions is indeed a clone
         /// The only authentic way to change the order is to change through the order ticket!
         /// </summary>
-        /// <param name="newEvent">OrderEvent object that contains all the information about the event</param>
-        public override void OnOrderEvent(OrderEvent newEvent)
+        /// <param name="orderEvent">OrderEvent object that contains all the information about the event</param>
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
 
             // Get the order twice, since they are clones they should NOT be the same
-            var orderV1 = Transactions.GetOrderById(newEvent.OrderId);
-            var orderV2 = Transactions.GetOrderById(newEvent.OrderId);
+            var orderV1 = Transactions.GetOrderById(orderEvent.OrderId);
+            var orderV2 = Transactions.GetOrderById(orderEvent.OrderId);
 
             if (orderV1 == orderV2)
             {
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Try and manipulate orderV2 using the only external accessor BrokerID, since we
             // are changing a clone the BrokerIDs should not be the same
             orderV2.BrokerId.Add("FAKE BROKER ID");
-            var orderV3 = Transactions.GetOrderById(newEvent.OrderId);
+            var orderV3 = Transactions.GetOrderById(orderEvent.OrderId);
 
             if (orderV2.BrokerId.SequenceEqual(orderV3.BrokerId))
             {
@@ -107,9 +107,9 @@ namespace QuantConnect.Algorithm.CSharp
             //Try and manipulate the orderV1 using UpdateOrderRequest
             //NOTICE: Orders should only be updated through their tickets!
             var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe2!" };
-            var updateRequest = new UpdateOrderRequest(DateTime.Now, newEvent.OrderId, updateFields);
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderEvent.OrderId, updateFields);
             orderV1.ApplyUpdateOrderRequest(updateRequest);
-            var orderV4 = Transactions.GetOrderById(newEvent.OrderId);
+            var orderV4 = Transactions.GetOrderById(orderEvent.OrderId);
 
             if (orderV4.Quantity == orderV1.Quantity)
             {

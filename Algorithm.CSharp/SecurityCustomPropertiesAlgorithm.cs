@@ -86,12 +86,12 @@ namespace QuantConnect.Algorithm.CSharp
             Plot("BB", bb.UpperBand, bb.MiddleBand, bb.LowerBand);
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
-                var fee = newEvent.OrderFee;
-                var expectedFee = _dynamicSpy.OrdersFeesPrices[newEvent.OrderId] * newEvent.AbsoluteFillQuantity * _dynamicSpy.FeeFactor;
+                var fee = orderEvent.OrderFee;
+                var expectedFee = _dynamicSpy.OrdersFeesPrices[orderEvent.OrderId] * orderEvent.AbsoluteFillQuantity * _dynamicSpy.FeeFactor;
                 if (fee.Value.Amount != expectedFee)
                 {
                     throw new RegressionTestException($"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}");

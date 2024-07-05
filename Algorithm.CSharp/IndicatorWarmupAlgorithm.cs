@@ -77,12 +77,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
             SymbolData sd;
-            if (_sd.TryGetValue(newEvent.Symbol, out sd))
+            if (_sd.TryGetValue(orderEvent.Symbol, out sd))
             {
-                sd.OnOrderEvent(newEvent);
+                sd.OnOrderEvent(orderEvent);
             }
         }
 

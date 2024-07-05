@@ -66,11 +66,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Canceled)
+            if (orderEvent.Status == OrderStatus.Canceled)
             {
-                if (newEvent.OrderId != _limitOrderTicket.OrderId)
+                if (orderEvent.OrderId != _limitOrderTicket.OrderId)
                 {
                     throw new RegressionTestException("The only canceled order should have been the limit order.");
                 }
@@ -78,10 +78,10 @@ namespace QuantConnect.Algorithm.CSharp
                 // update canceled order tag
                 UpdateOrderTag(_limitOrderTicket, TagAfterCanceled, "Error updating order tag after canceled");
             }
-            else if (newEvent.Status == OrderStatus.Filled)
+            else if (orderEvent.Status == OrderStatus.Filled)
             {
                 _marketOrderTicket = Transactions.GetOrderTickets(x => x.OrderType == OrderType.Market).Single();
-                if (newEvent.OrderId != _marketOrderTicket.OrderId)
+                if (orderEvent.OrderId != _marketOrderTicket.OrderId)
                 {
                     throw new RegressionTestException("The only filled order should have been the market order.");
                 }

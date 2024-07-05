@@ -51,11 +51,11 @@ namespace QuantConnect.Algorithm.CSharp
                                          select symbol);
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Log($"Order Symbol: {newEvent.Symbol}; Quantity: {newEvent.Quantity}; Status: {newEvent.Status}");
+            Log($"Order Symbol: {orderEvent.Symbol}; Quantity: {orderEvent.Quantity}; Status: {orderEvent.Status}");
 
-            if (newEvent.Symbol == _equity && newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Symbol == _equity && orderEvent.Status == OrderStatus.Filled)
             {
                 _purchasedUnderlying = true;
             }

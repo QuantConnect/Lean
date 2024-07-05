@@ -67,20 +67,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Filled && newEvent.Direction == OrderDirection.Sell)
+            if (orderEvent.Status == OrderStatus.Filled && orderEvent.Direction == OrderDirection.Sell)
             {
-                Debug($"OrderEvent: {newEvent}");
+                Debug($"OrderEvent: {orderEvent}");
                 Debug($"CashBook:\n{Portfolio.CashBook}\n");
                 Debug($"UnsettledCashBook:\n{Portfolio.UnsettledCashBook}\n");
 
-                if (!Portfolio.UnsettledCashBook.TryGetValue(newEvent.FillPriceCurrency, out var unsettledCash))
+                if (!Portfolio.UnsettledCashBook.TryGetValue(orderEvent.FillPriceCurrency, out var unsettledCash))
                 {
-                    throw new RegressionTestException($"Unsettled cash entry for {newEvent.FillPriceCurrency} not found");
+                    throw new RegressionTestException($"Unsettled cash entry for {orderEvent.FillPriceCurrency} not found");
                 }
 
-                var expectedUnsettledCash = Math.Abs(newEvent.FillPrice * newEvent.FillQuantity);
+                var expectedUnsettledCash = Math.Abs(orderEvent.FillPrice * orderEvent.FillQuantity);
                 var actualUnsettledCash = unsettledCash.Amount - _lastUnsettledCash;
                 if (actualUnsettledCash != expectedUnsettledCash)
                 {

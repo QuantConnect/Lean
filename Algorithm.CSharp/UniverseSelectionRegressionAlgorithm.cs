@@ -123,15 +123,15 @@ namespace QuantConnect.Algorithm.CSharp
             _changes = changes;
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Submitted)
+            if (orderEvent.Status == OrderStatus.Submitted)
             {
-                Log(Time + ": Submitted: " + Transactions.GetOrderById(newEvent.OrderId));
+                Log(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
-            if (newEvent.Status.IsFill())
+            if (orderEvent.Status.IsFill())
             {
-                Log(Time + ": Filled: " + Transactions.GetOrderById(newEvent.OrderId));
+                Log(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
         }
 

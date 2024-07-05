@@ -52,12 +52,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnOrderEvent is called whenever an order is updated
         /// </summary>
-        /// <param name="newEvent">Order Event</param>
-        public override void OnOrderEvent(OrderEvent newEvent)
+        /// <param name="orderEvent">Order Event</param>
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             { 
-                Debug($"Price: {Securities[newEvent.Symbol].Price}, filled price: {newEvent.FillPrice}, quantity: {newEvent.FillQuantity}");
+                Debug($"Price: {Securities[orderEvent.Symbol].Price}, filled price: {orderEvent.FillPrice}, quantity: {orderEvent.FillQuantity}");
             }
             
         }

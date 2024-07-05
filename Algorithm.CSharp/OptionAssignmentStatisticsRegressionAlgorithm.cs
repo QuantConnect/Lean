@@ -95,11 +95,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Filled && newEvent.Symbol.SecurityType.IsOption())
+            if (orderEvent.Status == OrderStatus.Filled && orderEvent.Symbol.SecurityType.IsOption())
             {
-                Securities[newEvent.Symbol]["closed"] = true;
+                Securities[orderEvent.Symbol]["closed"] = true;
             }
         }
 

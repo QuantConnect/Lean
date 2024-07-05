@@ -127,9 +127,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Direction != OrderDirection.Sell || newEvent.Status != OrderStatus.Filled)
+            if (orderEvent.Direction != OrderDirection.Sell || orderEvent.Status != OrderStatus.Filled)
             {
                 return;
             }
@@ -139,13 +139,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             // * We expect NO Underlying Future Liquidation because we already hold a Long future position so the FOP Put selling leaves us breakeven
             _liquidated++;
-            if (newEvent.Symbol.SecurityType == SecurityType.FutureOption && _expectedLiquidationTime != Time)
+            if (orderEvent.Symbol.SecurityType == SecurityType.FutureOption && _expectedLiquidationTime != Time)
             {
-                throw new RegressionTestException($"Expected to liquidate option {newEvent.Symbol} at {_expectedLiquidationTime}, instead liquidated at {Time}");
+                throw new RegressionTestException($"Expected to liquidate option {orderEvent.Symbol} at {_expectedLiquidationTime}, instead liquidated at {Time}");
             }
-            if (newEvent.Symbol.SecurityType == SecurityType.Future && _expectedLiquidationTime.AddMinutes(-1) != Time && _expectedLiquidationTime != Time)
+            if (orderEvent.Symbol.SecurityType == SecurityType.Future && _expectedLiquidationTime.AddMinutes(-1) != Time && _expectedLiquidationTime != Time)
             {
-                throw new RegressionTestException($"Expected to liquidate future {newEvent.Symbol} at {_expectedLiquidationTime} (+1 minute), instead liquidated at {Time}");
+                throw new RegressionTestException($"Expected to liquidate future {orderEvent.Symbol} at {_expectedLiquidationTime} (+1 minute), instead liquidated at {Time}");
             }
         }
 

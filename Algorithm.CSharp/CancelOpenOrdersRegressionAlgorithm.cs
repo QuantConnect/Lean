@@ -81,10 +81,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Order fill event handler. On an order fill update the resulting information is passed to this method.
         /// </summary>
-        /// <param name="newEvent">Order event details containing details of the events</param>
-        public override void OnOrderEvent(OrderEvent newEvent)
+        /// <param name="orderEvent">Order event details containing details of the events</param>
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug(newEvent.ToString());
+            Debug(orderEvent.ToString());
         }
 
         /// <summary>

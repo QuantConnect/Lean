@@ -51,9 +51,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Submitted)
+            if (orderEvent.Status == OrderStatus.Submitted)
             {
                 var orderTickets = Transactions.GetOpenOrderTickets(_aapl).Single();
             }
@@ -67,11 +67,11 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (newEvent.OrderId > 1)
+            if (orderEvent.OrderId > 1)
             {
-                throw new RegressionTestException($"We only expect 1 order to be placed: {newEvent}");
+                throw new RegressionTestException($"We only expect 1 order to be placed: {orderEvent}");
             }
-            Debug($"OnOrderEvent: {newEvent}");
+            Debug($"OnOrderEvent: {orderEvent}");
         }
 
         /// <summary>

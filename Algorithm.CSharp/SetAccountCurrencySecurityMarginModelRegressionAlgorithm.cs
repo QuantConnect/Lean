@@ -124,21 +124,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
-                Log($"OnOrderEvent(): New filled order event: {newEvent}");
+                Log($"OnOrderEvent(): New filled order event: {orderEvent}");
                 // leave 1 unit as error in expected value
-                if (Math.Abs(newEvent.FillQuantity - _expectedOrderQuantity) > 2)
+                if (Math.Abs(orderEvent.FillQuantity - _expectedOrderQuantity) > 2)
                 {
-                    throw new RegressionTestException($"Unexpected order event fill quantity: {newEvent.FillQuantity}. " +
+                    throw new RegressionTestException($"Unexpected order event fill quantity: {orderEvent.FillQuantity}. " +
                         $"Expected {_expectedOrderQuantity}");
                 }
 
-                var orderFeeInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(newEvent.OrderFee.Value).Amount;
+                var orderFeeInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
                 var expectedOrderFee = _spy.Holdings.TotalFees - _previousHoldingsFees;
-                if (newEvent.OrderFee.Value.Currency == AccountCurrency
+                if (orderEvent.OrderFee.Value.Currency == AccountCurrency
                     // leave 0.00001m as error in expected fee value
                     || Math.Abs(expectedOrderFee - orderFeeInAccountCurrency) > 0.00001m)
                 {

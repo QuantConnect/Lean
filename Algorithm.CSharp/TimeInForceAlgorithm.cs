@@ -109,11 +109,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Order event handler. This handler will be called for all order events, including submissions, fills, cancellations.
         /// </summary>
-        /// <param name="newEvent">Order event instance containing details of the event</param>
+        /// <param name="orderEvent">Order event instance containing details of the event</param>
         /// <remarks>This method can be called asynchronously, ensure you use proper locks on thread-unsafe objects</remarks>
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug($"{Time} {newEvent}");
+            Debug($"{Time} {orderEvent}");
         }
 
         /// <summary>

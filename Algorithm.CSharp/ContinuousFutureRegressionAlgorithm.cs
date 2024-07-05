@@ -123,11 +123,11 @@ namespace QuantConnect.Algorithm.CSharp
             _currentMappedSymbol = _continuousContract.Mapped;
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
-                Log($"{newEvent}");
+                Log($"{orderEvent}");
             }
         }
 

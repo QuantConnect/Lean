@@ -117,7 +117,7 @@ namespace QuantConnect.Indicators
         /// </remarks>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
-        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        protected override decimal ComputeNextValue(IndicatorDataPoint _)
         {
             // this should never actually be invoked
             return _composer.Invoke(Left, Right).Value;

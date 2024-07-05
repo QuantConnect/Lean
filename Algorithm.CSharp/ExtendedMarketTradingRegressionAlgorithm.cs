@@ -66,14 +66,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// Order events are triggered on order status changes. There are many order events including non-fill messages.
         /// </summary>
         /// <param name="orderEvent">OrderEvent object with details about the order status</param>
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
             if (InMarketHours())
             {
                 throw new RegressionTestException("Order processed during market hours.");
             }
 
-            Log($"{newEvent}");
+            Log($"{orderEvent}");
         }
 
         /// <summary>

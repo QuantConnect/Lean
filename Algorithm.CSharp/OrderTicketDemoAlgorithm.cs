@@ -506,35 +506,35 @@ namespace QuantConnect.Algorithm.CSharp
 
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            var order = Transactions.GetOrderById(newEvent.OrderId);
-            Log($"{Time}: {order.Type}: {newEvent}");
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            Log($"{Time}: {order.Type}: {orderEvent}");
 
-            if (newEvent.Quantity == 0)
+            if (orderEvent.Quantity == 0)
             {
                 throw new RegressionTestException("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
             }
-            if (newEvent.Quantity != order.Quantity)
+            if (orderEvent.Quantity != order.Quantity)
             {
                 throw new RegressionTestException("OrderEvent quantity should hold the current order Quantity");
             }
-            if (order is LimitOrder && newEvent.LimitPrice == 0
-                || order is StopLimitOrder && newEvent.LimitPrice == 0)
+            if (order is LimitOrder && orderEvent.LimitPrice == 0
+                || order is StopLimitOrder && orderEvent.LimitPrice == 0)
             {
                 throw new RegressionTestException("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder");
             }
-            if (order is StopMarketOrder && newEvent.StopPrice == 0)
+            if (order is StopMarketOrder && orderEvent.StopPrice == 0)
             {
                 throw new RegressionTestException("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder");
             }
 
             // We can access the order ticket from the order event
-            if (newEvent.Ticket == null)
+            if (orderEvent.Ticket == null)
             {
                 throw new RegressionTestException("OrderEvent Ticket was not set");
             }
-            if (newEvent.OrderId != newEvent.Ticket.OrderId)
+            if (orderEvent.OrderId != orderEvent.Ticket.OrderId)
             {
                 throw new RegressionTestException("OrderEvent.OrderId and orderEvent.Ticket.OrderId do not match");
             }

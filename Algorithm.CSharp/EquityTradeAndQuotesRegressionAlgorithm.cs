@@ -119,16 +119,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
-                Log($"{Time:s} {newEvent.Direction}");
-                var expectedFillPrice = newEvent.Direction == OrderDirection.Buy ? Securities[_symbol].AskPrice : Securities[_symbol].BidPrice;
-                if (newEvent.FillPrice != expectedFillPrice)
+                Log($"{Time:s} {orderEvent.Direction}");
+                var expectedFillPrice = orderEvent.Direction == OrderDirection.Buy ? Securities[_symbol].AskPrice : Securities[_symbol].BidPrice;
+                if (orderEvent.FillPrice != expectedFillPrice)
                 {
-                    throw new RegressionTestException($"Fill price is not the expected for OrderId {newEvent.OrderId} at Algorithm Time {Time:s}." +
-                                        $"\n\tExpected fill price: {expectedFillPrice}, Actual fill price: {newEvent.FillPrice}");
+                    throw new RegressionTestException($"Fill price is not the expected for OrderId {orderEvent.OrderId} at Algorithm Time {Time:s}." +
+                                        $"\n\tExpected fill price: {expectedFillPrice}, Actual fill price: {orderEvent.FillPrice}");
                 }
             }
         }

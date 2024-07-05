@@ -64,11 +64,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status.IsFill())
+            if (orderEvent.Status.IsFill())
             {
-                Debug($"Purchased Complete: {newEvent.Symbol}");
+                Debug($"Purchased Complete: {orderEvent.Symbol}");
             }
         }
 

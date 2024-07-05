@@ -80,11 +80,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug(Time + " " + newEvent);
+            Debug(Time + " " + orderEvent);
             _orderFeesInAccountCurrency +=
-                Portfolio.CashBook.ConvertToAccountCurrency(newEvent.OrderFee.Value).Amount;
+                Portfolio.CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
         }
 
         public override void OnEndOfAlgorithm()

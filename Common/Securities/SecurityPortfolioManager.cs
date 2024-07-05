@@ -127,19 +127,19 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Add a new securities string-security to the portfolio.
         /// </summary>
-        /// <param name="key">Symbol of dictionary</param>
-        /// <param name="value">SecurityHoldings object</param>
+        /// <param name="symbol">Symbol of dictionary</param>
+        /// <param name="holding">SecurityHoldings object</param>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Add(Symbol key, SecurityHolding value) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryAddNotImplemented); }
+        public void Add(Symbol symbol, SecurityHolding holding) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryAddNotImplemented); }
 
         /// <summary>
         /// Add a new securities key value pair to the portfolio.
         /// </summary>
-        /// <param name="item">Key value pair of dictionary</param>
+        /// <param name="pair">Key value pair of dictionary</param>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public void Add(KeyValuePair<Symbol, SecurityHolding> item) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryAddNotImplemented); }
+        public void Add(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryAddNotImplemented); }
 
         /// <summary>
         /// Clear the portfolio of securities objects.
@@ -152,9 +152,9 @@ namespace QuantConnect.Securities
         /// Remove this keyvalue pair from the portfolio.
         /// </summary>
         /// <exception cref="NotImplementedException">Portfolio object is an adaptor for Security Manager. This method is not applicable for PortfolioManager class.</exception>
-        /// <param name="key">Key value pair of dictionary</param>
+        /// <param name="pair">Key value pair of dictionary</param>
         /// <remarks>This method is not implemented and using it will throw an exception</remarks>
-        public bool Remove(KeyValuePair<Symbol, SecurityHolding> key) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryRemoveNotImplemented); }
+        public bool Remove(KeyValuePair<Symbol, SecurityHolding> pair) { throw new NotImplementedException(Messages.SecurityPortfolioManager.DictionaryRemoveNotImplemented); }
 
         /// <summary>
         /// Remove this symbol from the portfolio.
@@ -167,22 +167,22 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Check if the portfolio contains this symbol string.
         /// </summary>
-        /// <param name="key">String search symbol for the security</param>
+        /// <param name="symbol">String search symbol for the security</param>
         /// <returns>Boolean true if portfolio contains this symbol</returns>
-        public bool ContainsKey(Symbol key)
+        public bool ContainsKey(Symbol symbol)
         {
-            return Securities.ContainsKey(key);
+            return Securities.ContainsKey(symbol);
         }
 
         /// <summary>
         /// Check if the key-value pair is in the portfolio.
         /// </summary>
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
-        /// <param name="item">Pair we're searching for</param>
+        /// <param name="pair">Pair we're searching for</param>
         /// <returns>True if we have this object</returns>
-        public bool Contains(KeyValuePair<Symbol, SecurityHolding> item)
+        public bool Contains(KeyValuePair<Symbol, SecurityHolding> pair)
         {
-            return Securities.ContainsKey(item.Key);
+            return Securities.ContainsKey(pair.Key);
         }
 
         /// <summary>
@@ -214,14 +214,14 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
         /// <param name="array">Destination array</param>
-        /// <param name="arrayIndex">Position in array to start copying</param>
-        public void CopyTo(KeyValuePair<Symbol, SecurityHolding>[] array, int arrayIndex)
+        /// <param name="index">Position in array to start copying</param>
+        public void CopyTo(KeyValuePair<Symbol, SecurityHolding>[] array, int index)
         {
             array = new KeyValuePair<Symbol, SecurityHolding>[Securities.Count];
             var i = 0;
             foreach (var asset in Securities.Values)
             {
-                if (i >= arrayIndex)
+                if (i >= index)
                 {
                     array[i] = new KeyValuePair<Symbol, SecurityHolding>(asset.Symbol, asset.Holdings);
                 }
@@ -273,14 +273,14 @@ namespace QuantConnect.Securities
         /// Attempt to get the value of the securities holding class if this symbol exists.
         /// </summary>
         /// <param name="symbol">String search symbol</param>
-        /// <param name="value">Holdings object of this security</param>
+        /// <param name="holding">Holdings object of this security</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Boolean true if successful locating and setting the holdings object</returns>
-        public override bool TryGetValue(Symbol symbol, out SecurityHolding value)
+        public override bool TryGetValue(Symbol symbol, out SecurityHolding holding)
         {
             Security security;
             var success = Securities.TryGetValue(symbol, out security);
-            value = success ? security.Holdings : null;
+            holding = success ? security.Holdings : null;
             return success;
         }
 

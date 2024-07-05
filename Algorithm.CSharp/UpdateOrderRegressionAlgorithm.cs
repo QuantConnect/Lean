@@ -144,18 +144,18 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
             // if the order time isn't equal to the algo time, then the modified time on the order should be updated
-            var order = Transactions.GetOrderById(newEvent.OrderId);
-            var ticket = Transactions.GetOrderTicket(newEvent.OrderId);
-            if (order.Status == OrderStatus.Canceled && order.CanceledTime != newEvent.UtcTime)
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            var ticket = Transactions.GetOrderTicket(orderEvent.OrderId);
+            if (order.Status == OrderStatus.Canceled && order.CanceledTime != orderEvent.UtcTime)
             {
                 throw new RegressionTestException("Expected canceled order CanceledTime to equal canceled order event time.");
             }
 
             // fills update LastFillTime
-            if ((order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled) && order.LastFillTime != newEvent.UtcTime)
+            if ((order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled) && order.LastFillTime != orderEvent.UtcTime)
             {
                 throw new RegressionTestException("Expected filled order LastFillTime to equal fill order event time.");
             }
@@ -166,13 +166,13 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Expected updated order LastUpdateTime to equal submitted update order event time");
             }
 
-            if (newEvent.Status == OrderStatus.Filled)
+            if (orderEvent.Status == OrderStatus.Filled)
             {
-                Log("FILLED:: " + Transactions.GetOrderById(newEvent.OrderId) + " FILL PRICE:: " + newEvent.FillPrice.SmartRounding());
+                Log("FILLED:: " + Transactions.GetOrderById(orderEvent.OrderId) + " FILL PRICE:: " + orderEvent.FillPrice.SmartRounding());
             }
             else
             {
-                Log(newEvent.ToString());
+                Log(orderEvent.ToString());
                 Log("TICKET:: " + ticket);
             }
         }

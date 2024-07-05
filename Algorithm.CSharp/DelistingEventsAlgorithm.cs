@@ -106,9 +106,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug($"OnOrderEvent(OrderEvent): {Time}: {newEvent}");
+            Debug($"OnOrderEvent(OrderEvent): {Time}: {orderEvent}");
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)

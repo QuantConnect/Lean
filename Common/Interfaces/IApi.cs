@@ -169,10 +169,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id to update</param>
         /// <param name="backtestId">Backtest id to update</param>
-        /// <param name="backtestName">New backtest name to set</param>
-        /// <param name="backtestNote">Note attached to the backtest</param>
+        /// <param name="name">New backtest name to set</param>
+        /// <param name="note">Note attached to the backtest</param>
         /// <returns>Rest response on success</returns>
-        RestResponse UpdateBacktest(int projectId, string backtestId, string backtestName = "", string backtestNote = "");
+        RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "");
 
         /// <summary>
         /// Delete a backtest from the specified project and backtestId.

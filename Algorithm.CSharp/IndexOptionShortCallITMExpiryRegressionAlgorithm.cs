@@ -101,34 +101,34 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status != OrderStatus.Filled)
+            if (orderEvent.Status != OrderStatus.Filled)
             {
                 // There's lots of noise with OnOrderEvent, but we're only interested in fills.
                 return;
             }
 
-            if (!Securities.ContainsKey(newEvent.Symbol))
+            if (!Securities.ContainsKey(orderEvent.Symbol))
             {
-                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {newEvent.Symbol}");
+                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
             }
 
-            var security = Securities[newEvent.Symbol];
+            var security = Securities[orderEvent.Symbol];
             if (security.Symbol == _spx)
             {
-                AssertIndexOptionOrderExercise(newEvent, security, Securities[_expectedContract]);
+                AssertIndexOptionOrderExercise(orderEvent, security, Securities[_expectedContract]);
             }
             else if (security.Symbol == _expectedContract)
             {
-                AssertIndexOptionContractOrder(newEvent, security);
+                AssertIndexOptionContractOrder(orderEvent, security);
             }
             else
             {
-                throw new RegressionTestException($"Received order event for unknown Symbol: {newEvent.Symbol}");
+                throw new RegressionTestException($"Received order event for unknown Symbol: {orderEvent.Symbol}");
             }
 
-            Log($"{newEvent}");
+            Log($"{orderEvent}");
         }
 
         private void AssertIndexOptionOrderExercise(OrderEvent orderEvent, Security index, Security optionContract)

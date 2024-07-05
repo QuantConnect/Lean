@@ -302,7 +302,7 @@ namespace QuantConnect.Tests.API
 
             //Update the note and make sure its been updated:
             var newNote = DateTime.Now.ToStringInvariant("u");
-            var noteBacktest = ApiClient.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, backtestNote: newNote);
+            var noteBacktest = ApiClient.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, note: newNote);
             Assert.IsTrue(noteBacktest.Success);
             backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
             Assert.AreEqual(newNote, backtestRead.Note);
@@ -382,7 +382,7 @@ namespace QuantConnect.Tests.API
             var newName = $"{originalName} - Amended - {DateTime.UtcNow.ToStringInvariant("u")}";
 
             // Update the backtest name
-            var updateResult = ApiClient.UpdateBacktest(TestProject.ProjectId, TestBacktest.BacktestId, backtestName: newName);
+            var updateResult = ApiClient.UpdateBacktest(TestProject.ProjectId, TestBacktest.BacktestId, name: newName);
             Assert.IsTrue(updateResult.Success, $"Error updating backtest name:\n    {string.Join("\n    ", updateResult.Errors)}");
 
             // Read the backtest and verify the name has been updated
@@ -391,7 +391,7 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(newName, readResult.Name);
 
             // Revert the name back to the original
-            updateResult = ApiClient.UpdateBacktest(TestProject.ProjectId, TestBacktest.BacktestId, backtestName: originalName);
+            updateResult = ApiClient.UpdateBacktest(TestProject.ProjectId, TestBacktest.BacktestId, name: originalName);
             Assert.IsTrue(updateResult.Success, $"Error updating backtest name:\n    {string.Join("\n    ", updateResult.Errors)}");
 
             // Read the backtest and verify the name has been updated

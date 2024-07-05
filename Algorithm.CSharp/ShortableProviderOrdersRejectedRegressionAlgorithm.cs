@@ -134,9 +134,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            _lastOrderEvent = newEvent;
+            _lastOrderEvent = orderEvent;
         }
 
         private void HandleOrder(OrderTicket orderTicket)

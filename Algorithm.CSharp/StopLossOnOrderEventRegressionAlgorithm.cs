@@ -36,16 +36,16 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY").Symbol;
         }
 
-        public override void OnOrderEvent(OrderEvent newEvent)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug($"{newEvent}");
-            var order = Transactions.GetOrderById(newEvent.OrderId);
-            if (order.Tag == "Entry" && newEvent.Status == OrderStatus.Filled)
+            Debug($"{orderEvent}");
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            if (order.Tag == "Entry" && orderEvent.Status == OrderStatus.Filled)
             {
                 // Entry short $2 below
-                var stopPrice = newEvent.FillPrice - 2;
+                var stopPrice = orderEvent.FillPrice - 2;
                 var currencySymbol = Currencies.GetCurrencySymbol(order.PriceCurrency);
-                Debug($"Enter short at {newEvent.FillPrice} set STOPLOSS at {currencySymbol}{stopPrice}");
+                Debug($"Enter short at {orderEvent.FillPrice} set STOPLOSS at {currencySymbol}{stopPrice}");
                 StopMarketOrder(order.Symbol, -order.Quantity, stopPrice, "StopLoss");
             }
         }

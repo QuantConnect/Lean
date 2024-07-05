@@ -84,16 +84,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Order events are triggered on order status changes. There are many order events including non-fill messages.
         /// </summary>
-        /// <param name="newEvent">OrderEvent object with details about the order status</param>
-        public override void OnOrderEvent(OrderEvent newEvent)
+        /// <param name="orderEvent">OrderEvent object with details about the order status</param>
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            if (newEvent.Status == OrderStatus.Submitted)
+            if (orderEvent.Status == OrderStatus.Submitted)
             {
-                Debug(Time + ": Submitted: " + Transactions.GetOrderById(newEvent.OrderId));
+                Debug(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
-            if (newEvent.Status.IsFill())
+            if (orderEvent.Status.IsFill())
             {
-                Debug(Time + ": Filled: " + Transactions.GetOrderById(newEvent.OrderId));
+                Debug(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
             }
         }
 
