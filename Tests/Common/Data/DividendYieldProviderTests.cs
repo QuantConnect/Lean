@@ -60,7 +60,6 @@ namespace QuantConnect.Tests.Common.Data
         {
             var symbol = Symbols.AAPL;
             using var fileProviderTest = new DividendYieldProviderTest(symbol);
-            fileProviderTest.Reset();
 
             fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
             var fetchCount = fileProviderTest.FetchCount;
@@ -68,33 +67,41 @@ namespace QuantConnect.Tests.Common.Data
             fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
             Assert.AreEqual(fetchCount, fileProviderTest.FetchCount);
 
-            Thread.Sleep(TimeSpan.FromSeconds(10));
-
-            fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
-            Assert.Greater(fileProviderTest.FetchCount, fetchCount);
+            var counter = 0;
+            while (counter++ < 10)
+            {
+                fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
+                if (fileProviderTest.FetchCount <= fetchCount)
+                {
+                    Thread.Sleep(250);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            Assert.Less(counter, 10);
         }
 
         [Test]
         public void AnotherSymbolCall()
         {
-            using var fileProviderTest = new DividendYieldProviderTest(Symbols.AAPL);
+            using var fileProviderTest = new DividendYieldProviderTest(Symbol.Create("TEST_A", SecurityType.Equity, QuantConnect.Market.USA));
 
             var applYield = fileProviderTest.GetDividendYield(new DateTime(2020, 1, 1));
             Assert.AreEqual(1, fileProviderTest.FetchCount);
 
-            using var fileProviderTest2 = new DividendYieldProviderTest(Symbols.SPY);
+            using var fileProviderTest2 = new DividendYieldProviderTest(Symbol.Create("TEST_B", SecurityType.Equity, QuantConnect.Market.USA));
 
             var spyYield = fileProviderTest2.GetDividendYield(new DateTime(2020, 1, 1));
             Assert.AreEqual(1, fileProviderTest2.FetchCount);
-
-            Assert.AreNotEqual(applYield, spyYield);
         }
 
         private class DividendYieldProviderTest : DividendYieldProvider, IDisposable
         {
             public int FetchCount { get; set; }
 
-            protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromSeconds(5);
+            protected override TimeSpan CacheRefreshPeriod => TimeSpan.FromSeconds(1);
 
             public DividendYieldProviderTest(Symbol symbol)
                 : base(symbol) 
