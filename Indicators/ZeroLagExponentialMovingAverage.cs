@@ -81,17 +81,9 @@ namespace QuantConnect.Indicators
             if (_delayedPrice.IsReady)
             {
                 _ema.Update(input.Time, input.Value + (input.Value - _delayedPrice.Current));
+                return _ema.Current.Value;
             }
             else
-            {
-                return 0;
-            }
-
-            if(_ema.IsReady)
-            {
-                return _ema.Current.Value;
-                
-            } else
             {
                 return 0;
             }
