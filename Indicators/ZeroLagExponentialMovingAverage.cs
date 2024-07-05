@@ -19,6 +19,8 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Represents the zero lag moving average indicator (ZLEMA)
+    /// ie a technical indicator that aims is to eliminate the inherent lag associated to all trend 
+    /// following indicators which average a price over time.
     /// </summary>
     public class ZeroLagExponentialMovingAverage : WindowIndicator<IndicatorDataPoint>, IIndicatorWarmUpPeriodProvider
     {
