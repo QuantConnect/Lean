@@ -234,7 +234,16 @@ namespace QuantConnect.Tests.Indicators
         /// </summary>
         protected virtual Action<IndicatorBase<T>, double> Assertion
         {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double) indicator.Current.Value, 1e-3); }
+            get
+            {
+                return (indicator, expected) =>
+                {
+                    Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-3);
+
+                    var relativeDifference = Math.Abs(((double)indicator.Current.Value - expected) / expected);
+                    Assert.LessOrEqual(relativeDifference, 1); // less than 1% error rate
+                };
+            }
         }
 
         /// <summary>

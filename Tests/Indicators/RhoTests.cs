@@ -20,7 +20,7 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class RhoTests : OptionBaseIndicatorTests<Rho>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()

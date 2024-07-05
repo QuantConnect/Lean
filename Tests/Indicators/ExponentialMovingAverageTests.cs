@@ -20,7 +20,7 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class ExponentialMovingAverageTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
@@ -31,8 +31,6 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_ema.csv";
 
         protected override string TestColumnName => "EMA14";
-
-        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion => TestHelper.AssertDeltaDecreases(2.5e-2);
 
         [Test]
         public void EmaComputesCorrectly()
