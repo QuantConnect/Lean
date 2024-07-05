@@ -780,9 +780,9 @@ namespace QuantConnect.Algorithm
         /// <param name="type">The type of smoothing to use</param>
         /// <param name="resolution">The resolution</param>
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
-        /// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
+        /// <returns>A new ForceIndex indicator with the specified smoothing type and period</returns>
         [DocumentationAttribute(Indicators)]
-        public ForceIndex FI(Symbol symbol, int period, MovingAverageType type = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        public ForceIndex FI(Symbol symbol, int period, MovingAverageType type = MovingAverageType.Exponential, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"FI({period})", resolution);
             var indicator = new ForceIndex(name, period, type);

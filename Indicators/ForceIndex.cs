@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using QLNet;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
@@ -48,14 +46,13 @@ namespace QuantConnect.Indicators
         /// Creates a new ForceIndex indicator using the specified period and moving average type
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The smoothing period used to smooth the true range values</param>
+        /// <param name="period">The smoothing period used to smooth the instantaneous force index values</param>
         /// <param name="movingAverageType">The type of smoothing used to smooth the true range values</param>
-        public ForceIndex(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Wilders)
+        public ForceIndex(string name, int period, MovingAverageType movingAverageType = MovingAverageType.Exponential)
             : base(name)
         {
-            WarmUpPeriod = period;
-
             _smoother = movingAverageType.AsIndicator($"{name}_{movingAverageType}", period);
+            WarmUpPeriod = period + 1;
 
         }
 
@@ -78,6 +75,7 @@ namespace QuantConnect.Indicators
         {
             if (Samples < 2)
             {
+                _previousInput = input;
                 return 0;
             }
             // compute the instantaneous force index and then send it to our smoother

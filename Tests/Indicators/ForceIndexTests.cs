@@ -21,37 +21,18 @@ using QuantConnect.Indicators;
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
-    public class ForceIndexTests : CommonIndicatorTests<IBaseDataBar>
+    public class ForceIndexTests : CommonIndicatorTests<TradeBar>
     {
-        protected override IndicatorBase<IBaseDataBar> CreateIndicator()
+        protected override IndicatorBase<TradeBar> CreateIndicator()
         {
-            RenkoBarSize = 1m;
-            VolumeRenkoBarSize = 0.5m;
+            //RenkoBarSize = 1m;
+            //VolumeRenkoBarSize = 0.5m;
             return new ForceIndex(20);
         }
 
         protected override string TestFileName => "spy_with_ForceIndex.csv";
 
         protected override string TestColumnName => "ForceIndex20";
-
-        [Test]
-        public override void ResetsProperly()
-        {
-            var indicator = new ForceIndex(14, MovingAverageType.Simple);
-            indicator.Update(new TradeBar
-            {
-                Time = DateTime.Today,
-                Open = 1m,
-                High = 3m,
-                Low = .5m,
-                Close = 2.75m,
-                Volume = 1234567890
-            });
-
-            indicator.Reset();
-
-            TestHelper.AssertIndicatorIsInDefaultState(indicator);
-        }
 
     }
 }
