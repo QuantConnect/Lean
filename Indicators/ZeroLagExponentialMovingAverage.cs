@@ -37,14 +37,9 @@ namespace QuantConnect.Indicators
         public override bool IsReady => _delayedPrice.IsReady && _ema.IsReady;
 
         /// <summary>
-        /// Resets this indicator to its initial state
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public override void Reset()
-        {
-            _ema.Reset();
-            _delayedPrice.Reset();
-            base.Reset();
-        }
+        public override int WarmUpPeriod => _period + (int)Math.Floor(((float)_period) / 2);
 
         /// <summary>
         /// Initializes a new instance of the ZeroLagMovingAverage class with the specified name and period
@@ -69,6 +64,16 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _ema.Reset();
+            _delayedPrice.Reset();
+            base.Reset();
+        }
+
+        /// <summary>
         /// Computes the next value for this indicator from the given state.
         /// </summary>
         /// <param name="window">The window of data held in this indicator</param>
@@ -76,22 +81,12 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            _delayedPrice.Update(input);
-
-            if (_delayedPrice.IsReady)
+            if (_delayedPrice.Update(input))
             {
                 _ema.Update(input.Time, input.Value + (input.Value - _delayedPrice.Current));
                 return _ema.Current.Value;
             }
-            else
-            {
-                return 0;
-            }
+            return 0;
         }
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        public int WarmUpPeriod => _period + (int)Math.Floor(((float)_period) / 2);
     }
 }
