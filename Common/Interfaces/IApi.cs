@@ -191,6 +191,17 @@ namespace QuantConnect.Interfaces
         BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = false);
 
         /// <summary>
+        /// Read out the insights of a backtest
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the backtest</param>
+        /// <param name="backtestId">Backtest id from which we want to get the insights</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0);
+
+        /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API
         /// </summary>
         /// <param name="projectId">Project ID of the project the optimization belongs to</param>
