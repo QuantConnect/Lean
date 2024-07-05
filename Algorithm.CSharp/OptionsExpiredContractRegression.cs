@@ -43,9 +43,9 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(x => x.CallsOnly().Strikes(0, 1).Expiration(0, 30));
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            foreach (var chain in data.OptionChains)
+            foreach (var chain in slice.OptionChains)
             {
                 _receivedData = true;
 

@@ -83,10 +83,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            Debug($"OnData({UtcTime:o}): {IsWarmingUp}. {string.Join(", ", data.Values.OrderBy(x => x.Symbol))}");
+            Debug($"OnData({UtcTime:o}): {IsWarmingUp}. {string.Join(", ", slice.Values.OrderBy(x => x.Symbol))}");
 
             // if we have no changes, do nothing
             if (_changes == SecurityChanges.None || IsWarmingUp)
@@ -119,9 +119,9 @@ namespace QuantConnect.Algorithm.CSharp
             Debug($"OnSecuritiesChanged({UtcTime:o}):: {changes}");
         }
 
-        public override void OnOrderEvent(OrderEvent fill)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            Debug($"OnOrderEvent({UtcTime:o}):: {fill}");
+            Debug($"OnOrderEvent({UtcTime:o}):: {orderEvent}");
         }
 
         /// <summary>

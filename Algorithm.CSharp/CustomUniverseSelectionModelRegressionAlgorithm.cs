@@ -40,7 +40,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetUniverseSelection(new CustomUniverseSelectionModel());
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {

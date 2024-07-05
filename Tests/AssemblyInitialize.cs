@@ -115,8 +115,8 @@ namespace QuantConnect.Tests
         /// <summary>
         /// Replace the log handler if it has been changed
         /// </summary>
-        /// <param name="details"></param>
-        public void BeforeTest(ITest details)
+        /// <param name="test"></param>
+        public void BeforeTest(ITest test)
         {
             if (Log.LogHandler != LogHandler)
             {
@@ -124,7 +124,7 @@ namespace QuantConnect.Tests
             }
         }
 
-        public void AfterTest(ITest details)
+        public void AfterTest(ITest test)
         {
             //NOP
         }

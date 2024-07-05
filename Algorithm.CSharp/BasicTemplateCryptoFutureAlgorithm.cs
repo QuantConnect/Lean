@@ -79,9 +79,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            var interestRates = data.Get<MarginInterestRate>();
+            var interestRates = slice.Get<MarginInterestRate>();
             foreach (var interestRate in interestRates)
             {
                 _interestPerSymbol[interestRate.Key]++;

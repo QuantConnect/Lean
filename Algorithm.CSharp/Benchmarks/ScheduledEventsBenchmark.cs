@@ -34,7 +34,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             }
         }
 
-        public override void OnData(Slice data) { }
+        public override void OnData(Slice slice) { }
         private void Rebalance() { }
     }
 }

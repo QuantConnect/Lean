@@ -48,9 +48,9 @@ namespace QuantConnect.Algorithm.CSharp
             Plot("Portfolio.TPV", "Value", Portfolio.TotalPortfolioValue);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            var current = data.Bars.FirstOrDefault().Value;
+            var current = slice.Bars.FirstOrDefault().Value;
             if (current != null)
             {
                 if (Time == new DateTime(2014, 06, 09, 4, 1, 0) && !Portfolio.Invested)

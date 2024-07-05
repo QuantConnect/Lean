@@ -84,11 +84,11 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Determines whether or not the specified data should be processed
         /// </summary>
-        /// <param name="tick">The data to check</param>
+        /// <param name="data">The data to check</param>
         /// <returns>True if the consolidator should process this data, false otherwise</returns>
-        protected override bool ShouldProcess(Tick tick)
+        protected override bool ShouldProcess(Tick data)
         {
-            return tick.TickType == TickType.OpenInterest;
+            return data.TickType == TickType.OpenInterest;
         }
 
         /// <summary>
@@ -97,22 +97,22 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="workingBar">The bar we're building, null if the event was just fired and we're starting a new OI bar</param>
         /// <param name="tick">The new data</param>
-        protected override void AggregateBar(ref OpenInterest workingBar, Tick tick)
+        protected override void AggregateBar(ref OpenInterest workingBar, Tick data)
         {
             if (workingBar == null)
             {
                 workingBar = new OpenInterest
                 {
-                    Symbol = tick.Symbol,
-                    Time = GetRoundedBarTime(tick),
-                    Value = tick.Value
+                    Symbol = data.Symbol,
+                    Time = GetRoundedBarTime(data),
+                    Value = data.Value
                 };
 
             }
             else
             {
                 //Update the working bar
-                workingBar.Value = tick.Value;
+                workingBar.Value = data.Value;
             }
         }
     }

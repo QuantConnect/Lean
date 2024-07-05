@@ -51,10 +51,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Will assert the requested configuration is valid for the current job
         /// </summary>
-        /// <param name="subscriptionDataConfig">The data subscription configuration to assert</param>
+        /// <param name="subscriptionRequest">The data subscription configuration to assert</param>
         /// <param name="startTimeLocal">The start time of this request</param>
         /// <param name="endTimeLocal">The end time of this request</param>
-        public virtual void AssertConfiguration(SubscriptionDataConfig subscriptionDataConfig, DateTime startTimeLocal, DateTime endTimeLocal)
+        public virtual void AssertConfiguration(SubscriptionDataConfig subscriptionRequest, DateTime startTimeLocal, DateTime endTimeLocal)
         {
         }
     }

@@ -51,10 +51,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            foreach (var changedEvent in data.SymbolChangedEvents.Values)
+            foreach (var changedEvent in slice.SymbolChangedEvents.Values)
             {
                 if (changedEvent.Symbol == _continuousContract.Symbol)
                 {
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (!data.Bars.TryGetValue(_continuousContract.Symbol, out var continuousBar))
+            if (!slice.Bars.TryGetValue(_continuousContract.Symbol, out var continuousBar))
             {
                 return;
             }

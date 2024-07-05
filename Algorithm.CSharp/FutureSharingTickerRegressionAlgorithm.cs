@@ -45,12 +45,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
-                foreach (var chain in data.FutureChains)
+                foreach (var chain in slice.FutureChains)
                 {
                     // find the front contract expiring no earlier than in 90 days
                     var contract = (

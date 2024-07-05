@@ -38,12 +38,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetWarmUp(TimeSpan.FromDays(1), Resolution.Minute);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            var tradeBars = data.Get<TradeBar>();
+            var tradeBars = slice.Get<TradeBar>();
             tradeBars.TryGetValue("SPY", out var trade);
 
-            var quoteBars = data.Get<QuoteBar>();
+            var quoteBars = slice.Get<QuoteBar>();
             quoteBars.TryGetValue("SPY", out var quote);
 
             var expectedPeriod = TimeSpan.FromSeconds(1);

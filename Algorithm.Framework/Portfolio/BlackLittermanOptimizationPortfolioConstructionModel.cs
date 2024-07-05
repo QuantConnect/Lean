@@ -243,16 +243,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Will determine the target percent for each insight
         /// </summary>
-        /// <param name="lastActiveInsights">The active insights to generate a target for</param>
+        /// <param name="activeInsights">The active insights to generate a target for</param>
         /// <returns>A target percent for each insight</returns>
-        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> lastActiveInsights)
+        protected override Dictionary<Insight, double> DetermineTargetPercent(List<Insight> activeInsights)
         {
             var targets = new Dictionary<Insight, double>();
 
-            if (TryGetViews(lastActiveInsights, out var P, out var Q))
+            if (TryGetViews(activeInsights, out var P, out var Q))
             {
                 // Updates the ReturnsSymbolData with insights
-                foreach (var insight in lastActiveInsights)
+                foreach (var insight in activeInsights)
                 {
                     if (_symbolDataDict.TryGetValue(insight.Symbol, out var symbolData))
                     {
@@ -265,7 +265,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     }
                 }
                 // Get symbols' returns
-                var symbols = lastActiveInsights.Select(x => x.Symbol).Distinct().ToList();
+                var symbols = activeInsights.Select(x => x.Symbol).Distinct().ToList();
                 var returns = _symbolDataDict.FormReturnsMatrix(symbols);
 
                 // Calculate posterior estimate of the mean and uncertainty in the mean
@@ -286,7 +286,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                     {
                         weight = 0;
                     }
-                    targets[lastActiveInsights.First(insight => insight.Symbol == symbol)] = weight;
+                    targets[activeInsights.First(insight => insight.Symbol == symbol)] = weight;
 
                     sidx++;
                 }

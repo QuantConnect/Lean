@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Portfolio.Invested) return;
             SetHoldings(_symbol, .5);
@@ -59,10 +59,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Raises the data event.
         /// </summary>
-        /// <param name="data">Data.</param>
-        public override void OnDividends(Dividends data) // update this to Dividends dictionary
+        /// <param name="dividends">Data.</param>
+        public override void OnDividends(Dividends dividends) // update this to Dividends dictionary
         {
-            var dividend = data[_symbol];
+            var dividend = dividends[_symbol];
             var holdings = Portfolio[_symbol];
             Debug($"{dividend.Time.ToStringInvariant("o")} >> DIVIDEND >> {dividend.Symbol} - " +
                 $"{dividend.Distribution.ToStringInvariant("C")} - {Portfolio.Cash} - " +

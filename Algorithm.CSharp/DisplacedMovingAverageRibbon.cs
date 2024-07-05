@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // wait for our entire ribbon to be ready
             if (!_ribbon.All(x => x.IsReady)) return;
@@ -86,7 +86,7 @@ namespace QuantConnect.Algorithm.CSharp
             // only once per day
             if (_previous.Date == Time.Date) return;
 
-            Plot("Ribbon", "Price", data[_spy].Price);
+            Plot("Ribbon", "Price", slice[_spy].Price);
             Plot("Ribbon", _ribbon);
 
 

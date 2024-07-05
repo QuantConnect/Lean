@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             _googCall650["bought"] = false;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (_goog.Price == 0 || _googCall600.Price == 0 || _googCall650.Price == 0)
             {

@@ -139,7 +139,7 @@ namespace QuantConnect.Algorithm.CSharp
             };
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             var fastFactor = 0.005m;
 
