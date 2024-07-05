@@ -37,18 +37,28 @@ namespace QuantConnect
         /// </summary>
         public static class FillModel
         {
+            /// <summary>
+            /// Returns a string message warning saying the order was filled at stale price
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string FilledAtStalePrice(Securities.Security security, Prices prices)
             {
                 return Invariant($"Warning: fill at stale price ({prices.EndTime.ToStringInvariant()} {security.Exchange.TimeZone})");
             }
 
+            /// <summary>
+            /// Returns a string message saying the market never closes for the given symbol, and that an order of the given
+            /// type cannot be submitted
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MarketNeverCloses(Securities.Security security, OrderType orderType)
             {
                 return Invariant($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(orderType)} order.");
             }
 
+            /// <summary>
+            /// Returns a string message containing the given subscribedTypes
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static string SubscribedTypesToString(HashSet<Type> subscribedTypes)
             {
@@ -57,6 +67,10 @@ namespace QuantConnect
                     : Invariant($" SubscribedTypes: [{string.Join(",", subscribedTypes.Select(type => type.Name))}]");
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to get ask price to perform the fill for the given security symbol because
+            /// no market data was found
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoMarketDataToGetAskPriceForFilling(Securities.Security security, HashSet<Type> subscribedTypes = null)
             {
@@ -64,6 +78,10 @@ namespace QuantConnect
                     SubscribedTypesToString(subscribedTypes);
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to get bid price to perform the fill for the given security symbol because
+            /// no market data was found
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoMarketDataToGetBidPriceForFilling(Securities.Security security, HashSet<Type> subscribedTypes = null)
             {
@@ -71,6 +89,10 @@ namespace QuantConnect
                     SubscribedTypesToString(subscribedTypes);
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to perform a fill for the given security symbol because
+            /// no data subscription was found
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string NoDataSubscriptionFoundForFilling(Securities.Security security)
             {

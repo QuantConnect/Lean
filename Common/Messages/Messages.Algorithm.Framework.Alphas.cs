@@ -30,14 +30,29 @@ namespace QuantConnect
         /// </summary>
         public static class Insight
         {
+            /// <summary>
+            /// Returns a string message saying: Insight barCount must be grater than zero
+            /// </summary>
             public static string InvalidBarCount = "Insight barCount must be greater than zero.";
 
+            /// <summary>
+            /// Returns a string message saying: Insight period must be greater than or equal to 1 second
+            /// </summary>
             public static string InvalidPeriod = "Insight period must be greater than or equal to 1 second.";
 
+            /// <summary>
+            /// Returns a string message saying: Insight closeTimeUtc must be greater than generatedTimeUtc
+            /// </summary>
             public static string InvalidCloseTimeUtc = "Insight closeTimeUtc must be greater than generatedTimeUtc.";
 
+            /// <summary>
+            /// Returns a string message saying: Insight closeTimeLocal must not be in the past
+            /// </summary>
             public static string InvalidCloseTimeLocal = "Insight closeTimeLocal must not be in the past.";
 
+            /// <summary>
+            /// Returns a string message saying the Insight's GeneratedTimeUtc property must be set before calling SetPeriodAndCloseTime
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string GeneratedTimeUtcNotSet(Algorithm.Framework.Alphas.Insight insight)
             {
@@ -45,12 +60,19 @@ namespace QuantConnect
                     nameof(insight.SetPeriodAndCloseTime)}.");
             }
 
+            /// <summary>
+            /// Returns a string message saying it was impossible to set group id on the given insight because it has already
+            /// been assigned to a group
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InsightAlreadyAssignedToAGroup(Algorithm.Framework.Alphas.Insight insight)
             {
                 return Invariant($"Unable to set group id on insight {insight} because it has already been assigned to a group.");
             }
 
+            /// <summary>
+            /// Parses the given insight into a string containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Algorithm.Framework.Alphas.Insight insight)
             {
@@ -77,6 +99,9 @@ namespace QuantConnect
                 return str;
             }
 
+            /// <summary>
+            /// Parses a short insight into a string containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ShortToString(Algorithm.Framework.Alphas.Insight insight)
             {

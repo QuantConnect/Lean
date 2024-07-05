@@ -34,6 +34,9 @@ namespace QuantConnect.Data.Custom.IconicTypes
         [ProtoMember(55)]
         public int Count { get; set; }
 
+        /// <summary>
+        /// Return the URL string source of the file. This will be converted to a stream
+        /// </summary>
         public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
         {
             return new SubscriptionDataSource(
@@ -46,6 +49,10 @@ namespace QuantConnect.Data.Custom.IconicTypes
                 FileFormat.Csv);
         }
 
+        /// <summary>
+        /// Reader converts each line of the data source into BaseData objects. Each data type creates its own factory method, and returns a new instance of the object
+        /// each time it is called. The returned object is assumed to be time stamped in the config.ExchangeTimeZone.
+        /// </summary>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
             return new LinkedData

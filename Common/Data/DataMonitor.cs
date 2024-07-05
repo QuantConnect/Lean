@@ -132,6 +132,9 @@ namespace QuantConnect.Data
             _cancellationTokenSource.DisposeSafely();
         }
 
+        /// <summary>
+        /// Disposes this object
+        /// </summary>
         public void Dispose()
         {
             Exit();

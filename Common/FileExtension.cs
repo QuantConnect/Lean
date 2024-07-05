@@ -25,6 +25,9 @@ namespace QuantConnect
     /// </summary>
     public static class FileExtension
     {
+        /// <summary>
+        /// Reserved words prefix from Configuration
+        /// </summary>
         public static readonly string ReservedWordsPrefix = Config.Get("reserved-words-prefix", "@");
         private static readonly Regex ToValidWindowsPathRegex = new Regex("((?<=(\\\\|/|^))(CON|PRN|AUX|NUL|(COM[0-9])|(LPT[0-9]))(?=(\\.|\\\\|/|$)))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly string _fixPathRegex = ReservedWordsPrefix + "$&"; // The string "$&" gets the matched word

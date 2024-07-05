@@ -30,6 +30,9 @@ namespace QuantConnect
         /// </summary>
         public static class DllNotFoundPythonExceptionInterpreter
         {
+            /// <summary>
+            /// Returns a string message saying the given dynamic-link library could not be found
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string DynamicLinkLibraryNotFound(string dllName, string platform)
             {

@@ -43,6 +43,9 @@ namespace QuantConnect
         /// </summary>
         public static class AlphaStreamsFeeModel
         {
+            /// <summary>
+            /// Returns a string message saying the given market is unexpected
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnexpectedEquityMarket(string market)
             {

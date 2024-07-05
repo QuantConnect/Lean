@@ -167,6 +167,9 @@ namespace QuantConnect.Data.Shortable
             });
         }
 
+        /// <summary>
+        /// Gets the shortable data
+        /// </summary>
         protected record ShortableData(long? ShortableQuantity, decimal RebateFee, decimal FeeRate);
     }
 }

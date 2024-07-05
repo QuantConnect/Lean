@@ -34,6 +34,9 @@ namespace QuantConnect
         /// </summary>
         public static class CancelOrderRequest
         {
+            /// <summary>
+            /// Parses the given CancelOrderRequest into a string message containing basic information about it
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(Orders.CancelOrderRequest request)
             {

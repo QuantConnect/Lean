@@ -36,9 +36,15 @@ namespace QuantConnect
         /// </summary>
         public static class DefaultBrokerageModel
         {
+            /// <summary>
+            /// String message saying: MarketOnOpen orders are not supported for futures and future options
+            /// </summary>
             public static string UnsupportedMarketOnOpenOrdersForFuturesAndFutureOptions =
                 "MarketOnOpen orders are not supported for futures and future options.";
 
+            /// <summary>
+            /// String message saying: There is no data for this symbol yet
+            /// </summary>
             public static string NoDataForSymbol =
                 "There is no data for this symbol yet, please check the security.HasData flag to ensure there is at least one data point.";
 
