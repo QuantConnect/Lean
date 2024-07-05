@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             _dynamicSpy.OrdersFeesPrices = new Dictionary<int, decimal>();
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!_dynamicSpy.FastEma.IsReady)
             {
@@ -86,12 +86,12 @@ namespace QuantConnect.Algorithm.CSharp
             Plot("BB", bb.UpperBand, bb.MiddleBand, bb.LowerBand);
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
-                var fee = orderEvent.OrderFee;
-                var expectedFee = _dynamicSpy.OrdersFeesPrices[orderEvent.OrderId] * orderEvent.AbsoluteFillQuantity * _dynamicSpy.FeeFactor;
+                var fee = newEvent.OrderFee;
+                var expectedFee = _dynamicSpy.OrdersFeesPrices[newEvent.OrderId] * newEvent.AbsoluteFillQuantity * _dynamicSpy.FeeFactor;
                 if (fee.Value.Amount != expectedFee)
                 {
                     throw new RegressionTestException($"Custom fee model failed to set the correct fee. Expected: {expectedFee}. Actual: {fee.Value.Amount}");

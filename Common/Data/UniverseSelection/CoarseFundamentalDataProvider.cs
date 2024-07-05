@@ -34,16 +34,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <typeparam name="T">The expected data type</typeparam>
         /// <param name="time">The time to request this data for</param>
         /// <param name="securityIdentifier">The security identifier</param>
-        /// <param name="enumName">The name of the fundamental property</param>
+        /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
-        public override T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
+        public override T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
         {
-            var name = Enum.GetName(enumName);
+            var enumName = Enum.GetName(name);
             lock (_coarseFundamental)
             {
                 if (time == _date)
                 {
-                    return GetProperty<T>(securityIdentifier, name);
+                    return GetProperty<T>(securityIdentifier, enumName);
                 }
                 _date = time;
 
@@ -68,7 +68,7 @@ namespace QuantConnect.Data.UniverseSelection
                     }
                 }
 
-                return GetProperty<T>(securityIdentifier, name);
+                return GetProperty<T>(securityIdentifier, enumName);
             }
         }
 

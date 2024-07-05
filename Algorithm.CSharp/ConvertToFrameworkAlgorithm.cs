@@ -58,8 +58,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             // wait for our indicator to be ready
             if (!_macd.IsReady) return;
@@ -108,9 +108,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             // plot both lines
             Plot("MACD", _macd, _macd.Signal);
-            if (data.Bars.ContainsKey(_symbol))
+            if (slice.Bars.ContainsKey(_symbol))
             {
-                Plot(_symbol, "Open", data[_symbol].Open);
+                Plot(_symbol, "Open", slice[_symbol].Open);
             }
             Plot(_symbol, _macd.Fast, _macd.Slow);
         }

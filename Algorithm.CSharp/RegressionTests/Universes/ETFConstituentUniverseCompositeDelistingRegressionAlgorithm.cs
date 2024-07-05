@@ -85,9 +85,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            if (UtcTime.Date > _delistingDate && data.Keys.Any(x => x != _aapl))
+            if (UtcTime.Date > _delistingDate && slice.Keys.Any(x => x != _aapl))
             {
                 throw new RegressionTestException($"Received unexpected slice in OnData(...) after universe was deselected");
             }

@@ -238,11 +238,11 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Add the specified key and value.
         /// </summary>
-        /// <param name="symbol">The symbol of the Cash value.</param>
+        /// <param name="key">The symbol of the Cash value.</param>
         /// <param name="value">Value.</param>
-        public void Add(string symbol, Cash value)
+        public void Add(string key, Cash value)
         {
-            AddIternal(symbol, value);
+            AddIternal(key, value);
         }
 
         /// <summary>
@@ -257,10 +257,10 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Remove the Cash item corresponding to the specified symbol
         /// </summary>
-        /// <param name="symbol">The symbolto be removed</param>
-        public bool Remove(string symbol)
+        /// <param name="key">The symbolto be removed</param>
+        public bool Remove(string key)
         {
-            return Remove(symbol, calledInternally: false);
+            return Remove(key, calledInternally: false);
         }
 
         /// <summary>
@@ -276,10 +276,10 @@ namespace QuantConnect.Securities
         /// Determines whether the current instance contains an entry with the specified symbol.
         /// </summary>
         /// <returns><c>true</c>, if key was contained, <c>false</c> otherwise.</returns>
-        /// <param name="symbol">Key.</param>
-        public bool ContainsKey(string symbol)
+        /// <param name="key">Key.</param>
+        public bool ContainsKey(string key)
         {
-            return _currencies.ContainsKey(symbol);
+            return _currencies.ContainsKey(key);
         }
 
         /// <summary>
@@ -287,11 +287,11 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>To be added.</remarks>
         /// <returns><c>true</c>, if get value was tryed, <c>false</c> otherwise.</returns>
-        /// <param name="symbol">The symbol.</param>
+        /// <param name="key">The symbol.</param>
         /// <param name="value">Value.</param>
-        public bool TryGetValue(string symbol, out Cash value)
+        public bool TryGetValue(string key, out Cash value)
         {
-            return _currencies.TryGetValue(symbol, out value);
+            return _currencies.TryGetValue(key, out value);
         }
 
         /// <summary>

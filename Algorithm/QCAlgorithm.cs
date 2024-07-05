@@ -1157,10 +1157,10 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Order fill event handler. On an order fill update the resulting information is passed to this method.
         /// </summary>
-        /// <param name="orderEvent">Order event details containing details of the events</param>
+        /// <param name="newEvent">Order event details containing details of the events</param>
         /// <remarks>This method can be called asynchronously and so should only be used by seasoned C# experts. Ensure you use proper locks on thread-unsafe objects</remarks>
         [DocumentationAttribute(TradingAndOrders)]
-        public virtual void OnOrderEvent(OrderEvent orderEvent)
+        public virtual void OnOrderEvent(OrderEvent newEvent)
         {
 
         }
@@ -1209,11 +1209,11 @@ namespace QuantConnect.Algorithm
         /// Update the internal algorithm time frontier.
         /// </summary>
         /// <remarks>For internal use only to advance time.</remarks>
-        /// <param name="frontier">Current utc datetime.</param>
+        /// <param name="time">Current utc datetime.</param>
         [DocumentationAttribute(HandlingData)]
-        public void SetDateTime(DateTime frontier)
+        public void SetDateTime(DateTime time)
         {
-            _timeKeeper.SetUtcDateTime(frontier);
+            _timeKeeper.SetUtcDateTime(time);
             if (_locked && IsWarmingUp && Time >= _start)
             {
                 SetFinishedWarmingUp();
@@ -1292,15 +1292,15 @@ namespace QuantConnect.Algorithm
         /// Sets the brokerage to emulate in backtesting or paper trading.
         /// This can be used to set a custom brokerage model.
         /// </summary>
-        /// <param name="model">The brokerage model to use</param>
+        /// <param name="brokerageModel">The brokerage model to use</param>
         [DocumentationAttribute(Modeling)]
-        public void SetBrokerageModel(IBrokerageModel model)
+        public void SetBrokerageModel(IBrokerageModel brokerageModel)
         {
-            BrokerageModel = model;
+            BrokerageModel = brokerageModel;
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
-                SecurityInitializer = new BrokerageModelSecurityInitializer(model, SecuritySeeder.Null);
+                SecurityInitializer = new BrokerageModelSecurityInitializer(brokerageModel, SecuritySeeder.Null);
 
                 // update models on securities added earlier (before SetBrokerageModel is called)
                 foreach (var kvp in Securities)
@@ -1846,7 +1846,7 @@ namespace QuantConnect.Algorithm
         /// Set a required SecurityType-symbol and resolution for algorithm
         /// </summary>
         /// <param name="securityType">MarketType Type: Equity, Commodity, Future, FOREX or Crypto</param>
-        /// <param name="ticker">The security ticker, e.g. AAPL</param>
+        /// <param name="symbol">The security ticker, e.g. AAPL</param>
         /// <param name="resolution">Resolution of the MarketType required: MarketData, Second or Minute</param>
         /// <param name="market">The market the requested security belongs to, such as 'usa' or 'fxcm'</param>
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice.</param>
@@ -1855,18 +1855,18 @@ namespace QuantConnect.Algorithm
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
         [DocumentationAttribute(AddingData)]
-        public Security AddSecurity(SecurityType securityType, string ticker, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
+        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
         {
             // if AddSecurity method is called to add an option or a future, we delegate a call to respective methods
             if (securityType == SecurityType.Option)
             {
-                return AddOption(ticker, resolution, market, fillForward, leverage);
+                return AddOption(symbol, resolution, market, fillForward, leverage);
             }
 
             if (securityType == SecurityType.Future)
             {
-                return AddFuture(ticker, resolution, market, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
+                return AddFuture(symbol, resolution, market, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
             }
 
             try
@@ -1879,15 +1879,15 @@ namespace QuantConnect.Algorithm
                     }
                 }
 
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol) ||
-                    symbol.ID.Market != market ||
-                    symbol.SecurityType != securityType)
+                Symbol symbolFound;
+                if (!SymbolCache.TryGetSymbol(symbol, out symbolFound) ||
+                    symbolFound.ID.Market != market ||
+                    symbolFound.SecurityType != securityType)
                 {
-                    symbol = QuantConnect.Symbol.Create(ticker, securityType, market);
+                    symbolFound = QuantConnect.Symbol.Create(symbol, securityType, market);
                 }
 
-                return AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
+                return AddSecurity(symbolFound, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
             }
             catch (Exception err)
             {

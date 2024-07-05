@@ -38,9 +38,9 @@ namespace QuantConnect.Algorithm.CSharp
             _ibm = AddEquity("IBM", Resolution.Tick).Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            if (!data.Ticks.ContainsKey(_ibm))
+            if (!slice.Ticks.ContainsKey(_ibm))
             {
                 return;
             }
@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var tick in data.Ticks[_ibm])
+            foreach (var tick in slice.Ticks[_ibm])
             {
                 if (tick.BidPrice != 0 && !_bought && ((tick.Value - tick.BidPrice) <= 0.05m))
                 {

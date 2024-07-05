@@ -73,10 +73,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            if (!data.Bars.ContainsKey(symbol)) return;
+            if (!slice.Bars.ContainsKey(symbol)) return;
 
             // each month make an action
             if (Time.Month != LastMonth)
@@ -89,11 +89,11 @@ namespace QuantConnect.Algorithm.CSharp
                 LastMonth = Time.Month;
                 Log("ORDER TYPE:: " + orderType);
                 var isLong = Quantity > 0;
-                var stopPrice = isLong ? (1 + StopPercentage)*data.Bars[symbol].High : (1 - StopPercentage)*data.Bars[symbol].Low;
+                var stopPrice = isLong ? (1 + StopPercentage)*slice.Bars[symbol].High : (1 - StopPercentage)*slice.Bars[symbol].Low;
                 var limitPrice = isLong ? (1 - LimitPercentage)*stopPrice : (1 + LimitPercentage)*stopPrice;
                 if (orderType == OrderType.Limit)
                 {
-                    limitPrice = !isLong ? (1 + LimitPercentage) * data.Bars[symbol].High : (1 - LimitPercentage) * data.Bars[symbol].Low;
+                    limitPrice = !isLong ? (1 + LimitPercentage) * slice.Bars[symbol].High : (1 - LimitPercentage) * slice.Bars[symbol].Low;
                 }
                 var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, 0, 0.01m, true, UtcTime,
                     ((int)orderType).ToString(CultureInfo.InvariantCulture));
@@ -144,18 +144,18 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
             // if the order time isn't equal to the algo time, then the modified time on the order should be updated
-            var order = Transactions.GetOrderById(orderEvent.OrderId);
-            var ticket = Transactions.GetOrderTicket(orderEvent.OrderId);
-            if (order.Status == OrderStatus.Canceled && order.CanceledTime != orderEvent.UtcTime)
+            var order = Transactions.GetOrderById(newEvent.OrderId);
+            var ticket = Transactions.GetOrderTicket(newEvent.OrderId);
+            if (order.Status == OrderStatus.Canceled && order.CanceledTime != newEvent.UtcTime)
             {
                 throw new RegressionTestException("Expected canceled order CanceledTime to equal canceled order event time.");
             }
 
             // fills update LastFillTime
-            if ((order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled) && order.LastFillTime != orderEvent.UtcTime)
+            if ((order.Status == OrderStatus.Filled || order.Status == OrderStatus.PartiallyFilled) && order.LastFillTime != newEvent.UtcTime)
             {
                 throw new RegressionTestException("Expected filled order LastFillTime to equal fill order event time.");
             }
@@ -166,13 +166,13 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Expected updated order LastUpdateTime to equal submitted update order event time");
             }
 
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
-                Log("FILLED:: " + Transactions.GetOrderById(orderEvent.OrderId) + " FILL PRICE:: " + orderEvent.FillPrice.SmartRounding());
+                Log("FILLED:: " + Transactions.GetOrderById(newEvent.OrderId) + " FILL PRICE:: " + newEvent.FillPrice.SmartRounding());
             }
             else
             {
-                Log(orderEvent.ToString());
+                Log(newEvent.ToString());
                 Log("TICKET:: " + ticket);
             }
         }

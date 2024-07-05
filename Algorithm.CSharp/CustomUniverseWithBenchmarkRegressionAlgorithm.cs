@@ -74,13 +74,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             var security = Securities[_spy];
             _onDataWasCalled = true;
 
-            var bar = data.Bars.Values.Single();
+            var bar = slice.Bars.Values.Single();
             if (_universeSelected)
             {
                 if (bar.IsFillForward
@@ -89,20 +89,20 @@ namespace QuantConnect.Algorithm.CSharp
                     // bar should always be the Minute resolution one here
                     throw new RegressionTestException("Unexpected Bar error");
                 }
-                if (_previousTime.Date == data.Time.Date
-                    && (data.Time - _previousTime) != TimeSpan.FromMinutes(1))
+                if (_previousTime.Date == slice.Time.Date
+                    && (slice.Time - _previousTime) != TimeSpan.FromMinutes(1))
                 {
                     throw new RegressionTestException("For the same date expected data updates every 1 minute");
                 }
             }
             else
             {
-                if (data.Time.Minute == 0
+                if (slice.Time.Minute == 0
                     && _previousSecurityValue == security.Price)
                 {
                     throw new RegressionTestException($"Security Price error. Price should change every new hour");
                 }
-                if (data.Time.Minute != 0
+                if (slice.Time.Minute != 0
                     && _previousSecurityValue != security.Price
                     && security.IsTradable)
                 {
@@ -112,18 +112,18 @@ namespace QuantConnect.Algorithm.CSharp
             _previousSecurityValue = security.Price;
 
             // assert benchmark updates only on date change
-            var currentValue = Benchmark.Evaluate(data.Time);
-            if (_previousTime.Hour == data.Time.Hour)
+            var currentValue = Benchmark.Evaluate(slice.Time);
+            if (_previousTime.Hour == slice.Time.Hour)
             {
                 if (currentValue != _previousBenchmarkValue)
                 {
-                    throw new RegressionTestException($"Benchmark value error - expected: {_previousBenchmarkValue} {_previousTime}, actual: {currentValue} {data.Time}. " +
+                    throw new RegressionTestException($"Benchmark value error - expected: {_previousBenchmarkValue} {_previousTime}, actual: {currentValue} {slice.Time}. " +
                                         "Benchmark value should only change when there is a change in hours");
                 }
             }
             else
             {
-                if (data.Time.Minute == 0)
+                if (slice.Time.Minute == 0)
                 {
                     if (currentValue == _previousBenchmarkValue)
                     {
@@ -131,7 +131,7 @@ namespace QuantConnect.Algorithm.CSharp
                         // there are two consecutive equal data points so we give it some room
                         if (_benchmarkPriceDidNotChange > 1)
                         {
-                            throw new RegressionTestException($"Benchmark value error - expected a new value, current {currentValue} {data.Time}" +
+                            throw new RegressionTestException($"Benchmark value error - expected a new value, current {currentValue} {slice.Time}" +
                                                 "Benchmark value should change when there is a change in hours");
                         }
                     }
@@ -142,7 +142,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
             _previousBenchmarkValue = currentValue;
-            _previousTime = data.Time;
+            _previousTime = slice.Time;
 
             // assert algorithm security is the correct one - not the internal one
             if (security.Leverage != ExpectedLeverage)

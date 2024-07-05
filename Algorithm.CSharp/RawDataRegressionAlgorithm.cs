@@ -66,16 +66,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
                 SetHoldings(_googl, 1);
             }
 
-            if (data.Bars.ContainsKey(_googl))
+            if (slice.Bars.ContainsKey(_googl))
             {
-                var googlData = data.Bars[_googl];
+                var googlData = slice.Bars[_googl];
 
                 // Assert our volume matches what we expected
                 if (_expectedRawPrices.Current != googlData.Close)

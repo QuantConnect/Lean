@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Minute).Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
@@ -66,11 +66,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Canceled)
+            if (newEvent.Status == OrderStatus.Canceled)
             {
-                if (orderEvent.OrderId != _limitOrderTicket.OrderId)
+                if (newEvent.OrderId != _limitOrderTicket.OrderId)
                 {
                     throw new RegressionTestException("The only canceled order should have been the limit order.");
                 }
@@ -78,10 +78,10 @@ namespace QuantConnect.Algorithm.CSharp
                 // update canceled order tag
                 UpdateOrderTag(_limitOrderTicket, TagAfterCanceled, "Error updating order tag after canceled");
             }
-            else if (orderEvent.Status == OrderStatus.Filled)
+            else if (newEvent.Status == OrderStatus.Filled)
             {
                 _marketOrderTicket = Transactions.GetOrderTickets(x => x.OrderType == OrderType.Market).Single();
-                if (orderEvent.OrderId != _marketOrderTicket.OrderId)
+                if (newEvent.OrderId != _marketOrderTicket.OrderId)
                 {
                     throw new RegressionTestException("The only filled order should have been the market order.");
                 }

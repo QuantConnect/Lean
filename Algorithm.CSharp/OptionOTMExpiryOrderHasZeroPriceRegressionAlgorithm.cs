@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
@@ -80,20 +80,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status != OrderStatus.Filled)
+            if (newEvent.Status != OrderStatus.Filled)
             {
                 // There's lots of noise with OnOrderEvent, but we're only interested in fills.
                 return;
             }
 
-            if (!Securities.ContainsKey(orderEvent.Symbol))
+            if (!Securities.ContainsKey(newEvent.Symbol))
             {
-                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
+                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {newEvent.Symbol}");
             }
 
-            var security = Securities[orderEvent.Symbol];
+            var security = Securities[newEvent.Symbol];
             if (security.Symbol == _es19m20)
             {
                 throw new RegressionTestException("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
@@ -102,10 +102,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (_cashAfterMarketOrder > 0)
             {
                 // This is the exercise order fill event
-                if (orderEvent.IsInTheMoney || orderEvent.FillPrice != 0)
+                if (newEvent.IsInTheMoney || newEvent.FillPrice != 0)
                 {
                     throw new RegressionTestException($"Expected exercise order event fill price to be zero and to be marked as OTM, " +
-                        $"but was the fill price was {orderEvent.FillPrice} and IsInTheMoney = {orderEvent.IsInTheMoney}");
+                        $"but was the fill price was {newEvent.FillPrice} and IsInTheMoney = {newEvent.IsInTheMoney}");
                 }
             }
         }

@@ -55,18 +55,18 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             _step++;
             if (_step == 1)
             {
-                if (!data.ContainsKey(_qqq)
-                    || !data.ContainsKey(_appl))
+                if (!slice.ContainsKey(_qqq)
+                    || !slice.ContainsKey(_appl))
                 {
                     throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
                 }
-                if (data.Count != 2)
+                if (slice.Count != 2)
                 {
                     throw new RegressionTestException($"Unexpected data count, step: {_step}");
                 }
@@ -76,11 +76,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (_step == 2)
             {
-                if (!data.ContainsKey(_appl))
+                if (!slice.ContainsKey(_appl))
                 {
                     throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
                 }
-                if (data.Count != 1)
+                if (slice.Count != 1)
                 {
                     throw new RegressionTestException($"Unexpected data count, step: {_step}");
                 }
@@ -90,37 +90,37 @@ namespace QuantConnect.Algorithm.CSharp
             }
             else if (_step == 3)
             {
-                if (!data.ContainsKey(_fb)
-                    || !data.ContainsKey(_spy)
-                    || !data.ContainsKey(_appl))
+                if (!slice.ContainsKey(_fb)
+                    || !slice.ContainsKey(_spy)
+                    || !slice.ContainsKey(_appl))
                 {
                     throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
                 }
-                if (data.Count != 3)
+                if (slice.Count != 3)
                 {
                     throw new RegressionTestException($"Unexpected data count, step: {_step}");
                 }
             }
             else if (_step == 4)
             {
-                if (!data.ContainsKey(_fb)
-                    || !data.ContainsKey(_spy))
+                if (!slice.ContainsKey(_fb)
+                    || !slice.ContainsKey(_spy))
                 {
                     throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
                 }
-                if (data.Count != 2)
+                if (slice.Count != 2)
                 {
                     throw new RegressionTestException($"Unexpected data count, step: {_step}");
                 }
             }
             else if (_step == 5)
             {
-                if (!data.ContainsKey(_fb)
-                    || !data.ContainsKey(_spy))
+                if (!slice.ContainsKey(_fb)
+                    || !slice.ContainsKey(_spy))
                 {
                     throw new RegressionTestException($"Unexpected symbols found, step: {_step}");
                 }
-                if (data.Count != 2)
+                if (slice.Count != 2)
                 {
                     throw new RegressionTestException($"Unexpected data count, step: {_step}");
                 }

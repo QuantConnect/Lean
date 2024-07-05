@@ -54,10 +54,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            if (!data.ContainsKey("SPY"))
+            if (!slice.ContainsKey("SPY"))
             {
                 return;
             }
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _negative = goLong ? 1 : -1;
                 var orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "SPY",
                     _negative * 10, 0,
-                    data["SPY"].Price - (decimal) _negative, data["SPY"].Price - (decimal) 0.25 * _negative, UtcTime,
+                    slice["SPY"].Price - (decimal) _negative, slice["SPY"].Price - (decimal) 0.25 * _negative, UtcTime,
                     $"LIT - Quantity: {_negative * 10}");
                 _request = Transactions.AddOrder(orderRequest);
                 return;
@@ -97,15 +97,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// Order fill event handler. On an order fill update the resulting information is passed to this method.
         /// </summary>
         /// <param name="orderEvent">Order event details containing details of the events</param>
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
                 var expected = _expectedEvents.Dequeue();
 
-                if (orderEvent.ToString() != expected)
+                if (newEvent.ToString() != expected)
                 {
-                    throw new RegressionTestException($"orderEvent {orderEvent.Id} differed from {expected}. Actual {orderEvent}");
+                    throw new RegressionTestException($"orderEvent {newEvent.Id} differed from {expected}. Actual {newEvent}");
                 }
             }
         }

@@ -66,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
             _googCall650["bought"] = false;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (_goog.Price == 0 || _googCall600.Price == 0 || _googCall650.Price == 0)
             {
@@ -95,11 +95,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled && orderEvent.Symbol.SecurityType.IsOption())
+            if (newEvent.Status == OrderStatus.Filled && newEvent.Symbol.SecurityType.IsOption())
             {
-                Securities[orderEvent.Symbol]["closed"] = true;
+                Securities[newEvent.Symbol]["closed"] = true;
             }
         }
 

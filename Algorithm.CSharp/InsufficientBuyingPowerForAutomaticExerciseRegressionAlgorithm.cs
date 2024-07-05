@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddOptionContract(_option);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // We are done with buying
             if (_stockBought && _optionSold)
@@ -96,18 +96,18 @@ namespace QuantConnect.Algorithm.CSharp
             _marginCallReceived = true;
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Debug($"{Time} :: {order.Id} - {order.Type} - {orderEvent.Symbol}: {orderEvent.Status} - {orderEvent.Quantity} shares at {orderEvent.FillPrice}");
+            var order = Transactions.GetOrderById(newEvent.OrderId);
+            Debug($"{Time} :: {order.Id} - {order.Type} - {newEvent.Symbol}: {newEvent.Status} - {newEvent.Quantity} shares at {newEvent.FillPrice}");
 
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
-                if (orderEvent.Symbol == _stock)
+                if (newEvent.Symbol == _stock)
                 {
                     _stockBought = true;
                 }
-                else if (orderEvent.Symbol == _option)
+                else if (newEvent.Symbol == _option)
                 {
                     if (order.Type == OrderType.Market)
                     {
@@ -118,7 +118,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                         _optionSold = true;
                     }
-                    else if (order.Type == OrderType.OptionExercise && orderEvent.IsAssignment)
+                    else if (order.Type == OrderType.OptionExercise && newEvent.IsAssignment)
                     {
                         if (!_optionSold)
                         {
@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 else
                 {
-                    throw new RegressionTestException("Unexpected symbol: " + orderEvent.Symbol);
+                    throw new RegressionTestException("Unexpected symbol: " + newEvent.Symbol);
                 }
             }
         }

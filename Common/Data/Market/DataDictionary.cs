@@ -187,22 +187,22 @@ namespace QuantConnect.Data.Market
         /// <returns>
         /// true if the element is successfully removed; otherwise, false.  This method also returns false if <paramref name="key"/> was not found in the original <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        /// <param name="key">The key of the element to remove.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public override bool Remove(Symbol key)
+        /// <param name="symbol">The key of the element to remove.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
+        public override bool Remove(Symbol symbol)
         {
-            return _data.Remove(key);
+            return _data.Remove(symbol);
         }
 
         /// <summary>
         /// Gets the value associated with the specified key.
         /// </summary>
         /// <returns>
-        /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key; otherwise, false.
+        /// true if the object that implements <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> contains an element with the specified key; otherwise, false.
         /// </returns>
-        /// <param name="key">The key whose value to get.</param><param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        public override bool TryGetValue(Symbol key, out T value)
+        /// <param name="symbol">The key whose value to get.</param><param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
+        public override bool TryGetValue(Symbol symbol, out T value)
         {
-            return _data.TryGetValue(key, out value);
+            return _data.TryGetValue(symbol, out value);
         }
 
         /// <summary>
@@ -212,9 +212,9 @@ namespace QuantConnect.Data.Market
         /// The element with the specified key.
         /// </returns>
         /// <param name="symbol">The key of the element to get or set.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="symbol"/> is null.</exception>
-        /// <exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="symbol"/> is not found.</exception>
-        /// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
+        /// <exception cref="System.ArgumentNullException"><paramref name="symbol"/> is null.</exception>
+        /// <exception cref="System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="symbol"/> is not found.</exception>
+        /// <exception cref="System.NotSupportedException">The property is set and the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> is read-only.</exception>
         public override T this[Symbol symbol]
         {
             get

@@ -61,14 +61,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// "Nifty" type below and fired into this event handler.
         /// </summary>
         /// <param name="data">One(1) Nifty Object, streamed into our algorithm synchronised in time with our other data streams</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            if (data.ContainsKey("USDINR"))
+            if (slice.ContainsKey("USDINR"))
             {
-                _today = new CorrelationPair(Time) { CurrencyPrice = Convert.ToDouble(data["USDINR"].Close) };
+                _today = new CorrelationPair(Time) { CurrencyPrice = Convert.ToDouble(slice["USDINR"].Close) };
             }
 
-            if (!data.ContainsKey("NIFTY"))
+            if (!slice.ContainsKey("NIFTY"))
             {
                 return;
             }
@@ -76,8 +76,8 @@ namespace QuantConnect.Algorithm.CSharp
             try
             {
 
-                _today.NiftyPrice = Convert.ToDouble(data["NIFTY"].Close);
-                if (_today.Date == data["NIFTY"].Time)
+                _today.NiftyPrice = Convert.ToDouble(slice["NIFTY"].Close);
+                if (_today.Date == slice["NIFTY"].Time)
                 {
                     _prices.Add(_today);
 
@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 //Strategy
-                var quantity = (int)(Portfolio.MarginRemaining * 0.9m / data["NIFTY"].Close);
+                var quantity = (int)(Portfolio.MarginRemaining * 0.9m / slice["NIFTY"].Close);
                 var highestNifty = (from pair in _prices select pair.NiftyPrice).Max();
                 var lowestNifty = (from pair in _prices select pair.NiftyPrice).Min();
 
@@ -99,15 +99,15 @@ namespace QuantConnect.Algorithm.CSharp
                     //double correlation = Correlation.Pearson(niftyPrices, currencyPrices);
                     //double niftyFraction = (correlation)/2;
 
-                    if (Convert.ToDouble(data["NIFTY"].Open) >= highestNifty)
+                    if (Convert.ToDouble(slice["NIFTY"].Open) >= highestNifty)
                     {
                         var code = Order("NIFTY", quantity - Portfolio["NIFTY"].Quantity);
-                        Debug("LONG " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data["NIFTY"].Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
+                        Debug("LONG " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + slice["NIFTY"].Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
                     }
-                    else if (Convert.ToDouble(data["NIFTY"].Open) <= lowestNifty)
+                    else if (Convert.ToDouble(slice["NIFTY"].Open) <= lowestNifty)
                     {
                         var code = Order("NIFTY", -quantity - Portfolio["NIFTY"].Quantity);
-                        Debug("SHORT " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + data["NIFTY"].Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
+                        Debug("SHORT " + code + " Time: " + Time.ToShortDateString() + " Quantity: " + quantity + " Portfolio:" + Portfolio["NIFTY"].Quantity + " Nifty: " + slice["NIFTY"].Close + " Buying Power: " + Portfolio.TotalPortfolioValue);
                     }
                 }
             }

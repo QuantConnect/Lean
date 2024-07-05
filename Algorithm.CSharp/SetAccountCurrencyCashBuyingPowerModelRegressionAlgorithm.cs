@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             Log($"OnData(): Current execution step: {_step}");
             switch (_step)
@@ -158,27 +158,27 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
-                Log($"OnOrderEvent(): New filled order event: {orderEvent}");
+                Log($"OnOrderEvent(): New filled order event: {newEvent}");
                 // leave 1 unit as error in expected value
-                if (Math.Abs(orderEvent.FillQuantity - _expectedOrderQuantity) > 1)
+                if (Math.Abs(newEvent.FillQuantity - _expectedOrderQuantity) > 1)
                 {
-                    throw new RegressionTestException($"Unexpected order event fill quantity: {orderEvent.FillQuantity}. " +
+                    throw new RegressionTestException($"Unexpected order event fill quantity: {newEvent.FillQuantity}. " +
                         $"Expected {_expectedOrderQuantity}");
                 }
 
-                var orderFeeInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
+                var orderFeeInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(newEvent.OrderFee.Value).Amount;
                 var expectedOrderFee = _btcUsd.Holdings.TotalFees - _previousHoldingsFees;
 
                 // just to verify let calculate the order fee using taker fee
                 var calculatedOrderFee = Portfolio.CashBook.ConvertToAccountCurrency(
-                    orderEvent.AbsoluteFillQuantity * 0.003m * orderEvent.FillPrice,
-                    orderEvent.OrderFee.Value.Currency);
+                    newEvent.AbsoluteFillQuantity * 0.003m * newEvent.FillPrice,
+                    newEvent.OrderFee.Value.Currency);
 
-                if (orderEvent.OrderFee.Value.Currency == AccountCurrency
+                if (newEvent.OrderFee.Value.Currency == AccountCurrency
                     // leave 0.00001m as error in expected fee value
                     || Math.Abs(expectedOrderFee - orderFeeInAccountCurrency) > 0.00001m
                     || Math.Abs(expectedOrderFee - calculatedOrderFee) > 0.00001m)

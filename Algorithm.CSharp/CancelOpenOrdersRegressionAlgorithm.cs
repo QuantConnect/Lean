@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (UtcTime.Hour != 6) return;
 
@@ -81,10 +81,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Order fill event handler. On an order fill update the resulting information is passed to this method.
         /// </summary>
-        /// <param name="orderEvent">Order event details containing details of the events</param>
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        /// <param name="newEvent">Order event details containing details of the events</param>
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            Debug(orderEvent.ToString());
+            Debug(newEvent.ToString());
         }
 
         /// <summary>

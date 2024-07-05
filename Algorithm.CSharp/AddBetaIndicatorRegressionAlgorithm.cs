@@ -51,11 +51,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
-                var price = data["IBM"].Close;
+                var price = slice["IBM"].Close;
                 Buy("IBM", 10);
                 LimitOrder("IBM", 10, price * 0.1m);
                 StopMarketOrder("IBM", 10, price / 0.1m);
@@ -69,9 +69,9 @@ namespace QuantConnect.Algorithm.CSharp
             Log($"Beta between IBM and SPY is: {_beta.Current.Value}");
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            var order = Transactions.GetOrderById(newEvent.OrderId);
             var goUpwards = _lastSMAValue < _sma.Current.Value;
             _lastSMAValue = _sma.Current.Value;
 
@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (order.Status == OrderStatus.Canceled)
             {
-                Log(orderEvent.ToString());
+                Log(newEvent.ToString());
             }
         }
 

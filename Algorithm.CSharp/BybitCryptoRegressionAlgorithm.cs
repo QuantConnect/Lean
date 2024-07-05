@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             _slow = EMA(_btcUsdt, 60, Resolution.Minute);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Portfolio.CashBook["USDT"].ConversionRate == 0 || Portfolio.CashBook["BTC"].ConversionRate == 0)
             {
@@ -100,9 +100,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            Debug(Time + " " + orderEvent);
+            Debug(Time + " " + newEvent);
         }
 
         public override void OnEndOfAlgorithm()

@@ -50,14 +50,14 @@ namespace QuantConnect.Algorithm.CSharp
             var aapl = AddEquity(UnderlyingTicker, Resolution.Minute);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Time.Hour == 9 && Time.Minute == 58)
             {
                 AddOption(UnderlyingTicker);
             }
 
-            AssertValue(data);
+            AssertValue(slice);
         }
 
         public override void OnEndOfAlgorithm()

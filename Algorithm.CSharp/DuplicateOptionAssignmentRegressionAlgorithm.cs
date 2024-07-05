@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddOptionContract(_option);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // We are done
             if (_optionSold)
@@ -66,9 +66,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
                 // This is the fill for the option sell order
                 if (!_optionSold)
@@ -82,41 +82,41 @@ namespace QuantConnect.Algorithm.CSharp
                 // This is the assignment
                 else if (!_optionAssigned)
                 {
-                    if (orderEvent.Ticket.OrderType != OrderType.OptionExercise || !orderEvent.IsAssignment)
+                    if (newEvent.Ticket.OrderType != OrderType.OptionExercise || !newEvent.IsAssignment)
                     {
-                        throw new RegressionTestException($"Expected option assignment but got: {orderEvent}");
+                        throw new RegressionTestException($"Expected option assignment but got: {newEvent}");
                     }
 
                     _optionAssigned = true;
                 }
                 else if (!_stockAssigned)
                 {
-                    if (orderEvent.Ticket.OrderType != OrderType.OptionExercise || orderEvent.IsAssignment || orderEvent.Symbol != _stock)
+                    if (newEvent.Ticket.OrderType != OrderType.OptionExercise || newEvent.IsAssignment || newEvent.Symbol != _stock)
                     {
-                        throw new RegressionTestException($"Expected stock assignment but got: {orderEvent}");
+                        throw new RegressionTestException($"Expected stock assignment but got: {newEvent}");
                     }
 
                     _stockAssigned = true;
                 }
                 else
                 {
-                    throw new RegressionTestException($"Unexpected order fill event: {orderEvent}");
+                    throw new RegressionTestException($"Unexpected order fill event: {newEvent}");
                 }
             }
-            else if (orderEvent.Status == OrderStatus.CancelPending)
+            else if (newEvent.Status == OrderStatus.CancelPending)
             {
                 // We receive the delisting warning before the order cancel is requested
                 if (!_optionSold || !_optionAssigned || !_stockAssigned || !_optionDelistedWarningReceived)
                 {
-                    throw new RegressionTestException($"Unexpected cancel pending event: {orderEvent}");
+                    throw new RegressionTestException($"Unexpected cancel pending event: {newEvent}");
                 }
             }
-            else if (orderEvent.Status == OrderStatus.Canceled)
+            else if (newEvent.Status == OrderStatus.Canceled)
             {
                 // The delisted event is received before the order is canceled
                 if (!_optionSold || !_optionAssigned || !_stockAssigned || !_optionDelistedWarningReceived || !_optionDelisted)
                 {
-                    throw new RegressionTestException($"Unexpected cancel event: {orderEvent}");
+                    throw new RegressionTestException($"Unexpected cancel event: {newEvent}");
                 }
 
                 _orderCanceled = true;

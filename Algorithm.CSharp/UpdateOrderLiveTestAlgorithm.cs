@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!_security.HasData)
             {
@@ -159,21 +159,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (_immediateCancellations.Contains(orderEvent.OrderId))
+            if (_immediateCancellations.Contains(newEvent.OrderId))
             {
-                _immediateCancellations.Remove(orderEvent.OrderId);
-                Transactions.CancelOrder(orderEvent.OrderId);
+                _immediateCancellations.Remove(newEvent.OrderId);
+                Transactions.CancelOrder(newEvent.OrderId);
             }
 
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
-                Log("FILLED:: " + Transactions.GetOrderById(orderEvent.OrderId) + " FILL PRICE:: " + orderEvent.FillPrice.SmartRounding());
+                Log("FILLED:: " + Transactions.GetOrderById(newEvent.OrderId) + " FILL PRICE:: " + newEvent.FillPrice.SmartRounding());
             }
             else
             {
-                Log(orderEvent.ToString());
+                Log(newEvent.ToString());
             }
         }
 

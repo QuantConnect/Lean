@@ -68,25 +68,25 @@ namespace QuantConnect.Securities
         /// Add a new security with this symbol to the collection.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        /// <param name="symbol">symbol for security we're trading</param>
-        /// <param name="security">security object</param>
+        /// <param name="key">symbol for security we're trading</param>
+        /// <param name="value">security object</param>
         /// <seealso cref="Add(Security)"/>
-        public void Add(Symbol symbol, Security security)
+        public void Add(Symbol key, Security value)
         {
             bool changed;
             lock (_securityManager)
             {
-                changed = _securityManager.TryAdd(symbol, security);
+                changed = _securityManager.TryAdd(key, value);
                 if (changed)
                 {
-                    _completeSecuritiesCollection[symbol] = security;
+                    _completeSecuritiesCollection[key] = value;
                 }
             }
 
             if (changed)
             {
-                security.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(security.Exchange.TimeZone));
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, security));
+                value.SetLocalTimeKeeper(_timeKeeper.GetLocalTimeKeeper(value.Exchange.TimeZone));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value));
             }
         }
 
@@ -103,10 +103,10 @@ namespace QuantConnect.Securities
         /// Add a symbol-security by its key value pair.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        /// <param name="pair"></param>
-        public void Add(KeyValuePair<Symbol, Security> pair)
+        /// <param name="item"></param>
+        public void Add(KeyValuePair<Symbol, Security> item)
         {
-            Add(pair.Key, pair.Value);
+            Add(item.Key, item.Value);
         }
 
         /// <summary>
@@ -128,28 +128,28 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Check if this collection contains this key value pair.
         /// </summary>
-        /// <param name="pair">Search key-value pair</param>
+        /// <param name="item">Search key-value pair</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Bool true if contains this key-value pair</returns>
-        public bool Contains(KeyValuePair<Symbol, Security> pair)
+        public bool Contains(KeyValuePair<Symbol, Security> item)
         {
             lock (_securityManager)
             {
-                return _completeSecuritiesCollection.Contains(pair);
+                return _completeSecuritiesCollection.Contains(item);
             }
         }
 
         /// <summary>
         /// Check if this collection contains this symbol.
         /// </summary>
-        /// <param name="symbol">Symbol we're checking for.</param>
+        /// <param name="key">Symbol we're checking for.</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Bool true if contains this symbol pair</returns>
-        public bool ContainsKey(Symbol symbol)
+        public bool ContainsKey(Symbol key)
         {
             lock (_securityManager)
             {
-                return _completeSecuritiesCollection.ContainsKey(symbol);
+                return _completeSecuritiesCollection.ContainsKey(key);
             }
         }
 
@@ -157,13 +157,13 @@ namespace QuantConnect.Securities
         /// Copy from the internal array to an external array.
         /// </summary>
         /// <param name="array">Array we're outputting to</param>
-        /// <param name="number">Starting index of array</param>
+        /// <param name="arrayIndex">Starting index of array</param>
         /// <remarks>IDictionary implementation</remarks>
-        public void CopyTo(KeyValuePair<Symbol, Security>[] array, int number)
+        public void CopyTo(KeyValuePair<Symbol, Security>[] array, int arrayIndex)
         {
             lock (_securityManager)
             {
-                ((IDictionary<Symbol, Security>)_securityManager).CopyTo(array, number);
+                ((IDictionary<Symbol, Security>)_securityManager).CopyTo(array, arrayIndex);
             }
         }
 
@@ -195,11 +195,11 @@ namespace QuantConnect.Securities
         /// Remove a key value of of symbol-securities from the collections.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        /// <param name="pair">Key Value pair of symbol-security to remove</param>
+        /// <param name="key">Key Value pair of symbol-security to remove</param>
         /// <returns>Boolean true on success</returns>
-        public bool Remove(KeyValuePair<Symbol, Security> pair)
+        public bool Remove(KeyValuePair<Symbol, Security> key)
         {
-            return Remove(pair.Key);
+            return Remove(key.Key);
         }
 
         /// <summary>
@@ -247,32 +247,32 @@ namespace QuantConnect.Securities
         /// Try and get this security object with matching symbol and return true on success.
         /// </summary>
         /// <param name="symbol">String search symbol</param>
-        /// <param name="security">Output Security object</param>
+        /// <param name="value">Output Security object</param>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>True on successfully locating the security object</returns>
-        public override bool TryGetValue(Symbol symbol, out Security security)
+        public override bool TryGetValue(Symbol symbol, out Security value)
         {
             lock (_securityManager)
             {
-                return _completeSecuritiesCollection.TryGetValue(symbol, out security);
+                return _completeSecuritiesCollection.TryGetValue(symbol, out value);
             }
         }
 
         /// <summary>
-        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// Gets an <see cref="System.Collections.Generic.ICollection{T}"/> containing the Symbol objects of the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <remarks>Excludes non active or delisted securities</remarks>
         /// <returns>
-        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// An <see cref="System.Collections.Generic.ICollection{T}"/> containing the Symbol objects of the object that implements <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
         /// </returns>
         protected override IEnumerable<Symbol> GetKeys => Keys;
 
         /// <summary>
-        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// Gets an <see cref="System.Collections.Generic.ICollection{T}"/> containing the values in the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
         /// </summary>
         /// <remarks>Excludes non active or delisted securities</remarks>
         /// <returns>
-        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// An <see cref="System.Collections.Generic.ICollection{T}"/> containing the values in the object that implements <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
         /// </returns>
         protected override IEnumerable<Security> GetValues => Values;
 

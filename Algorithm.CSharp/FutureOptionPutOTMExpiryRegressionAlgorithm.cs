@@ -76,11 +76,11 @@ namespace QuantConnect.Algorithm.CSharp
             });
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // Assert delistings, so that we can make sure that we receive the delisting warnings at
             // the expected time. These assertions detect bug #4872
-            foreach (var delisting in data.Delistings.Values)
+            foreach (var delisting in slice.Delistings.Values)
             {
                 if (delisting.Type == DelistingType.Warning)
                 {
@@ -99,34 +99,34 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status != OrderStatus.Filled)
+            if (newEvent.Status != OrderStatus.Filled)
             {
                 // There's lots of noise with OnOrderEvent, but we're only interested in fills.
                 return;
             }
 
-            if (!Securities.ContainsKey(orderEvent.Symbol))
+            if (!Securities.ContainsKey(newEvent.Symbol))
             {
-                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {orderEvent.Symbol}");
+                throw new RegressionTestException($"Order event Symbol not found in Securities collection: {newEvent.Symbol}");
             }
 
-            var security = Securities[orderEvent.Symbol];
+            var security = Securities[newEvent.Symbol];
             if (security.Symbol == _es19m20)
             {
                 throw new RegressionTestException("Invalid state: did not expect a position for the underlying to be opened, since this contract expires OTM");
             }
             if (security.Symbol == _expectedContract)
             {
-                AssertFutureOptionContractOrder(orderEvent, security);
+                AssertFutureOptionContractOrder(newEvent, security);
             }
             else
             {
-                throw new RegressionTestException($"Received order event for unknown Symbol: {orderEvent.Symbol}");
+                throw new RegressionTestException($"Received order event for unknown Symbol: {newEvent.Symbol}");
             }
 
-            Log($"{orderEvent}");
+            Log($"{newEvent}");
         }
 
         private void AssertFutureOptionContractOrder(OrderEvent orderEvent, Security option)

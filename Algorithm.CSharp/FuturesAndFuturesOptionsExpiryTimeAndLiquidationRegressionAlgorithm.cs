@@ -63,9 +63,9 @@ namespace QuantConnect.Algorithm.CSharp
             _esFutureOption = AddFutureOptionContract(esOption, Resolution.Minute).Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            foreach (var delisting in data.Delistings.Values)
+            foreach (var delisting in slice.Delistings.Values)
             {
                 // Two warnings and two delisted events should be received for a grand total of 4 events.
                 _delistingsReceived++;
@@ -92,8 +92,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             if (!_invested &&
-                (data.Bars.ContainsKey(_esFuture) || data.QuoteBars.ContainsKey(_esFuture)) &&
-                (data.Bars.ContainsKey(_esFutureOption) || data.QuoteBars.ContainsKey(_esFutureOption)))
+                (slice.Bars.ContainsKey(_esFuture) || slice.QuoteBars.ContainsKey(_esFuture)) &&
+                (slice.Bars.ContainsKey(_esFutureOption) || slice.QuoteBars.ContainsKey(_esFutureOption)))
             {
                 _invested = true;
 
@@ -127,9 +127,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Direction != OrderDirection.Sell || orderEvent.Status != OrderStatus.Filled)
+            if (newEvent.Direction != OrderDirection.Sell || newEvent.Status != OrderStatus.Filled)
             {
                 return;
             }
@@ -139,13 +139,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             // * We expect NO Underlying Future Liquidation because we already hold a Long future position so the FOP Put selling leaves us breakeven
             _liquidated++;
-            if (orderEvent.Symbol.SecurityType == SecurityType.FutureOption && _expectedLiquidationTime != Time)
+            if (newEvent.Symbol.SecurityType == SecurityType.FutureOption && _expectedLiquidationTime != Time)
             {
-                throw new RegressionTestException($"Expected to liquidate option {orderEvent.Symbol} at {_expectedLiquidationTime}, instead liquidated at {Time}");
+                throw new RegressionTestException($"Expected to liquidate option {newEvent.Symbol} at {_expectedLiquidationTime}, instead liquidated at {Time}");
             }
-            if (orderEvent.Symbol.SecurityType == SecurityType.Future && _expectedLiquidationTime.AddMinutes(-1) != Time && _expectedLiquidationTime != Time)
+            if (newEvent.Symbol.SecurityType == SecurityType.Future && _expectedLiquidationTime.AddMinutes(-1) != Time && _expectedLiquidationTime != Time)
             {
-                throw new RegressionTestException($"Expected to liquidate future {orderEvent.Symbol} at {_expectedLiquidationTime} (+1 minute), instead liquidated at {Time}");
+                throw new RegressionTestException($"Expected to liquidate future {newEvent.Symbol} at {_expectedLiquidationTime} (+1 minute), instead liquidated at {Time}");
             }
         }
 

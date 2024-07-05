@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _originalOrder = Transactions.GetOrderById(_ticket.OrderId);
 
                 // Create an UpdateOrderRequest and send it to the ticket
-                var updateFields = new UpdateOrderFields { Quantity = 20, Tag = "Pepe", LimitPrice = data[_spy].Low};
+                var updateFields = new UpdateOrderFields { Quantity = 20, Tag = "Pepe", LimitPrice = slice[_spy].Low};
                 var response = _ticket.Update(updateFields);
 
                 // Test order time
@@ -79,13 +79,13 @@ namespace QuantConnect.Algorithm.CSharp
         /// This function will test that what we get from Transactions is indeed a clone
         /// The only authentic way to change the order is to change through the order ticket!
         /// </summary>
-        /// <param name="orderEvent">OrderEvent object that contains all the information about the event</param>
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        /// <param name="newEvent">OrderEvent object that contains all the information about the event</param>
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
 
             // Get the order twice, since they are clones they should NOT be the same
-            var orderV1 = Transactions.GetOrderById(orderEvent.OrderId);
-            var orderV2 = Transactions.GetOrderById(orderEvent.OrderId);
+            var orderV1 = Transactions.GetOrderById(newEvent.OrderId);
+            var orderV2 = Transactions.GetOrderById(newEvent.OrderId);
 
             if (orderV1 == orderV2)
             {
@@ -96,7 +96,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Try and manipulate orderV2 using the only external accessor BrokerID, since we
             // are changing a clone the BrokerIDs should not be the same
             orderV2.BrokerId.Add("FAKE BROKER ID");
-            var orderV3 = Transactions.GetOrderById(orderEvent.OrderId);
+            var orderV3 = Transactions.GetOrderById(newEvent.OrderId);
 
             if (orderV2.BrokerId.SequenceEqual(orderV3.BrokerId))
             {
@@ -107,9 +107,9 @@ namespace QuantConnect.Algorithm.CSharp
             //Try and manipulate the orderV1 using UpdateOrderRequest
             //NOTICE: Orders should only be updated through their tickets!
             var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe2!" };
-            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderEvent.OrderId, updateFields);
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, newEvent.OrderId, updateFields);
             orderV1.ApplyUpdateOrderRequest(updateRequest);
-            var orderV4 = Transactions.GetOrderById(orderEvent.OrderId);
+            var orderV4 = Transactions.GetOrderById(newEvent.OrderId);
 
             if (orderV4.Quantity == orderV1.Quantity)
             {

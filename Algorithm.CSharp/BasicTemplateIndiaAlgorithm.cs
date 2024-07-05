@@ -56,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
@@ -64,11 +64,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status.IsFill())
+            if (newEvent.Status.IsFill())
             {
-                Debug($"Purchased Complete: {orderEvent.Symbol}");
+                Debug($"Purchased Complete: {newEvent.Symbol}");
             }
         }
 

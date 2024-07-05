@@ -51,12 +51,12 @@ namespace QuantConnect.Algorithm.CSharp
                   .Expiration(0, 180));
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (_orderLegs == null)
             {
                 OptionChain chain;
-                if (IsMarketOpen(_optionSymbol) && data.OptionChains.TryGetValue(_optionSymbol, out chain))
+                if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     var callContracts = chain.Where(contract => contract.Right == OptionRight.Call)
                         .GroupBy(x => x.Expiry)
@@ -233,20 +233,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            var order = Transactions.GetOrderById(newEvent.OrderId);
 
-            if (orderEvent.Quantity == 0)
+            if (newEvent.Quantity == 0)
             {
                 throw new RegressionTestException("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
             }
-            if (orderEvent.Quantity != order.Quantity)
+            if (newEvent.Quantity != order.Quantity)
             {
-                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity
+                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {newEvent.Quantity
                     }, expected {order.Quantity}");
             }
-            if (order is ComboLegLimitOrder && orderEvent.LimitPrice == 0)
+            if (order is ComboLegLimitOrder && newEvent.LimitPrice == 0)
             {
                 throw new RegressionTestException("OrderEvent.LimitPrice is not expected to be 0 for ComboLegLimitOrder");
             }

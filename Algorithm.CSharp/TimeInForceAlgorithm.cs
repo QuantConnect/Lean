@@ -55,8 +55,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             if (_gtcOrderTicket1 == null)
             {
@@ -109,11 +109,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Order event handler. This handler will be called for all order events, including submissions, fills, cancellations.
         /// </summary>
-        /// <param name="orderEvent">Order event instance containing details of the event</param>
+        /// <param name="newEvent">Order event instance containing details of the event</param>
         /// <remarks>This method can be called asynchronously, ensure you use proper locks on thread-unsafe objects</remarks>
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            Debug($"{Time} {orderEvent}");
+            Debug($"{Time} {newEvent}");
         }
 
         /// <summary>

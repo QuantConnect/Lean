@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (lastAction.Date == Time.Date) return;
 
@@ -84,16 +84,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Order events are triggered on order status changes. There are many order events including non-fill messages.
         /// </summary>
-        /// <param name="orderEvent">OrderEvent object with details about the order status</param>
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        /// <param name="newEvent">OrderEvent object with details about the order status</param>
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Submitted)
+            if (newEvent.Status == OrderStatus.Submitted)
             {
-                Debug(Time + ": Submitted: " + Transactions.GetOrderById(orderEvent.OrderId));
+                Debug(Time + ": Submitted: " + Transactions.GetOrderById(newEvent.OrderId));
             }
-            if (orderEvent.Status.IsFill())
+            if (newEvent.Status.IsFill())
             {
-                Debug(Time + ": Filled: " + Transactions.GetOrderById(orderEvent.OrderId));
+                Debug(Time + ": Filled: " + Transactions.GetOrderById(newEvent.OrderId));
             }
         }
 

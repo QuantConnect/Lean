@@ -381,12 +381,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
-        /// <param name="serverType">Type of server instance that will run the algorithm</param>
-        /// <param name="baseLiveAlgorithmSettings">Dictionary with Brokerage specific settings</param>
+        /// <param name="nodeId">Id of the node that will run the algorithm</param>
+        /// <param name="brokerageSettings">Dictionary with Brokerage specific settings</param>
         /// <param name="versionId">The version identifier</param>
         /// <param name="dataProviders">Dictionary with data providers and their corresponding credentials</param>
-        /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
-        CreateLiveAlgorithmResponse CreateLiveAlgorithm(int projectId, string compileId, string serverType, Dictionary<string, object> baseLiveAlgorithmSettings, string versionId = "-1", Dictionary<string, object> dataProviders = null);
+        /// <returns>Information regarding the new algorithm <see cref="CreateLiveAlgorithmResponse"/></returns>
+        CreateLiveAlgorithmResponse CreateLiveAlgorithm(int projectId, string compileId, string nodeId, Dictionary<string, object> brokerageSettings, string versionId = "-1", Dictionary<string, object> dataProviders = null);
 
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.

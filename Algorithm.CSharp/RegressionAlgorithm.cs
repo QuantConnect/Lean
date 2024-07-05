@@ -42,12 +42,12 @@ namespace QuantConnect.Algorithm.CSharp
 
         private DateTime lastTradeTradeBars;
         private TimeSpan tradeEvery = TimeSpan.FromMinutes(1);
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Time - lastTradeTradeBars < tradeEvery) return;
             lastTradeTradeBars = Time;
 
-            foreach (var kvp in data.Bars)
+            foreach (var kvp in slice.Bars)
             {
                 var symbol = kvp.Key;
                 var bar = kvp.Value;

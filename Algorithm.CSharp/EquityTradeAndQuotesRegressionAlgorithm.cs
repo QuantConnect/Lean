@@ -77,11 +77,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            _quoteCounter += data.QuoteBars.Count;
-            _tradeCounter += data.Bars.Count;
+            _quoteCounter += slice.QuoteBars.Count;
+            _tradeCounter += slice.Bars.Count;
 
             if (!Portfolio.Invested && _canTrade)
             {
@@ -119,16 +119,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
-                Log($"{Time:s} {orderEvent.Direction}");
-                var expectedFillPrice = orderEvent.Direction == OrderDirection.Buy ? Securities[_symbol].AskPrice : Securities[_symbol].BidPrice;
-                if (orderEvent.FillPrice != expectedFillPrice)
+                Log($"{Time:s} {newEvent.Direction}");
+                var expectedFillPrice = newEvent.Direction == OrderDirection.Buy ? Securities[_symbol].AskPrice : Securities[_symbol].BidPrice;
+                if (newEvent.FillPrice != expectedFillPrice)
                 {
-                    throw new RegressionTestException($"Fill price is not the expected for OrderId {orderEvent.OrderId} at Algorithm Time {Time:s}." +
-                                        $"\n\tExpected fill price: {expectedFillPrice}, Actual fill price: {orderEvent.FillPrice}");
+                    throw new RegressionTestException($"Fill price is not the expected for OrderId {newEvent.OrderId} at Algorithm Time {Time:s}." +
+                                        $"\n\tExpected fill price: {expectedFillPrice}, Actual fill price: {newEvent.FillPrice}");
                 }
             }
         }

@@ -55,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
             _security.SetBuyingPowerModel(new CustomBuyingPowerModel(this));
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             var openOrders = Transactions.GetOpenOrders(_spy);
             if (openOrders.Count != 0) return;

@@ -182,27 +182,27 @@ namespace QuantConnect
         /// <summary>
         /// Returns the value for the specified Symbol if Symbol is in dictionary.
         /// </summary>
-        /// <param name="symbol">Symbol to be searched in the dictionary</param>
+        /// <param name="key">Symbol to be searched in the dictionary</param>
         /// <returns>The value for the specified Symbol if Symbol is in dictionary.
         /// None if the Symbol is not found and value is not specified.</returns>
-        public T get(Symbol symbol)
+        public T get(Symbol key)
         {
             T data;
-            TryGetValue(symbol, out data);
+            TryGetValue(key, out data);
             return data;
         }
 
         /// <summary>
         /// Returns the value for the specified Symbol if Symbol is in dictionary.
         /// </summary>
-        /// <param name="symbol">Symbol to be searched in the dictionary</param>
+        /// <param name="key">Symbol to be searched in the dictionary</param>
         /// <param name="value">Value to be returned if the Symbol is not found. The default value is null.</param>
         /// <returns>The value for the specified Symbol if Symbol is in dictionary.
         /// value if the Symbol is not found and value is specified.</returns>
-        public T get(Symbol symbol, T value)
+        public T get(Symbol key, T value)
         {
             T data;
-            if (TryGetValue(symbol, out data))
+            if (TryGetValue(key, out data))
             {
                 return data;
             }
@@ -249,62 +249,62 @@ namespace QuantConnect
         /// <summary>
         /// Returns the value of a Symbol (if the Symbol is in dictionary). If not, it inserts Symbol with a value to the dictionary.
         /// </summary>
-        /// <param name="symbol">Key with null/None value is inserted to the dictionary if Symbol is not in the dictionary.</param>
+        /// <param name="key">Key with null/None value is inserted to the dictionary if Symbol is not in the dictionary.</param>
         /// <returns>The value of the Symbol if it is in the dictionary
         /// None if Symbol is not in the dictionary</returns>
-        public T setdefault(Symbol symbol)
+        public T setdefault(Symbol key)
         {
-            return setdefault(symbol, default(T));
+            return setdefault(key, default(T));
         }
 
         /// <summary>
         /// Returns the value of a Symbol (if the Symbol is in dictionary). If not, it inserts Symbol with a value to the dictionary.
         /// </summary>
-        /// <param name="symbol">Key with a value default_value is inserted to the dictionary if Symbol is not in the dictionary.</param>
+        /// <param name="key">Key with a value default_value is inserted to the dictionary if Symbol is not in the dictionary.</param>
         /// <param name="default_value">Default value</param>
         /// <returns>The value of the Symbol if it is in the dictionary
         /// default_value if Symbol is not in the dictionary and default_value is specified</returns>
-        public T setdefault(Symbol symbol, T default_value)
+        public T setdefault(Symbol key, T default_value)
         {
             T data;
-            if (TryGetValue(symbol, out data))
+            if (TryGetValue(key, out data))
             {
                 return data;
             }
 
             if (IsReadOnly)
             {
-                throw new KeyNotFoundException(Messages.ExtendedDictionary.SymbolNotFoundDueToNoData(this, symbol));
+                throw new KeyNotFoundException(Messages.ExtendedDictionary.SymbolNotFoundDueToNoData(this, key));
             }
 
-            this[symbol] = default_value;
+            this[key] = default_value;
             return default_value;
         }
 
         /// <summary>
         /// Removes and returns an element from a dictionary having the given Symbol.
         /// </summary>
-        /// <param name="symbol">Key which is to be searched for removal</param>
+        /// <param name="key">Key which is to be searched for removal</param>
         /// <returns>If Symbol is found - removed/popped element from the dictionary
         /// If Symbol is not found - KeyError exception is raised</returns>
-        public T pop(Symbol symbol)
+        public T pop(Symbol key)
         {
-            return pop(symbol, default(T));
+            return pop(key, default(T));
         }
 
         /// <summary>
         /// Removes and returns an element from a dictionary having the given Symbol.
         /// </summary>
-        /// <param name="symbol">Key which is to be searched for removal</param>
+        /// <param name="key">Key which is to be searched for removal</param>
         /// <param name="default_value">Value which is to be returned when the Symbol is not in the dictionary</param>
         /// <returns>If Symbol is found - removed/popped element from the dictionary
         /// If Symbol is not found - value specified as the second argument(default)</returns>
-        public T pop(Symbol symbol, T default_value)
+        public T pop(Symbol key, T default_value)
         {
             T data;
-            if (TryGetValue(symbol, out data))
+            if (TryGetValue(key, out data))
             {
-                Remove(symbol);
+                Remove(key);
                 return data;
             }
             return default_value;

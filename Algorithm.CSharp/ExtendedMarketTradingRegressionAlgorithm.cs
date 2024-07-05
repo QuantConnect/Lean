@@ -47,12 +47,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             //Only take an action once a day.
             if (_lastAction.Date == Time.Date) return;
-            TradeBar spyBar = data["SPY"];
+            TradeBar spyBar = slice["SPY"];
 
             //If it isnt during market hours, go ahead and buy ten!
             if (!InMarketHours())
@@ -66,14 +66,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// Order events are triggered on order status changes. There are many order events including non-fill messages.
         /// </summary>
         /// <param name="orderEvent">OrderEvent object with details about the order status</param>
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
             if (InMarketHours())
             {
                 throw new RegressionTestException("Order processed during market hours.");
             }
 
-            Log($"{orderEvent}");
+            Log($"{newEvent}");
         }
 
         /// <summary>

@@ -52,9 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
                 _cashAfterOrder = Portfolio.Cash;
             }
@@ -90,9 +90,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             public int CallCount { get; private set; }
 
-            public void ApplyMarginInterestRate(MarginInterestRateParameters parameters)
+            public void ApplyMarginInterestRate(MarginInterestRateParameters marginInterestRateParameters)
             {
-                var security = parameters.Security;
+                var security = marginInterestRateParameters.Security;
                 var positionValue = security.Holdings.GetQuantityValue(security.Holdings.Quantity);
 
                 if (positionValue.Amount > 0)

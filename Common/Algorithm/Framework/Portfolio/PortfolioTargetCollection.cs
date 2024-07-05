@@ -101,10 +101,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Adds the specified target to the collection. If a target for the same symbol
         /// already exists it wil be overwritten.
         /// </summary>
-        /// <param name="target">The portfolio target to add</param>
-        public void Add(IPortfolioTarget target)
+        /// <param name="item">The portfolio target to add</param>
+        public void Add(IPortfolioTarget item)
         {
-            if (target == null)
+            if (item == null)
             {
                 return;
             }
@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             {
                 _enumerable = null;
                 _kvpEnumerable = null;
-                _targets[target.Symbol] = target;
+                _targets[item.Symbol] = item;
             }
         }
 
@@ -121,21 +121,21 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Adds the specified target to the collection. If a target for the same symbol
         /// already exists it wil be overwritten.
         /// </summary>
-        /// <param name="target">The portfolio target to add</param>
-        public void Add(KeyValuePair<Symbol, IPortfolioTarget> target)
+        /// <param name="item">The portfolio target to add</param>
+        public void Add(KeyValuePair<Symbol, IPortfolioTarget> item)
         {
-            Add(target);
+            Add(item);
         }
 
         /// <summary>
         /// Adds the specified target to the collection. If a target for the same symbol
         /// already exists it wil be overwritten.
         /// </summary>
-        /// <param name="symbol">The symbol key</param>
-        /// <param name="target">The portfolio target to add</param>
-        public void Add(Symbol symbol, IPortfolioTarget target)
+        /// <param name="key">The symbol key</param>
+        /// <param name="value">The portfolio target to add</param>
+        public void Add(Symbol key, IPortfolioTarget value)
         {
-            Add(target);
+            Add(value);
         }
 
         /// <summary>
@@ -202,41 +202,41 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// NOTE: This checks for the exact specified target, not by symbol. Use ContainsKey
         /// to check by symbol.
         /// </summary>
-        /// <param name="target">The portfolio target to check for existence.</param>
+        /// <param name="item">The portfolio target to check for existence.</param>
         /// <returns>True if the target exists, false otherwise</returns>
-        public bool Contains(IPortfolioTarget target)
+        public bool Contains(IPortfolioTarget item)
         {
-            if (target == null)
+            if (item == null)
             {
                 return false;
             }
 
             lock (_targets)
             {
-                return _targets.ContainsKey(target.Symbol);
+                return _targets.ContainsKey(item.Symbol);
             }
         }
 
         /// <summary>
         /// Determines whether the specified symbol/target pair exists in this collection
         /// </summary>
-        /// <param name="target">The symbol/target pair</param>
+        /// <param name="item">The symbol/target pair</param>
         /// <returns>True if the pair exists, false otherwise</returns>
-        public bool Contains(KeyValuePair<Symbol, IPortfolioTarget> target)
+        public bool Contains(KeyValuePair<Symbol, IPortfolioTarget> item)
         {
-            return Contains(target);
+            return Contains(item);
         }
 
         /// <summary>
         /// Determines whether the specified symbol exists as a key in this collection
         /// </summary>
-        /// <param name="symbol">The symbol key</param>
+        /// <param name="key">The symbol key</param>
         /// <returns>True if the symbol exists in this collection, false otherwise</returns>
-        public bool ContainsKey(Symbol symbol)
+        public bool ContainsKey(Symbol key)
         {
             lock (_targets)
             {
-                return _targets.ContainsKey(symbol);
+                return _targets.ContainsKey(key);
             }
         }
 
@@ -266,13 +266,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Removes the target for the specified symbol if it exists in this collection.
         /// </summary>
-        /// <param name="symbol">The symbol to remove</param>
+        /// <param name="key">The symbol to remove</param>
         /// <returns>True if the symbol's target was removed, false if it doesn't exist in the collection</returns>
-        public bool Remove(Symbol symbol)
+        public bool Remove(Symbol key)
         {
             lock (_targets)
             {
-                if (_targets.Remove(symbol))
+                if (_targets.Remove(key))
                 {
                     _enumerable = null;
                     _kvpEnumerable = null;
@@ -287,19 +287,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// </summary>
         /// <param name="target">The symbol/target pair to remove</param>
         /// <returns>True if the symbol's target was removed, false if it doesn't exist in the collection</returns>
-        public bool Remove(KeyValuePair<Symbol, IPortfolioTarget> target)
+        public bool Remove(KeyValuePair<Symbol, IPortfolioTarget> item)
         {
-            return Remove(target.Value);
+            return Remove(item.Value);
         }
 
         /// <summary>
         /// Removes the target if it exists in this collection.
         /// </summary>
-        /// <param name="target">The target to remove</param>
+        /// <param name="item">The target to remove</param>
         /// <returns>True if the target was removed, false if it doesn't exist in the collection</returns>
-        public bool Remove(IPortfolioTarget target)
+        public bool Remove(IPortfolioTarget item)
         {
-            if (target == null)
+            if (item == null)
             {
                 return false;
             }
@@ -307,12 +307,12 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             lock (_targets)
             {
                 IPortfolioTarget existing;
-                if (_targets.TryGetValue(target.Symbol, out existing))
+                if (_targets.TryGetValue(item.Symbol, out existing))
                 {
                     // need to confirm that we're removing the requested target and not a different target w/ the same symbol key
-                    if (existing.Equals(target))
+                    if (existing.Equals(item))
                     {
-                        return Remove(target.Symbol);
+                        return Remove(item.Symbol);
                     }
                 }
             }
@@ -323,14 +323,14 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// <summary>
         /// Attempts to retrieve the target for the specified symbol
         /// </summary>
-        /// <param name="symbol">The symbol</param>
-        /// <param name="target">The portfolio target for the symbol, or null if not found</param>
+        /// <param name="key">The symbol</param>
+        /// <param name="value">The portfolio target for the symbol, or null if not found</param>
         /// <returns>True if the symbol's target was found, false if it does not exist in this collection</returns>
-        public bool TryGetValue(Symbol symbol, out IPortfolioTarget target)
+        public bool TryGetValue(Symbol key, out IPortfolioTarget value)
         {
             lock (_targets)
             {
-                return _targets.TryGetValue(symbol, out target);
+                return _targets.TryGetValue(key, out value);
             }
         }
 

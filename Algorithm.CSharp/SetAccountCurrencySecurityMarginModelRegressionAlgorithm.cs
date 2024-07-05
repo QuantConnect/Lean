@@ -59,8 +59,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             Log($"OnData(): Current execution step: {_step}");
             switch (_step)
@@ -124,21 +124,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
-                Log($"OnOrderEvent(): New filled order event: {orderEvent}");
+                Log($"OnOrderEvent(): New filled order event: {newEvent}");
                 // leave 1 unit as error in expected value
-                if (Math.Abs(orderEvent.FillQuantity - _expectedOrderQuantity) > 2)
+                if (Math.Abs(newEvent.FillQuantity - _expectedOrderQuantity) > 2)
                 {
-                    throw new RegressionTestException($"Unexpected order event fill quantity: {orderEvent.FillQuantity}. " +
+                    throw new RegressionTestException($"Unexpected order event fill quantity: {newEvent.FillQuantity}. " +
                         $"Expected {_expectedOrderQuantity}");
                 }
 
-                var orderFeeInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(orderEvent.OrderFee.Value).Amount;
+                var orderFeeInAccountCurrency = Portfolio.CashBook.ConvertToAccountCurrency(newEvent.OrderFee.Value).Amount;
                 var expectedOrderFee = _spy.Holdings.TotalFees - _previousHoldingsFees;
-                if (orderEvent.OrderFee.Value.Currency == AccountCurrency
+                if (newEvent.OrderFee.Value.Currency == AccountCurrency
                     // leave 0.00001m as error in expected fee value
                     || Math.Abs(expectedOrderFee - orderFeeInAccountCurrency) > 0.00001m)
                 {

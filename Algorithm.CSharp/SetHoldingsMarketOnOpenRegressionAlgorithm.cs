@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             _aapl = AddEquity("AAPL", Resolution.Daily).Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
@@ -51,9 +51,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Submitted)
+            if (newEvent.Status == OrderStatus.Submitted)
             {
                 var orderTickets = Transactions.GetOpenOrderTickets(_aapl).Single();
             }
@@ -67,11 +67,11 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (orderEvent.OrderId > 1)
+            if (newEvent.OrderId > 1)
             {
-                throw new RegressionTestException($"We only expect 1 order to be placed: {orderEvent}");
+                throw new RegressionTestException($"We only expect 1 order to be placed: {newEvent}");
             }
-            Debug($"OnOrderEvent: {orderEvent}");
+            Debug($"OnOrderEvent: {newEvent}");
         }
 
         /// <summary>

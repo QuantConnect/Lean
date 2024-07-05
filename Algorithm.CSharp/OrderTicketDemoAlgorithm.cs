@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // MARKET ORDERS
 
@@ -506,35 +506,35 @@ namespace QuantConnect.Algorithm.CSharp
 
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            var order = Transactions.GetOrderById(orderEvent.OrderId);
-            Log($"{Time}: {order.Type}: {orderEvent}");
+            var order = Transactions.GetOrderById(newEvent.OrderId);
+            Log($"{Time}: {order.Type}: {newEvent}");
 
-            if (orderEvent.Quantity == 0)
+            if (newEvent.Quantity == 0)
             {
                 throw new RegressionTestException("OrderEvent quantity is Not expected to be 0, it should hold the current order Quantity");
             }
-            if (orderEvent.Quantity != order.Quantity)
+            if (newEvent.Quantity != order.Quantity)
             {
                 throw new RegressionTestException("OrderEvent quantity should hold the current order Quantity");
             }
-            if (order is LimitOrder && orderEvent.LimitPrice == 0
-                || order is StopLimitOrder && orderEvent.LimitPrice == 0)
+            if (order is LimitOrder && newEvent.LimitPrice == 0
+                || order is StopLimitOrder && newEvent.LimitPrice == 0)
             {
                 throw new RegressionTestException("OrderEvent LimitPrice is Not expected to be 0 for LimitOrder and StopLimitOrder");
             }
-            if (order is StopMarketOrder && orderEvent.StopPrice == 0)
+            if (order is StopMarketOrder && newEvent.StopPrice == 0)
             {
                 throw new RegressionTestException("OrderEvent StopPrice is Not expected to be 0 for StopMarketOrder");
             }
 
             // We can access the order ticket from the order event
-            if (orderEvent.Ticket == null)
+            if (newEvent.Ticket == null)
             {
                 throw new RegressionTestException("OrderEvent Ticket was not set");
             }
-            if (orderEvent.OrderId != orderEvent.Ticket.OrderId)
+            if (newEvent.OrderId != newEvent.Ticket.OrderId)
             {
                 throw new RegressionTestException("OrderEvent.OrderId and orderEvent.Ticket.OrderId do not match");
             }

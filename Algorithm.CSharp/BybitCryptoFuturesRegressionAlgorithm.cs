@@ -68,9 +68,9 @@ namespace QuantConnect.Algorithm.CSharp
             _btcUsd.BaseCurrency.SetAmount(0.005m);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            var interestRates = data.Get<MarginInterestRate>();
+            var interestRates = slice.Get<MarginInterestRate>();
             foreach (var interestRate in interestRates)
             {
                 _interestPerSymbol[interestRate.Key]++;
@@ -192,9 +192,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            Debug(Time + " " + orderEvent);
+            Debug(Time + " " + newEvent);
         }
 
         public override void OnEndOfAlgorithm()

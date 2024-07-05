@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Minute).Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Time - _lastTradeDate < TimeSpan.FromHours(1))
             {
@@ -67,20 +67,20 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled && orderEvent.Direction == OrderDirection.Sell)
+            if (newEvent.Status == OrderStatus.Filled && newEvent.Direction == OrderDirection.Sell)
             {
-                Debug($"OrderEvent: {orderEvent}");
+                Debug($"OrderEvent: {newEvent}");
                 Debug($"CashBook:\n{Portfolio.CashBook}\n");
                 Debug($"UnsettledCashBook:\n{Portfolio.UnsettledCashBook}\n");
 
-                if (!Portfolio.UnsettledCashBook.TryGetValue(orderEvent.FillPriceCurrency, out var unsettledCash))
+                if (!Portfolio.UnsettledCashBook.TryGetValue(newEvent.FillPriceCurrency, out var unsettledCash))
                 {
-                    throw new RegressionTestException($"Unsettled cash entry for {orderEvent.FillPriceCurrency} not found");
+                    throw new RegressionTestException($"Unsettled cash entry for {newEvent.FillPriceCurrency} not found");
                 }
 
-                var expectedUnsettledCash = Math.Abs(orderEvent.FillPrice * orderEvent.FillQuantity);
+                var expectedUnsettledCash = Math.Abs(newEvent.FillPrice * newEvent.FillQuantity);
                 var actualUnsettledCash = unsettledCash.Amount - _lastUnsettledCash;
                 if (actualUnsettledCash != expectedUnsettledCash)
                 {

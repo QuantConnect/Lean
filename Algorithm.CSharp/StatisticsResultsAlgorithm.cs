@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             _slowIbmEma = EMA(_spy, 30, Resolution.Minute);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!_slowSpyEma.IsReady) return;
 
@@ -86,9 +86,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent orderEvent)
+        public override void OnOrderEvent(OrderEvent newEvent)
         {
-            if (orderEvent.Status == OrderStatus.Filled)
+            if (newEvent.Status == OrderStatus.Filled)
             {
                 // We can access the statistics summary at runtime
                 var statistics = Statistics.Summary;
@@ -125,8 +125,8 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Update the trade count
-                var tradeCount = _tradeCounts.GetValueOrDefault(orderEvent.Symbol);
-                _tradeCounts[orderEvent.Symbol] = tradeCount + 1;
+                var tradeCount = _tradeCounts.GetValueOrDefault(newEvent.Symbol);
+                _tradeCounts[newEvent.Symbol] = tradeCount + 1;
 
                 // Set the most traded security
                 mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
