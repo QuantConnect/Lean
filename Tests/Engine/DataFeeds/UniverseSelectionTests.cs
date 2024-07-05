@@ -185,7 +185,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 IDataProvider dataProvider,
                 IDataFeedSubscriptionManager subscriptionManager,
                 IDataFeedTimeProvider dataFeedTimeProvider,
-                IDataChannelProvider channelProvider
+                IDataChannelProvider dataChannelProvider
             )
             {
             }

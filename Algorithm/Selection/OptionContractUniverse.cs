@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -56,12 +56,12 @@ namespace QuantConnect.Algorithm.Selection
         /// <summary>
         /// Event invocator for the <see cref="UserDefinedUniverse.CollectionChanged"/> event
         /// </summary>
-        /// <param name="args">The notify collection changed event arguments</param>
-        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
+        /// <param name="e">The notify collection changed event arguments</param>
+        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (args.Action == NotifyCollectionChangedAction.Remove)
+            if (e.Action == NotifyCollectionChangedAction.Remove)
             {
-                var removedSymbol = (Symbol)args.OldItems[0];
+                var removedSymbol = (Symbol)e.OldItems[0];
                 _symbols.Remove(removedSymbol);
 
                 // the option has been removed! This can happen when the user manually removed the option contract we remove the underlying
@@ -72,13 +72,13 @@ namespace QuantConnect.Algorithm.Selection
                     Remove(removedSymbol.Underlying);
                 }
             }
-            else if (args.Action == NotifyCollectionChangedAction.Add)
+            else if (e.Action == NotifyCollectionChangedAction.Add)
             {
                 // QCAlgorithm.AddOptionContract will add both underlying and option contract
-                _symbols.Add((Symbol)args.NewItems[0]);
+                _symbols.Add((Symbol)e.NewItems[0]);
             }
 
-            base.OnCollectionChanged(args);
+            base.OnCollectionChanged(e);
         }
 
         /// <summary>

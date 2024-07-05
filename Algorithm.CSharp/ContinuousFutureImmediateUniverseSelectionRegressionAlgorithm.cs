@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
             });
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             _dataReceived = true;
 
@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("DC mapped contract is null");
             }
 
-            Log($"{data.Time} :: ES Mapped Contract: {_es.Mapped}. DC Mapped Contract: {_milk.Mapped}");
+            Log($"{slice.Time} :: ES Mapped Contract: {_es.Mapped}. DC Mapped Contract: {_milk.Mapped}");
         }
 
         public override void OnSecuritiesChanged(SecurityChanges changes)

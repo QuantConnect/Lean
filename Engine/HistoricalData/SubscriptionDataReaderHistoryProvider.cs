@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// <summary>
         /// Manager used to allow or deny access to a requested datasource for specific users
         /// </summary>
-        protected IDataPermissionManager DataPermissionManager;
+        protected IDataPermissionManager DataPermissionManager { get; set; }
 
         /// <summary>
         /// Initializes this history provider to work for the specified job

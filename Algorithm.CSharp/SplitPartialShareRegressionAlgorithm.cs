@@ -39,9 +39,9 @@ namespace QuantConnect.Algorithm.CSharp
             AddEquity("AAPL");
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            foreach (var dataSplit in data.Splits)
+            foreach (var dataSplit in slice.Splits)
             {
                 if (_splitType == null || _splitType < dataSplit.Value.Type)
                 {

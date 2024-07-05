@@ -139,10 +139,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             public static string CustomDataKey { get; set; }
 
-            public decimal Open;
-            public decimal High;
-            public decimal Low;
-            public decimal Close;
+            public decimal Open { get; set; }
+            public decimal High { get; set; }
+            public decimal Low { get; set; }
+            public decimal Close { get; set; }
 
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {

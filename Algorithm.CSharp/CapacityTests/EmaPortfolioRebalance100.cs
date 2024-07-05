@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class EmaPortfolioRebalance100 : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        public List<SymbolData> Data;
+        private List<SymbolData> _data;
 
         public override void Initialize()
         {
@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetWarmup(1000);
             SetCash(100000);
 
-            Data = new List<SymbolData> {
+            _data = new List<SymbolData> {
                 new SymbolData(this, AddEquity("AADR", Resolution.Minute).Symbol),
                 new SymbolData(this, AddEquity("AAMC", Resolution.Minute).Symbol),
                 new SymbolData(this, AddEquity("AAU", Resolution.Minute).Symbol),
@@ -139,11 +139,11 @@ namespace QuantConnect.Algorithm.CSharp
             };
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             var fastFactor = 0.005m;
 
-            foreach (var sd in Data)
+            foreach (var sd in _data)
             {
                 if (!Portfolio.Invested && sd.Fast * (1 + fastFactor) > sd.Slow)
                 {
@@ -158,9 +158,9 @@ namespace QuantConnect.Algorithm.CSharp
 
         public class SymbolData
         {
-            public Symbol Symbol;
-            public ExponentialMovingAverage Fast;
-            public ExponentialMovingAverage Slow;
+            public Symbol Symbol { get; set; }
+            public ExponentialMovingAverage Fast { get; set; }
+            public ExponentialMovingAverage Slow { get; set; }
             public bool IsCrossed => Fast > Slow;
 
             public SymbolData(QCAlgorithm algorithm, Symbol symbol) {

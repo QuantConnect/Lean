@@ -73,10 +73,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            if (!data.Bars.ContainsKey(symbol)) return;
+            if (!slice.Bars.ContainsKey(symbol)) return;
 
             // each month make an action
             if (Time.Month != LastMonth)
@@ -89,11 +89,11 @@ namespace QuantConnect.Algorithm.CSharp
                 LastMonth = Time.Month;
                 Log("ORDER TYPE:: " + orderType);
                 var isLong = Quantity > 0;
-                var stopPrice = isLong ? (1 + StopPercentage)*data.Bars[symbol].High : (1 - StopPercentage)*data.Bars[symbol].Low;
+                var stopPrice = isLong ? (1 + StopPercentage)*slice.Bars[symbol].High : (1 - StopPercentage)*slice.Bars[symbol].Low;
                 var limitPrice = isLong ? (1 - LimitPercentage)*stopPrice : (1 + LimitPercentage)*stopPrice;
                 if (orderType == OrderType.Limit)
                 {
-                    limitPrice = !isLong ? (1 + LimitPercentage) * data.Bars[symbol].High : (1 - LimitPercentage) * data.Bars[symbol].Low;
+                    limitPrice = !isLong ? (1 + LimitPercentage) * slice.Bars[symbol].High : (1 - LimitPercentage) * slice.Bars[symbol].Low;
                 }
                 var request = new SubmitOrderRequest(orderType, SecType, symbol, Quantity, stopPrice, limitPrice, 0, 0.01m, true, UtcTime,
                     ((int)orderType).ToString(CultureInfo.InvariantCulture));

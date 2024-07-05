@@ -96,12 +96,12 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Holds the bar for the current period.
         /// </summary>
-        protected IBaseDataBar _currentInput;
+        protected IBaseDataBar _currentInput { get; private set; }
 
         /// <summary>
         /// Holds the bar for the previous period.
         /// </summary>
-        protected IBaseDataBar _previousInput;
+        protected IBaseDataBar _previousInput { get; private set; }
 
         /// <summary>
         /// Gets the value for T (the limit move value) set in the constructor.

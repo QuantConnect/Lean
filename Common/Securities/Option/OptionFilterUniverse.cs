@@ -692,6 +692,113 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Sets universe of 2 call and 2 put contracts with the same strike price and 2 expiration dates, with closest match to the criteria given
+        /// </summary>
+        /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
+        /// <param name="minNearDaysTillExpiry">The mininum days till expiry of the closer contract from the current time, closest expiry will be selected</param>
+        /// <param name="minFarDaysTillExpiry">The mininum days till expiry of the further conrtact from the current time, closest expiry will be selected</param>
+        /// <remarks>Applicable to Long and Short Jelly Roll Option Strategy</remarks>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse JellyRoll(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
+        {
+            if (minFarDaysTillExpiry <= minNearDaysTillExpiry)
+            {
+                throw new ArgumentException("JellyRoll(): expiry arguments must be in ascending order, "
+                    + $"{nameof(minNearDaysTillExpiry)}, {nameof(minFarDaysTillExpiry)}");
+            }
+
+            if (minNearDaysTillExpiry < 0)
+            {
+                throw new ArgumentException("JellyRoll(): near expiry argument must be positive.");
+            }
+
+            // Select the set strike
+            var strike = AllSymbols.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + strikeFromAtm))
+                .First().ID.StrikePrice;
+            var contracts = AllSymbols.Where(x => x.ID.StrikePrice == strike && x.ID.OptionRight == OptionRight.Call).ToList();
+
+            // Select the expiries
+            var nearExpiryContract = GetContractsForExpiry(contracts, minNearDaysTillExpiry).SingleOrDefault();
+            if (nearExpiryContract == null)
+            {
+                return Empty();
+            }
+            var nearExpiry = nearExpiryContract.ID.Date;
+
+            var furtherContracts = contracts.Where(x => x.ID.Date > nearExpiryContract.ID.Date).ToList();
+            var farExpiryContract = GetContractsForExpiry(furtherContracts, minFarDaysTillExpiry).SingleOrDefault();
+            if (farExpiryContract == null)
+            {
+                return Empty();
+            }
+            var farExpiry = farExpiryContract.ID.Date;
+
+            var filtered = this.Where(x => x.ID.StrikePrice == strike && (x.ID.Date == nearExpiry || x.ID.Date == farExpiry));
+            if (filtered.Count() != 4)
+            {
+                return Empty();
+            }
+            return filtered;
+        }
+
+        /// <summary>
+        /// Sets universe of 3 call contracts with the same expiry and different strike prices, with closest match to the criteria given
+        /// </summary>
+        /// <param name="minDaysTillExpiry">The minimum days till expiry from the current time, closest expiry will be selected</param>
+        /// <param name="higherStrikeFromAtm">The desire strike price distance from the current underlying price of the higher strike price</param>
+        /// <param name="middleStrikeFromAtm">The desire strike price distance from the current underlying price of the middle strike price</param>
+        /// <param name="lowerStrikeFromAtm">The desire strike price distance from the current underlying price of the lower strike price</param>
+        /// <remarks>Applicable to Bear Call Ladder and Bull Call Ladder Option Strategy</remarks>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse CallLadder(int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        {
+            return Ladder(OptionRight.Call, minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm);
+        }
+
+        /// <summary>
+        /// Sets universe of 3 put contracts with the same expiry and different strike prices, with closest match to the criteria given
+        /// </summary>
+        /// <param name="minDaysTillExpiry">The minimum days till expiry from the current time, closest expiry will be selected</param>
+        /// <param name="higherStrikeFromAtm">The desire strike price distance from the current underlying price of the higher strike price</param>
+        /// <param name="middleStrikeFromAtm">The desire strike price distance from the current underlying price of the middle strike price</param>
+        /// <param name="lowerStrikeFromAtm">The desire strike price distance from the current underlying price of the lower strike price</param>
+        /// <remarks>Applicable to Bear Put Ladder and Bull Put Ladder Option Strategy</remarks>
+        /// <returns>Universe with filter applied</returns>
+        public OptionFilterUniverse PutLadder(int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        {
+            return Ladder(OptionRight.Put, minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm);
+        }
+
+        private OptionFilterUniverse Ladder(OptionRight right, int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        {
+            if (higherStrikeFromAtm <= lowerStrikeFromAtm || higherStrikeFromAtm <= middleStrikeFromAtm || middleStrikeFromAtm <= lowerStrikeFromAtm)
+            {
+                throw new ArgumentException("Ladder(): strike price arguments must be in descending order, "
+                    + $"{nameof(higherStrikeFromAtm)}, {nameof(middleStrikeFromAtm)}, {nameof(lowerStrikeFromAtm)}");
+            }
+
+            // Select the expiry as the nearest to set days later
+            var contracts = GetContractsForExpiry(AllSymbols.Where(x => x.ID.OptionRight == right).ToList(), minDaysTillExpiry);
+
+            // Select the strike prices with the set ladder range
+            var lowerStrikeContract = contracts.OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + lowerStrikeFromAtm)).First();
+            var middleStrikeContract = contracts.Where(x => x.ID.StrikePrice > lowerStrikeContract.ID.StrikePrice)
+                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + middleStrikeFromAtm)).FirstOrDefault();
+            if (middleStrikeContract == default)
+            {
+                return Empty();
+            }
+            var higherStrikeContract = contracts.Where(x => x.ID.StrikePrice > middleStrikeContract.ID.StrikePrice)
+                .OrderBy(x => Math.Abs(Underlying.Price - x.ID.StrikePrice + higherStrikeFromAtm)).FirstOrDefault();
+            if (higherStrikeContract == default)
+            {
+                return Empty();
+            }
+
+            return this.WhereContains(new List<Symbol> { lowerStrikeContract, middleStrikeContract, higherStrikeContract });
+        }
+
+        /// <summary>
         /// Will provide all contracts that respect a specific expiration filter
         /// </summary>
         /// <param name="symbols">Symbols source to use</param>

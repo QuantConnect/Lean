@@ -210,9 +210,9 @@ namespace QuantConnect.Tests.Indicators
 
         public class Bar
         {
-            public decimal closePrice;
-            public decimal volume;
-            public decimal expectedPOCPrice;
+            public decimal closePrice { get; set; }
+            public decimal volume { get; set; }
+            public decimal expectedPOCPrice { get; set; }
         }
     }
 }

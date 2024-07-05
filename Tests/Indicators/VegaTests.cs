@@ -22,7 +22,7 @@ using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class VegaTests : OptionBaseIndicatorTests<Vega>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()

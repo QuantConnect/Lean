@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             _slow = EMA(_gbpjpy, 40);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Portfolio[_gbpjpy].Quantity <= 0 && _fast > _slow)
             {

@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
                 enumerable => new[] { Time.Date <= new DateTime(2014, 6, 5) ? _twx : _aapl });
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (_option != null && Securities[_option].Price != 0 && !_traded)
             {

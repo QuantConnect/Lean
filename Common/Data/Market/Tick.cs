@@ -687,11 +687,11 @@ namespace QuantConnect.Data.Market
         /// Tick implementation of reader method: read a line of data from the source and convert it to a tick object.
         /// </summary>
         /// <param name="config">Subscription configuration object for algorithm</param>
-        /// <param name="reader">The source stream reader</param>
+        /// <param name="stream">The source stream reader</param>
         /// <param name="date">Date of this reader request</param>
         /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
         /// <returns>New Initialized tick</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, StreamReader reader, DateTime date, bool isLiveMode)
+        public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
         {
             if (isLiveMode)
             {
@@ -699,7 +699,7 @@ namespace QuantConnect.Data.Market
                 return new Tick();
             }
 
-            return new Tick(config, reader, date);
+            return new Tick(config, stream, date);
         }
 
 

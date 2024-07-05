@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse("my-daily-universe-name", time => new List<string> { "AAPL" });
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (_option == null)
             {

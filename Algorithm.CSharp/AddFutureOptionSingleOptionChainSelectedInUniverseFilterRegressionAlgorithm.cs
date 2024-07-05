@@ -75,9 +75,9 @@ namespace QuantConnect.Algorithm.CSharp
             });
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            if (!data.HasData)
+            if (!slice.HasData)
             {
                 return;
             }
@@ -85,7 +85,7 @@ namespace QuantConnect.Algorithm.CSharp
             _onDataReached = true;
 
             var hasOptionQuoteBars = false;
-            foreach (var qb in data.QuoteBars.Values)
+            foreach (var qb in slice.QuoteBars.Values)
             {
                 if (qb.Symbol.SecurityType != SecurityType.FutureOption)
                 {
@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var chain in data.OptionChains.Values)
+            foreach (var chain in slice.OptionChains.Values)
             {
                 var futureInvested = false;
                 var optionInvested = false;
@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var future = option.Underlying;
 
-                    if (!optionInvested && data.ContainsKey(option))
+                    if (!optionInvested && slice.ContainsKey(option))
                     {
                         var optionContract = Securities[option];
                         var marginModel = optionContract.BuyingPowerModel as FuturesOptionsMarginModel;
@@ -152,7 +152,7 @@ namespace QuantConnect.Algorithm.CSharp
                             throw new RegressionTestException("Unexpected Maintenance Margin requirement");
                         }
                     }
-                    if (!futureInvested && data.ContainsKey(future))
+                    if (!futureInvested && slice.ContainsKey(future))
                     {
                         MarketOrder(future, 1);
                         _invested = true;

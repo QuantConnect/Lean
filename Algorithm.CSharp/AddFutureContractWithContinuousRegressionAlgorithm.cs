@@ -56,16 +56,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             if (_ended)
             {
                 throw new RegressionTestException($"Algorithm should of ended!");
             }
-            if (data.Keys.Count > 2)
+            if (slice.Keys.Count > 2)
             {
-                throw new RegressionTestException($"Getting data for more than 2 symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
+                throw new RegressionTestException($"Getting data for more than 2 symbols! {string.Join(",", slice.Keys.Select(symbol => symbol))}");
             }
             if (UniverseManager.Count != 3)
             {

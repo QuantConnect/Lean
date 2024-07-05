@@ -71,11 +71,11 @@ namespace QuantConnect.Algorithm.CSharp
             });
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // Assert delistings, so that we can make sure that we receive the delisting warnings at
             // the expected time. These assertions detect bug #4872
-            foreach (var delisting in data.Delistings.Values)
+            foreach (var delisting in slice.Delistings.Values)
             {
                 if (delisting.Type == DelistingType.Warning)
                 {

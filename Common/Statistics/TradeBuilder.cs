@@ -182,11 +182,11 @@ namespace QuantConnect.Statistics
         /// Processes a new fill, eventually creating new trades
         /// </summary>
         /// <param name="fill">The new fill order event</param>
-        /// <param name="conversionRate">The current security market conversion rate into the account currency</param>
+        /// <param name="securityConversionRate">The current security market conversion rate into the account currency</param>
         /// <param name="feeInAccountCurrency">The current order fee in the account currency</param>
         /// <param name="multiplier">The contract multiplier</param>
         public void ProcessFill(OrderEvent fill,
-            decimal conversionRate,
+            decimal securityConversionRate,
             decimal feeInAccountCurrency,
             decimal multiplier = 1.0m)
         {
@@ -202,15 +202,15 @@ namespace QuantConnect.Statistics
             switch (_groupingMethod)
             {
                 case FillGroupingMethod.FillToFill:
-                    ProcessFillUsingFillToFill(fill.Clone(), orderFee, conversionRate, multiplier);
+                    ProcessFillUsingFillToFill(fill.Clone(), orderFee, securityConversionRate, multiplier);
                     break;
 
                 case FillGroupingMethod.FlatToFlat:
-                    ProcessFillUsingFlatToFlat(fill.Clone(), orderFee, conversionRate, multiplier);
+                    ProcessFillUsingFlatToFlat(fill.Clone(), orderFee, securityConversionRate, multiplier);
                     break;
 
                 case FillGroupingMethod.FlatToReduced:
-                    ProcessFillUsingFlatToReduced(fill.Clone(), orderFee, conversionRate, multiplier);
+                    ProcessFillUsingFlatToReduced(fill.Clone(), orderFee, securityConversionRate, multiplier);
                     break;
             }
         }

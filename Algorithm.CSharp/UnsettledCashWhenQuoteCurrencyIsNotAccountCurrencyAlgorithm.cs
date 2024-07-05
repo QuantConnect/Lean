@@ -48,7 +48,7 @@ namespace QuantConnect.Algorithm.CSharp
             _spy = AddEquity("SPY", Resolution.Minute).Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Time - _lastTradeDate < TimeSpan.FromHours(1))
             {

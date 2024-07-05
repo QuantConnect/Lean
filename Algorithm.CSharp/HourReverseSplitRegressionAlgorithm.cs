@@ -39,10 +39,10 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = AddEquity("VXX.1", Resolution.Hour).Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             TradeBar bar;
-            if (!data.Bars.TryGetValue(_symbol, out bar)) return;
+            if (!slice.Bars.TryGetValue(_symbol, out bar)) return;
 
             if (!Portfolio.Invested && Time.Date == EndDate.Date)
             {

@@ -31,71 +31,71 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// User Id placing request
         /// </summary>
-        public int UserId;
+        public int UserId { get; set; }
 
         /// User API Token
-        public string UserToken = "";
+        public string UserToken { get; set; } = string.Empty;
 
         /// <summary>
         /// Project Id of the request
         /// </summary>
-        public int ProjectId;
+        public int ProjectId { get; set; }
 
         /// <summary>
         /// Unique compile id of this optimization
         /// </summary>
-        public string CompileId = "";
+        public string CompileId { get; set; } = string.Empty;
 
         /// <summary>
         /// The unique optimization Id of the request
         /// </summary>
-        public string OptimizationId = "";
+        public string OptimizationId { get; set; } = string.Empty;
 
         /// <summary>
         /// Organization Id of the request
         /// </summary>
-        public string OrganizationId = "";
+        public string OrganizationId { get; set; } = string.Empty;
 
         /// <summary>
         /// Limit for the amount of concurrent backtests being run
         /// </summary>
-        public int MaximumConcurrentBacktests;
+        public int MaximumConcurrentBacktests { get; set; }
 
         /// <summary>
         /// Optimization strategy name
         /// </summary>
-        public string OptimizationStrategy = "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy";
+        public string OptimizationStrategy { get; set; } = "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy";
 
         /// <summary>
         /// Objective settings
         /// </summary>
-        public Target Criterion;
+        public Target Criterion { get; set; }
 
         /// <summary>
         /// Optimization constraints
         /// </summary>
-        public IReadOnlyList<Constraint> Constraints;
+        public IReadOnlyList<Constraint> Constraints { get; set; }
 
         /// <summary>
         /// The user optimization parameters
         /// </summary>
-        public HashSet<OptimizationParameter> OptimizationParameters;
+        public HashSet<OptimizationParameter> OptimizationParameters { get; set; }
 
         /// <summary>
         /// The user optimization parameters
         /// </summary>
         [JsonProperty(TypeNameHandling = TypeNameHandling.All)]
-        public OptimizationStrategySettings OptimizationStrategySettings;
+        public OptimizationStrategySettings OptimizationStrategySettings { get; set; }
 
         /// <summary>
         /// Backtest out of sample maximum end date
         /// </summary>
-        public DateTime? OutOfSampleMaxEndDate;
+        public DateTime? OutOfSampleMaxEndDate { get; set; }
 
         /// <summary>
         /// The backtest out of sample day count
         /// </summary>
-        public int OutOfSampleDays;
+        public int OutOfSampleDays { get; set; }
 
         /// <summary>
         /// Creates a new instance

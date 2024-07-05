@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             _equity.SetVolatilityModel(new CustomVolatilityModel(10));
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested && !(_equity.VolatilityModel.Volatility > 0))
                 SetHoldings("SPY", 1);

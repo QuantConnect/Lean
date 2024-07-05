@@ -162,16 +162,20 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Adds an element with the provided key and value to the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// Adds an element with the provided key and value to the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
         /// </summary>
-        /// <param name="key">The object to use as the key of the element to add.</param><param name="universe">The object to use as the value of the element to add.</param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception><exception cref="T:System.ArgumentException">An element with the same key already exists in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.</exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.</exception>
-        public void Add(Symbol key, Universe universe)
+        /// <param name="key">The object to use as the key of the element to add.
+        /// </param><param name="value">The object to use as the value of the element to add.</param>
+        /// <exception cref="System.ArgumentNullException"><paramref name="key"/> is null.</exception>
+        /// <exception cref="System.ArgumentException">An element with the same key already exists in the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.</exception>
+        /// <exception cref="System.NotSupportedException">The <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/> is read-only.</exception>
+        public void Add(Symbol key, Universe value)
         {
-            if (_universes.TryAdd(key, universe))
+            if (_universes.TryAdd(key, value))
             {
                 lock(_pendingChanges)
                 {
-                    _pendingChanges.Enqueue(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, universe));
+                    _pendingChanges.Enqueue(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value));
                 }
             }
         }

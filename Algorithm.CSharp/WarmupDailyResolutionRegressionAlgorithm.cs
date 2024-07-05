@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             Sma = SMA("SPY", 2);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Sma.Samples <= _previousSampleCount)
             {
@@ -57,10 +57,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
             _previousSampleCount = Sma.Samples;
 
-            var tradeBars = data.Get<TradeBar>();
+            var tradeBars = slice.Get<TradeBar>();
             tradeBars.TryGetValue("SPY", out var trade);
 
-            var quoteBars = data.Get<QuoteBar>();
+            var quoteBars = slice.Get<QuoteBar>();
             quoteBars.TryGetValue("SPY", out var quote);
 
             var expectedPeriod = ExpectedDataSpan;

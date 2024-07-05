@@ -56,9 +56,9 @@ namespace QuantConnect.Algorithm.CSharp
             SetBenchmark(t => 1);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            foreach (var value in data.OptionChains.Values)
+            foreach (var value in slice.OptionChains.Values)
             {
                 foreach (var contact in value.Contracts)
                 {

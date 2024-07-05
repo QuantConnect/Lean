@@ -54,17 +54,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            _dataCount += data.Bars.Count;
+            _dataCount += slice.Bars.Count;
             if (Transactions.OrdersCount == 0)
             {
                 SetHoldings("AAA.1", 1);
                 Debug("Purchased Stock");
             }
 
-            foreach (var kvp in data.Bars)
+            foreach (var kvp in slice.Bars)
             {
                 var symbol = kvp.Key;
                 var tradeBar = kvp.Value;
@@ -83,7 +83,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Securities must be marked as tradable until they're delisted or removed from the universe");
             }
 
-            foreach (var kvp in data.Delistings)
+            foreach (var kvp in slice.Delistings)
             {
                 var symbol = kvp.Key;
                 var delisting = kvp.Value;

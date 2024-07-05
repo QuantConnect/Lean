@@ -862,7 +862,7 @@ namespace QuantConnect.Tests.Engine.Setup
     public class TestBrokerage : Brokerage
     {
         public override bool IsConnected { get; } = true;
-        public int GetCashBalanceCallCount;
+        public int GetCashBalanceCallCount { get; set; }
 
         public TestBrokerage() : base("Test")
         {

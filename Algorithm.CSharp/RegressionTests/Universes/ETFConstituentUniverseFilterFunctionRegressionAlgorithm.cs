@@ -91,20 +91,20 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            if (!_filtered && data.Bars.Count != 0 && data.Bars.ContainsKey(_aapl))
+            if (!_filtered && slice.Bars.Count != 0 && slice.Bars.ContainsKey(_aapl))
             {
                 throw new RegressionTestException("AAPL TradeBar data added to algorithm before constituent universe selection took place");
             }
 
-            if (data.Bars.Count == 1 && data.Bars.ContainsKey(_spy))
+            if (slice.Bars.Count == 1 && slice.Bars.ContainsKey(_spy))
             {
                 return;
             }
             
-            if (data.Bars.Count != 0 && !data.Bars.ContainsKey(_aapl))
+            if (slice.Bars.Count != 0 && !slice.Bars.ContainsKey(_aapl))
             {
                 throw new RegressionTestException($"Expected AAPL TradeBar data in OnData on {UtcTime:yyyy-MM-dd HH:mm:ss}");
             }
@@ -116,7 +116,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var bar in data.Bars.Values)
+            foreach (var bar in slice.Bars.Values)
             {
                 if (_etfConstituentData.TryGetValue(bar.Symbol, out var constituentData) && 
                     constituentData.Weight != null && 

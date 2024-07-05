@@ -118,9 +118,9 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
 
         public double NextDouble() => _random.NextDouble();
 
-        public int NextInt(int v1, int v2) => _random.Next(v1, v2);
+        public int NextInt(int minValue, int maxValue) => _random.Next(minValue, maxValue);
 
-        public int NextInt(int v1) => _random.Next(v1);
+        public int NextInt(int maxValue) => _random.Next(maxValue);
 
         /// <summary>
         /// Generates a random <see cref="decimal"/> suitable as a price. This should observe minimum price

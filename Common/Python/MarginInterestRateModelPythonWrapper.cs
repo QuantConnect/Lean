@@ -35,10 +35,10 @@ namespace QuantConnect.Python
         /// <summary>
         /// Apply margin interest rates to the portfolio
         /// </summary>
-        /// <param name="parameters">The parameters to use</param>
-        public void ApplyMarginInterestRate(MarginInterestRateParameters parameters)
+        /// <param name="marginInterestRateParameters">The parameters to use</param>
+        public void ApplyMarginInterestRate(MarginInterestRateParameters marginInterestRateParameters)
         {
-            InvokeMethod(nameof(ApplyMarginInterestRate), parameters);
+            InvokeMethod(nameof(ApplyMarginInterestRate), marginInterestRateParameters);
         }
     }
 }

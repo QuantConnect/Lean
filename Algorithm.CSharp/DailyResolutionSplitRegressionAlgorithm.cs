@@ -37,7 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = AddEquity("UPRO", Resolution.Daily).Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Time.Date == new DateTime(2018, 05, 22).Date)
             {

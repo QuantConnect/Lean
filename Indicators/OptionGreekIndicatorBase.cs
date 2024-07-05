@@ -28,7 +28,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Cache of the current value of the greek
         /// </summary>
-        protected decimal _greekValue;
+        protected decimal _greekValue { get; set; }
 
         /// <summary>
         /// Gets the implied volatility of the option

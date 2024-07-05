@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateOptionsDailyAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        public Symbol OptionSymbol;
+        private Symbol _optionSymbol;
         private bool _optionExpired;
 
         public override void Initialize()
@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var equity = AddEquity(UnderlyingTicker, Resolution.Daily);
             var option = AddOption(UnderlyingTicker, Resolution.Daily);
-            OptionSymbol = option.Symbol;
+            _optionSymbol = option.Symbol;
 
             option.SetFilter(x => x.CallsOnly().Strikes(0, 1).Expiration(0, 30));
 
@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (!Portfolio.Invested)
             {
                 OptionChain chain;
-                if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     // Grab us the contract nearest expiry that is not today
                     var contractsByExpiration = chain.Where(x => x.Expiry != Time.Date).OrderBy(x => x.Expiry);

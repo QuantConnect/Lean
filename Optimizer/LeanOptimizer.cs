@@ -59,28 +59,28 @@ namespace QuantConnect.Optimizer
         /// <summary>
         /// The optimization target
         /// </summary>
-        protected readonly Target OptimizationTarget;
+        protected Target OptimizationTarget { get; }
 
         /// <summary>
         /// Collection holding <see cref="ParameterSet"/> for each backtest id we are waiting to finish
         /// </summary>
-        protected readonly ConcurrentDictionary<string, ParameterSet> RunningParameterSetForBacktest;
+        protected ConcurrentDictionary<string, ParameterSet> RunningParameterSetForBacktest { get; init; }
 
         /// <summary>
         /// Collection holding <see cref="ParameterSet"/> for each backtest id we are waiting to launch
         /// </summary>
         /// <remarks>We can't launch 1 million backtests at the same time</remarks>
-        protected readonly ConcurrentQueue<ParameterSet> PendingParameterSet;
+        protected ConcurrentQueue<ParameterSet> PendingParameterSet { get; init; }
 
         /// <summary>
         /// The optimization strategy being used
         /// </summary>
-        protected readonly IOptimizationStrategy Strategy;
+        protected IOptimizationStrategy Strategy { get; init; }
 
         /// <summary>
         /// The optimization packet
         /// </summary>
-        protected readonly OptimizationNodePacket NodePacket;
+        protected OptimizationNodePacket NodePacket { get; init; }
 
         /// <summary>
         /// Indicates whether optimizer was disposed

@@ -2513,8 +2513,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public int CancelPendingOrdersSize => _cancelPendingOrders.GetCancelPendingOrdersSize;
 
-            public TimeSpan TestTimeSinceLastFill = TimeSpan.FromDays(1);
-            public DateTime TestCurrentTimeUtc = new DateTime(13, 1, 13, 13, 13, 13);
+            public TimeSpan TestTimeSinceLastFill { get; set; } = TimeSpan.FromDays(1);
+            public DateTime TestCurrentTimeUtc { get; set; } = new DateTime(13, 1, 13, 13, 13, 13);
 
             // modifying current time so cash sync is triggered
             protected override DateTime CurrentTimeUtc => TestCurrentTimeUtc;

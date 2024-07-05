@@ -95,7 +95,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public class NyseTopGainers : BaseData
         {
-            public int TopGainersRank;
+            public int TopGainersRank { get; set; }
 
             public override DateTime EndTime
             {

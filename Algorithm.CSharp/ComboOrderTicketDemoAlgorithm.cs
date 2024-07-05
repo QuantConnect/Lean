@@ -51,12 +51,12 @@ namespace QuantConnect.Algorithm.CSharp
                   .Expiration(0, 180));
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (_orderLegs == null)
             {
                 OptionChain chain;
-                if (IsMarketOpen(_optionSymbol) && data.OptionChains.TryGetValue(_optionSymbol, out chain))
+                if (IsMarketOpen(_optionSymbol) && slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     var callContracts = chain.Where(contract => contract.Right == OptionRight.Call)
                         .GroupBy(x => x.Expiry)
