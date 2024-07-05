@@ -413,28 +413,7 @@ namespace QuantConnect.Tests.API
                 { "QuantConnectBrokerage", quantConnectDataProvider }
             };
 
-            var file = new ProjectFile
-            {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateCryptoFrameworkAlgorithm.cs")
-            };
-
-            // Create a new project
-            var project = ApiClient.CreateProject($"Test project insight - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
-            var projectId = project.Projects.First().ProjectId;
-
-            // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
-            Assert.IsTrue(updateProjectFileContent.Success);
-
-            // Create compile
-            var compile = ApiClient.CreateCompile(projectId);
-            Assert.IsTrue(compile.Success);
-
-            // Wait at max 30 seconds for project to compile
-            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
-            Assert.IsTrue(compileCheck.Success);
-            Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
+            GetProjectAndCompileIdToReadInsights(out var projectId, out var compileId);
 
             // Get a live node to launch the algorithm on
             var nodesResponse = ApiClient.ReadProjectNodes(projectId);
@@ -445,7 +424,7 @@ namespace QuantConnect.Tests.API
             try
             {
                 // Create live default algorithm
-                var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
+                var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
                 Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
                 // Wait 2 minutes
@@ -513,54 +492,19 @@ namespace QuantConnect.Tests.API
         [Test]
         public void ReadBacktestInsightsWorksAsExpected()
         {
-            var quantConnectDataProvider = new Dictionary<string, object>
-            {
-                { "id", "QuantConnectBrokerage" },
-            };
-
-            var dataProviders = new Dictionary<string, object>
-            {
-                { "QuantConnectBrokerage", quantConnectDataProvider }
-            };
-
-            var file = new ProjectFile
-            {
-                Name = "Main.cs",
-                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateCryptoFrameworkAlgorithm.cs")
-            };
-
-            // Create a new project
-            var project = ApiClient.CreateProject($"Test project insight - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
-            var projectId = project.Projects.First().ProjectId;
-
-            // Update Project Files
-            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
-            Assert.IsTrue(updateProjectFileContent.Success);
-
-            // Create compile
-            var compile = ApiClient.CreateCompile(projectId);
-            Assert.IsTrue(compile.Success);
-
-            // Wait at max 30 seconds for project to compile
-            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
-            Assert.IsTrue(compileCheck.Success);
-            Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
-
+            GetProjectAndCompileIdToReadInsights(out var projectId, out var compileId);
             try
             {
                 // Create backtest
                 var backtestName = $"ReadBacktestOrders Backtest {GetTimestamp()}";
-                var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, backtestName);
-
-                // Wait 2 minutes
-                Thread.Sleep(120000);
+                var backtest = ApiClient.CreateBacktest(projectId, compileId, backtestName);
 
                 // Try to read the insights from the algorithm
                 var readInsights = ApiClient.ReadBacktestInsights(projectId, backtest.BacktestId, 0, 5);
                 var finish = DateTime.UtcNow.AddMinutes(2);
                 do
                 {
-                    Thread.Sleep(5000);
+                    Thread.Sleep(1000);
                     readInsights = ApiClient.ReadBacktestInsights(projectId, backtest.BacktestId, 0, 5);
                 }
                 while (finish > DateTime.UtcNow && !readInsights.Insights.Any());
@@ -758,6 +702,33 @@ namespace QuantConnect.Tests.API
         private static string GetTimestamp()
         {
             return DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfffff");
+        }
+
+        private void GetProjectAndCompileIdToReadInsights(out int projectId, out string compileId)
+        {
+            var file = new ProjectFile
+            {
+                Name = "Main.cs",
+                Code = File.ReadAllText("../../../Algorithm.CSharp/BasicTemplateCryptoFrameworkAlgorithm.cs")
+            };
+
+            // Create a new project
+            var project = ApiClient.CreateProject($"Test project insight - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            projectId = project.Projects.First().ProjectId;
+
+            // Update Project Files
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", file.Code);
+            Assert.IsTrue(updateProjectFileContent.Success);
+
+            // Create compile
+            var compile = ApiClient.CreateCompile(projectId);
+            Assert.IsTrue(compile.Success);
+            compileId = compile.CompileId;
+
+            // Wait at max 30 seconds for project to compile
+            var compileCheck = WaitForCompilerResponse(projectId, compile.CompileId);
+            Assert.IsTrue(compileCheck.Success);
+            Assert.IsTrue(compileCheck.State == CompileState.BuildSuccess);
         }
     }
 }
