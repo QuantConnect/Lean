@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -23,7 +22,7 @@ using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class CorrelationPearsonTests : CommonIndicatorTests<IBaseDataBar>
     { 
         protected override string TestFileName => "spy_qqq_corr.csv";
