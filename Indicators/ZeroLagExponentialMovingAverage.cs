@@ -29,13 +29,12 @@ namespace QuantConnect.Indicators
         /// </summary>
         private readonly int _period;
         private readonly ExponentialMovingAverage _ema;
-        private readonly int _lag;
-        private readonly RollingWindow<IndicatorDataPoint> _rollingWindow;
+        private readonly Delay _delayedPrice;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => (Samples >= _lag + 1) && _ema.IsReady;
+        public override bool IsReady => _delayedPrice.IsReady && _ema.IsReady;
 
         /// <summary>
         /// Resets this indicator to its initial state
@@ -43,7 +42,7 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _ema.Reset();
-            _rollingWindow.Reset();
+            _delayedPrice.Reset();
             base.Reset();
         }
 
@@ -56,9 +55,8 @@ namespace QuantConnect.Indicators
             : base(name, period)
         {
             _period = period;
-            _lag = (int)Math.Round((period - 1) / 2.0);
             _ema = new ExponentialMovingAverage(name + "_EMA", period);
-            _rollingWindow = new RollingWindow<IndicatorDataPoint>(_lag + 1);
+            _delayedPrice = new Delay((int)Math.Round((period - 1) / 2.0));
         }
 
         /// <summary>
@@ -78,11 +76,11 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            _rollingWindow.Add(input);
+            _delayedPrice.Update(input);
 
-            if (_rollingWindow.IsReady)
+            if (_delayedPrice.IsReady)
             {
-                _ema.Update(input.Time, input.Value + (input.Value - _rollingWindow[_lag].Value));
+                _ema.Update(input.Time, input.Value + (input.Value - _delayedPrice.Current));
             }
             else
             {
