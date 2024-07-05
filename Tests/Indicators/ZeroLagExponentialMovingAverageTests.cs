@@ -14,8 +14,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -69,7 +67,6 @@ namespace QuantConnect.Tests.Indicators
             zlema.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(zlema);
-            //TestHelper.AssertIndicatorIsInDefaultState(zlema._ema);
             zlema.Update(DateTime.UtcNow, 2.0m);
             zlema.Update(DateTime.UtcNow, 2.0m);
             zlema.Update(DateTime.UtcNow, 2.0m);

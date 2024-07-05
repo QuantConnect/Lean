@@ -14,10 +14,6 @@
 */
 
 using System;
-using System.Linq;
-using Fasterflect;
-using MathNet.Numerics;
-using static QuantConnect.Messages;
 
 namespace QuantConnect.Indicators
 {
@@ -32,7 +28,7 @@ namespace QuantConnect.Indicators
         private readonly int _period;
         private readonly ExponentialMovingAverage _ema;
         private readonly int _lag;
-        private readonly RollingWindow<IndicatorDataPoint> _rolling_window;
+        private readonly RollingWindow<IndicatorDataPoint> _rollingWindow;
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -45,7 +41,7 @@ namespace QuantConnect.Indicators
         public override void Reset()
         {
             _ema.Reset();
-            _rolling_window.Reset();
+            _rollingWindow.Reset();
             base.Reset();
         }
 
@@ -60,7 +56,7 @@ namespace QuantConnect.Indicators
             _period = period;
             _lag = (int)Math.Round((period - 1) / 2.0);
             _ema = new ExponentialMovingAverage(name + "_EMA", period);
-            _rolling_window = new RollingWindow<IndicatorDataPoint>(_lag + 1);
+            _rollingWindow = new RollingWindow<IndicatorDataPoint>(_lag + 1);
         }
 
         /// <summary>
@@ -80,12 +76,14 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            _rolling_window.Add(input);
+            _rollingWindow.Add(input);
 
             if (Samples >= _lag + 1)
             {
-                _ema.Update(input.Time, input.Value + (input.Value - _rolling_window[_lag].Value));
-            } else {
+                _ema.Update(input.Time, input.Value + (input.Value - _rollingWindow[_lag].Value));
+            }
+            else
+            {
                 return 0;
             }
 
