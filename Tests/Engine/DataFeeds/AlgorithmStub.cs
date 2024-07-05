@@ -29,9 +29,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     /// </summary>
     public class AlgorithmStub : QCAlgorithm
     {
-        public List<SecurityChanges> SecurityChangesRecord = new List<SecurityChanges>();
-        public DataManager DataManager;
-        public IDataFeed DataFeed;
+        public List<SecurityChanges> SecurityChangesRecord { get; set; } = new List<SecurityChanges>();
+        public DataManager DataManager { get; set; }
+        public IDataFeed DataFeed { get; set; }
 
         /// <summary>
         /// Lanzy PandasConverter only if used

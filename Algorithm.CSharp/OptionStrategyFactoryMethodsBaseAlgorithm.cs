@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public abstract class OptionStrategyFactoryMethodsBaseAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected Symbol _optionSymbol;
+        protected Symbol _optionSymbol { get; set; }
 
         protected abstract int ExpectedOrdersCount { get; }
 

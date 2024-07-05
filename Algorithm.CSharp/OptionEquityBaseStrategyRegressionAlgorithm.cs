@@ -29,8 +29,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public abstract class OptionEquityBaseStrategyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected decimal _paidFees;
-        protected Symbol _optionSymbol;
+        protected decimal _paidFees { get; set; }
+        protected Symbol _optionSymbol { get; set; }
 
         public override void Initialize()
         {

@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Indicators
         
         private DateTime _reference = new DateTime(2020, 1, 1);
 
-        protected CorrelationType _correlationType = CorrelationType.Pearson;
+        protected CorrelationType _correlationType { get; set; } = CorrelationType.Pearson;
         protected override string TestColumnName => (_correlationType==CorrelationType.Pearson)?"Correlation_Pearson":"Correlation_Spearman";
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {

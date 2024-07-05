@@ -78,17 +78,17 @@ namespace QuantConnect.Algorithm.CSharp
         private const decimal StdVolatilityThresholdPercent = 0.005m;
 
         // this is the security we're trading
-        public Security Security;
+        private Security _security;
 
         // define our indicators used for trading decisions
-        public AverageTrueRange ATR14;
-        public StandardDeviation STD14;
-        public AverageDirectionalIndex ADX14;
-        public ParabolicStopAndReverse PSARMin;
+        private AverageTrueRange ATR14;
+        private StandardDeviation STD14;
+        private AverageDirectionalIndex ADX14;
+        private ParabolicStopAndReverse PSARMin;
 
         // smoothed values
-        public ExponentialMovingAverage SmoothedSTD14;
-        public ExponentialMovingAverage SmoothedATR14;
+        private ExponentialMovingAverage _smoothedSTD14;
+        private ExponentialMovingAverage _smoothedATR14;
 
         // working variable to control our algorithm
 
@@ -125,10 +125,10 @@ namespace QuantConnect.Algorithm.CSharp
             AddSecurity(SecurityType.Equity, symbol, Resolution.Second);
 
             // save off our security so we can reference it quickly later
-            Security = Securities[symbol];
+            _security = Securities[symbol];
 
             // Set our max leverage
-            Security.SetLeverage(MaximumLeverage);
+            _security.SetLeverage(MaximumLeverage);
 
             // define our longer term indicators
             ADX14 = ADX(symbol, 28, Resolution.Hour);
@@ -138,9 +138,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             // smooth our ATR over a week, we'll use this to determine if recent volatilty warrants entrance
             var oneWeekInMarketHours = (int)(5*6.5);
-            SmoothedATR14 = new ExponentialMovingAverage("Smoothed_" + ATR14.Name, oneWeekInMarketHours).Of(ATR14);
+            _smoothedATR14 = new ExponentialMovingAverage("Smoothed_" + ATR14.Name, oneWeekInMarketHours).Of(ATR14);
             // smooth our STD over a week as well
-            SmoothedSTD14 = new ExponentialMovingAverage("Smoothed_"+STD14.Name, oneWeekInMarketHours).Of(STD14);
+            _smoothedSTD14 = new ExponentialMovingAverage("Smoothed_"+STD14.Name, oneWeekInMarketHours).Of(STD14);
 
             // initialize our charts
             var chart = new Chart(symbol);
@@ -190,8 +190,8 @@ namespace QuantConnect.Algorithm.CSharp
                 EndTime = Time,
                 Period = openingSpan,
                 // high and low
-                High = Security.Close,
-                Low = Security.Close
+                High = _security.Close,
+                Low = _security.Close
             };
 
             // aggregate the high/low for the opening range
@@ -230,17 +230,17 @@ namespace QuantConnect.Algorithm.CSharp
 
                 PlotIndicator("ATR", true, ATR14);
                 PlotIndicator("STD", true, STD14);
-                PlotIndicator("ATR", true, SmoothedATR14);
+                PlotIndicator("ATR", true, _smoothedATR14);
             }
 
             // update our PSAR
-            PSARMin.Update((TradeBar) Security.GetLastData());
+            PSARMin.Update((TradeBar) _security.GetLastData());
 
             // plot price until an hour after we close so we can see our execution skillz
             if (ShouldPlot)
             {
                 // we can plot price more often if we want
-                Plot(symbol, "Price", Security.Close);
+                Plot(symbol, "Price", _security.Close);
                 // only plot psar on the minute
                 if (PSARMin.IsReady)
                 {
@@ -261,14 +261,14 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // now that we have our opening bar, test to see if we're already in a position
-            if (!Security.Invested)
+            if (!_security.Invested)
             {
                 ScanForEntrance();
             }
             else
             {
                 // if we haven't exited yet then manage our stop loss, this controls our exit point
-                if (Security.Invested)
+                if (_security.Invested)
                 {
                     ManageStopLoss();
                 }
@@ -317,7 +317,7 @@ namespace QuantConnect.Algorithm.CSharp
                 EnablePsarTrailingStop = false;
 
                 // submit stop loss order for max loss on the trade
-                var stopPrice = Security.Low*(1 - GlobalStopLossPercent);
+                var stopPrice = _security.Low*(1 - GlobalStopLossPercent);
                 StopLossTicket = StopMarketOrder(symbol, -shares, stopPrice);
                 if (EnableOrderUpdateLogging)
                 {
@@ -335,7 +335,7 @@ namespace QuantConnect.Algorithm.CSharp
                 EnablePsarTrailingStop = false;
 
                 // submit stop loss order for max loss on the trade
-                var stopPrice = Security.High*(1 + GlobalStopLossPercent);
+                var stopPrice = _security.High*(1 + GlobalStopLossPercent);
                 StopLossTicket = StopMarketOrder(symbol, -shares, stopPrice);
                 if (EnableOrderUpdateLogging)
                 {
@@ -362,7 +362,7 @@ namespace QuantConnect.Algorithm.CSharp
             if (ShouldEnablePsarTrailingStop(stopPrice))
             {
                 EnablePsarTrailingStop = true;
-                Log("Enabled PSAR trailing stop @ ProfitPercent: " + Security.Holdings.UnrealizedProfitPercent.SmartRounding());
+                Log("Enabled PSAR trailing stop @ ProfitPercent: " + _security.Holdings.UnrealizedProfitPercent.SmartRounding());
             }
 
             // we've trigger the psar trailing stop, so start updating our stop loss tick
@@ -386,7 +386,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // if this is a fill and we now don't own any stock, that means we've closed for the day
-            if (!Security.Invested && orderEvent.Status == OrderStatus.Filled)
+            if (!_security.Invested && orderEvent.Status == OrderStatus.Filled)
             {
                 // reset values for tomorrow
                 LastExitTime = Time;
@@ -400,7 +400,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void OnEndOfDay(Symbol symbol)
         {
-            if (symbol == Security.Symbol && Security.Invested)
+            if (symbol == _security.Symbol && _security.Invested)
             {
                 Liquidate();
             }
@@ -423,7 +423,7 @@ namespace QuantConnect.Algorithm.CSharp
                 // every 30 seconds in backtest
                 if (Time.RoundDown(TimeSpan.FromSeconds(PricePlotFrequencyInSeconds)) != Time) return false;
                 // always if we're invested
-                if (Security.Invested) return true;
+                if (_security.Invested) return true;
                 // always if it's before noon
                 if (Time.TimeOfDay.Hours < 10.25) return true;
                 // for an hour after our exit
@@ -463,7 +463,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return IsUptrend
                     && HasEnoughRecentVolatility
-                    && Security.Close > OpeningBarRange.High;
+                    && _security.Close > OpeningBarRange.High;
             }
         }
 
@@ -485,7 +485,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return IsDowntrend
                     && HasEnoughRecentVolatility
-                    && Security.Close < OpeningBarRange.Low;
+                    && _security.Close < OpeningBarRange.Low;
             }
         }
 
@@ -505,8 +505,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             get
             {
-                return SmoothedATR14 > Security.Close*AtrVolatilityThresholdPercent
-                    || SmoothedSTD14 > Security.Close*StdVolatilityThresholdPercent;
+                return _smoothedATR14 > _security.Close*AtrVolatilityThresholdPercent
+                    || _smoothedSTD14 > _security.Close*StdVolatilityThresholdPercent;
             }
         }
 
@@ -519,7 +519,7 @@ namespace QuantConnect.Algorithm.CSharp
             // no need to enable if it's already enabled
             return !EnablePsarTrailingStop
                 // once we're up a certain percentage, we'll use PSAR to control our stop
-                && Security.Holdings.UnrealizedProfitPercent > PercentProfitStartPsarTrailingStop
+                && _security.Holdings.UnrealizedProfitPercent > PercentProfitStartPsarTrailingStop
                 // make sure the PSAR is on the right side
                 && PsarIsOnRightSideOfPrice
                 // make sure the PSAR is more profitable than our global loss
@@ -533,8 +533,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             get
             {
-                return (Security.Holdings.IsLong && PSARMin < Security.Close)
-                    || (Security.Holdings.IsShort && PSARMin > Security.Close);
+                return (_security.Holdings.IsLong && PSARMin < _security.Close)
+                    || (_security.Holdings.IsShort && PSARMin > _security.Close);
             }
         }
 
@@ -543,8 +543,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private bool IsPsarMoreProfitableThanStop(decimal stopPrice)
         {
-            return (Security.Holdings.IsLong && PSARMin > stopPrice)
-                || (Security.Holdings.IsShort && PSARMin < stopPrice);
+            return (_security.Holdings.IsLong && PSARMin > stopPrice)
+                || (_security.Holdings.IsShort && PSARMin < stopPrice);
         }
 #pragma warning restore 00162
     }

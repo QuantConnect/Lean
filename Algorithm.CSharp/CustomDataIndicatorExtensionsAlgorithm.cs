@@ -89,10 +89,10 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class CustomData : BaseData
     {
-        public decimal Open;
-        public decimal High;
-        public decimal Low;
-        public decimal Close;
+        public decimal Open { get; set; }
+        public decimal High { get; set; }
+        public decimal Low { get; set; }
+        public decimal Close { get; set; }
 
         public override DateTime EndTime
         {

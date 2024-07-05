@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// When Python calls a C# method that calls a method that's overriden in python it won't
         /// run the python implementation unless the call is performed through python too.
         /// </summary>
-        protected PortfolioConstructionModelPythonWrapper PythonWrapper;
+        protected PortfolioConstructionModelPythonWrapper PythonWrapper { get; set; }
 
         /// <summary>
         /// Initialize a new instance of <see cref="PortfolioConstructionModel"/>

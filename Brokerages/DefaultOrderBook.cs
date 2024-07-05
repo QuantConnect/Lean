@@ -35,12 +35,12 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Represents bid prices and sizes
         /// </summary>
-        protected readonly SortedDictionary<decimal, decimal> Bids = new SortedDictionary<decimal, decimal>();
+        protected SortedDictionary<decimal, decimal> Bids { get; init; } = new SortedDictionary<decimal, decimal>();
 
         /// <summary>
         /// Represents ask prices and sizes
         /// </summary>
-        protected readonly SortedDictionary<decimal, decimal> Asks = new SortedDictionary<decimal, decimal>();
+        protected SortedDictionary<decimal, decimal> Asks { get; init; } = new SortedDictionary<decimal, decimal>();
 
         /// <summary>
         /// Represents a unique security identifier of current Order Book

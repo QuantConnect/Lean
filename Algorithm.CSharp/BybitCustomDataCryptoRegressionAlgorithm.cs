@@ -82,11 +82,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public class CustomCryptoData : BaseData
         {
-            public decimal Open;
-            public decimal High;
-            public decimal Low;
-            public decimal Close;
-            public decimal Volume;
+            public decimal Open { get; set; }
+            public decimal High { get; set; }
+            public decimal Low { get; set; }
+            public decimal Close { get; set; }
+            public decimal Volume { get; set; }
 
             public override DateTime EndTime
             {

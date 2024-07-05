@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,23 +35,23 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is the period of bars we'll be creating
         /// </summary>
-        public readonly TimeSpan BarPeriod = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan _barPeriod = TimeSpan.FromMinutes(10);
         /// <summary>
         /// This is the period of our sma indicators
         /// </summary>
-        public readonly int SimpleMovingAveragePeriod = 10;
+        private readonly int _simpleMovingAveragePeriod = 10;
         /// <summary>
         /// This is the number of consolidated bars we'll hold in symbol data for reference
         /// </summary>
-        public readonly int RollingWindowSize = 10;
+        private readonly int _rollingWindowSize = 10;
         /// <summary>
         /// Holds all of our data keyed by each symbol
         /// </summary>
-        public readonly Dictionary<string, SymbolData> Data = new Dictionary<string, SymbolData>();
+        private readonly Dictionary<string, SymbolData> _data = new Dictionary<string, SymbolData>();
         /// <summary>
         /// Contains all of our equity symbols
         /// </summary>
-        public readonly IReadOnlyList<string> EquitySymbols = new List<string>
+        private IReadOnlyList<string> _equitySymbols = new List<string>
         {
             "AAPL",
             "SPY",
@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Contains all of our forex symbols
         /// </summary>
-        public readonly IReadOnlyList<string> ForexSymbols = new List<string>
+        private IReadOnlyList<string> _forexSymbols = new List<string>
         {
             "EURUSD",
             "USDJPY",
@@ -84,21 +84,21 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2015, 02, 01);
 
             // initialize our equity data
-            foreach (var symbol in EquitySymbols)
+            foreach (var symbol in _equitySymbols)
             {
                 var equity = AddEquity(symbol);
-                Data.Add(symbol, new SymbolData(equity.Symbol, BarPeriod, RollingWindowSize));
+                _data.Add(symbol, new SymbolData(equity.Symbol, _barPeriod, _rollingWindowSize));
             }
 
             // initialize our forex data
-            foreach (var symbol in ForexSymbols)
+            foreach (var symbol in _forexSymbols)
             {
                 var forex = AddForex(symbol);
-                Data.Add(symbol, new SymbolData(forex.Symbol, BarPeriod, RollingWindowSize));
+                _data.Add(symbol, new SymbolData(forex.Symbol, _barPeriod, _rollingWindowSize));
             }
 
             // loop through all our symbols and request data subscriptions and initialize indicatora
-            foreach (var kvp in Data)
+            foreach (var kvp in _data)
             {
                 // this is required since we're using closures below, for more information
                 // see: http://stackoverflow.com/questions/14907987/access-to-foreach-variable-in-closure-warning
@@ -106,11 +106,11 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // define a consolidator to consolidate data for this symbol on the requested period
                 var consolidator = symbolData.Symbol.SecurityType == SecurityType.Equity
-                    ? (IDataConsolidator)new TradeBarConsolidator(BarPeriod)
-                    : (IDataConsolidator)new QuoteBarConsolidator(BarPeriod);
+                    ? (IDataConsolidator)new TradeBarConsolidator(_barPeriod)
+                    : (IDataConsolidator)new QuoteBarConsolidator(_barPeriod);
 
                 // define our indicator
-                symbolData.SMA = new SimpleMovingAverage(CreateIndicatorName(symbolData.Symbol, "SMA" + SimpleMovingAveragePeriod, Resolution.Minute), SimpleMovingAveragePeriod);
+                symbolData.SMA = new SimpleMovingAverage(CreateIndicatorName(symbolData.Symbol, "SMA" + _simpleMovingAveragePeriod, Resolution.Minute), _simpleMovingAveragePeriod);
                 // wire up our consolidator to update the indicator
                 consolidator.DataConsolidated += (sender, baseData) =>
                 {
@@ -134,7 +134,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnData(Slice data)
         {
             // loop through each symbol in our structure
-            foreach (var symbolData in Data.Values)
+            foreach (var symbolData in _data.Values)
             {
                 // this check proves that this symbol was JUST updated prior to this OnData function being called
                 if (symbolData.IsReady && symbolData.WasJustUpdated(Time))
@@ -154,7 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnEndOfDay(Symbol symbol)
         {
             int i = 0;
-            foreach (var kvp in Data.OrderBy(x => x.Value.Symbol))
+            foreach (var kvp in _data.OrderBy(x => x.Value.Symbol))
             {
                 // we have too many symbols to plot them all, so plot ever other
                 if (kvp.Value.IsReady && ++i%2 == 0)
@@ -172,22 +172,22 @@ namespace QuantConnect.Algorithm.CSharp
             /// <summary>
             /// This symbol the other data in this class is associated with
             /// </summary>
-            public readonly Symbol Symbol;
+            public Symbol Symbol { get; init; }
             /// <summary>
             /// A rolling window of data, data needs to be pumped into Bars by using Bars.Update( tradeBar ) and
             /// can be accessed like:
             ///  mySymbolData.Bars[0] - most first recent piece of data
             ///  mySymbolData.Bars[5] - the sixth most recent piece of data (zero based indexing)
             /// </summary>
-            public readonly RollingWindow<IBaseDataBar> Bars;
+            public RollingWindow<IBaseDataBar> Bars { get; init; }
             /// <summary>
             /// The period used when populating the Bars rolling window.
             /// </summary>
-            public readonly TimeSpan BarPeriod;
+            public TimeSpan BarPeriod { get; init; }
             /// <summary>
             /// The simple moving average indicator for our symbol
             /// </summary>
-            public SimpleMovingAverage SMA;
+            public SimpleMovingAverage SMA { get; set; }
 
             /// <summary>
             /// Initializes a new instance of SymbolData

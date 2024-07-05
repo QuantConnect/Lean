@@ -31,8 +31,8 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         private Crypto _ethusd;
         private IFeeModel _feeModel;
 
-        protected decimal TakerFee;
-        protected decimal MakerFee;
+        protected decimal TakerFee { get; set; }
+        protected decimal MakerFee { get; set; }
 
         [SetUp]
         public void Initialize()

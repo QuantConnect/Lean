@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Option's symbol object
         /// </summary>
-        protected readonly Symbol _optionSymbol;
+        protected Symbol _optionSymbol { get; init; }
 
         /// <summary>
         /// Mirror option symbol (by option right), for implied volatility
@@ -41,17 +41,17 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Option pricing model used to calculate indicator
         /// </summary>
-        protected OptionPricingModelType _optionModel;
+        protected OptionPricingModelType _optionModel { get; set; }
 
         /// <summary>
         /// Risk-free rate model
         /// </summary>
-        protected readonly IRiskFreeInterestRateModel _riskFreeInterestRateModel;
+        protected IRiskFreeInterestRateModel _riskFreeInterestRateModel { get; init; }
 
         /// <summary>
         /// Dividend yield model, for continuous dividend yield
         /// </summary>
-        protected readonly IDividendYieldModel _dividendYieldModel;
+        protected IDividendYieldModel _dividendYieldModel { get; init; }
 
         /// <summary>
         /// Gets the expiration time of the option

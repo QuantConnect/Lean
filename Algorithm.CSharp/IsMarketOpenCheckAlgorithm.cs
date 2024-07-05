@@ -24,7 +24,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class IsMarketOpenCheckAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected Symbol Symbol;
+        protected Symbol Symbol { get; set; }
 
         protected virtual bool ExtendedMarketHours { get; }
 

@@ -37,7 +37,11 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         private readonly Resolution _resolution;
         private const decimal BounceThresholdPercent = 0.01m;
         private InsightCollection _insightCollection = new();
-        protected readonly Dictionary<Symbol, SymbolData> _symbolData;
+
+        /// <summary>
+        /// Dictionary containing basic information for each symbol present as key
+        /// </summary>
+        protected Dictionary<Symbol, SymbolData> _symbolData { get; init; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MacdAlphaModel"/> class
@@ -159,9 +163,9 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         {
             public InsightDirection? PreviousDirection { get; set; }
 
-            public readonly Security Security;
-            public readonly IDataConsolidator Consolidator;
-            public readonly MovingAverageConvergenceDivergence MACD;
+            public Security Security { get; init; }
+            public IDataConsolidator Consolidator { get; init; }
+            public MovingAverageConvergenceDivergence MACD { get; init; }
 
             public SymbolData(QCAlgorithm algorithm, Security security, int fastPeriod, int slowPeriod, int signalPeriod, MovingAverageType movingAverageType, Resolution resolution)
             {

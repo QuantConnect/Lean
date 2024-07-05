@@ -35,7 +35,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class SamcoBasicTemplateOptionsAlgorithm : QCAlgorithm
     {
         private const string UnderlyingTicker = "NIFTY";
-        public Symbol OptionSymbol;
+        private Symbol _optionSymbol;
 
         public override void Initialize()
         {
@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var equity = AddEquity(UnderlyingTicker, market: Market.India);
             var option = AddOption(equity.Symbol, market: Market.India);
-            OptionSymbol = option.Symbol;
+            _optionSymbol = option.Symbol;
 
             // set our strike/expiry filter for this option chain
             option.SetFilter(u => u.Strikes(-2, +2)
@@ -62,10 +62,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">The current slice of data keyed by symbol string</param>
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested && IsMarketOpen(OptionSymbol))
+            if (!Portfolio.Invested && IsMarketOpen(_optionSymbol))
             {
                 OptionChain chain;
-                if (slice.OptionChains.TryGetValue(OptionSymbol, out chain))
+                if (slice.OptionChains.TryGetValue(_optionSymbol, out chain))
                 {
                     // we find at the money (ATM) put contract with farthest expiration
                     var atmContract = chain

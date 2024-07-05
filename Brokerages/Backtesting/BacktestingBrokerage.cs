@@ -49,7 +49,7 @@ namespace QuantConnect.Brokerages.Backtesting
         /// <summary>
         /// This is the algorithm under test
         /// </summary>
-        protected readonly IAlgorithm Algorithm;
+        protected IAlgorithm Algorithm { get; init; }
 
         /// <summary>
         /// Creates a new BacktestingBrokerage for the specified algorithm

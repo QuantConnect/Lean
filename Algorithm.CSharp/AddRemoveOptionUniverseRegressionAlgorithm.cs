@@ -29,8 +29,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class AddRemoveOptionUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionChainSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        private readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
+        private readonly Symbol OptionChainSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
         private readonly HashSet<Symbol> _expectedSecurities = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedData = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedUniverses = new HashSet<Symbol>();

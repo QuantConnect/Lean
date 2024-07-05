@@ -244,12 +244,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             /// <summary>
             /// A unique symbol used to identify this enumerator
             /// </summary>
-            public readonly Symbol Symbol;
+            public Symbol Symbol { get; init; }
 
             /// <summary>
             /// The enumerator this handler handles
             /// </summary>
-            public readonly IEnumerator<BaseData> Enumerator;
+            public IEnumerator<BaseData> Enumerator { get; init; }
 
             /// <summary>
             /// Initializes a new instance of the <see cref="EnumeratorHandler"/> class

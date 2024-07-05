@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
         /// orders are processed they are moved into the Orders queue awaiting the brokerage response.
         /// </summary>
-        protected IBusyCollection<OrderRequest> _orderRequestQueue;
+        protected IBusyCollection<OrderRequest> _orderRequestQueue { get; set; }
 
         private Thread _processingThread;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -99,7 +99,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// The _cancelPendingOrders instance will help to keep track of CancelPending orders and their Status
         /// </summary>
-        protected readonly CancelPendingOrders _cancelPendingOrders = new CancelPendingOrders();
+        protected CancelPendingOrders _cancelPendingOrders { get; init; } = new CancelPendingOrders();
 
         private IResultHandler _resultHandler;
 

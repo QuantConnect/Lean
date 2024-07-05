@@ -26,11 +26,11 @@ namespace QuantConnect.Tests.Common.Util
     {
         public sealed class Arguments
         {
-            public Symbol Symbol;
-            public DateTime Date;
-            public Resolution Resolution;
-            public TickType TickType;
-            public string Market;
+            public Symbol Symbol { get; set; }
+            public DateTime Date { get; set; }
+            public Resolution Resolution { get; set; }
+            public TickType TickType { get; set; }
+            public string Market { get; set; }
 
             public Arguments(Symbol symbol, DateTime date, Resolution resolution, string market, TickType tickType)
             {

@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Dictionary<Symbol, int> _interestPerSymbol = new();
         private decimal _amountAfterTrade;
 
-        protected CryptoFuture AdaUsdt;
+        private CryptoFuture _adaUsdt;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -50,13 +50,13 @@ namespace QuantConnect.Algorithm.CSharp
             SetTimeZone(NodaTime.DateTimeZone.Utc);
             SetBrokerageModel(BrokerageName.BinanceCoinFutures, AccountType.Margin);
 
-            AdaUsdt = AddCryptoFuture("ADAUSDT", resolution);
+            _adaUsdt = AddCryptoFuture("ADAUSDT", resolution);
 
             // Default USD cash, set 1M but it wont be used
             SetCash(1000000);
 
             // the amount of USDT we need to hold to trade 'ADAUSDT'
-            AdaUsdt.QuoteCurrency.SetAmount(200);
+            _adaUsdt.QuoteCurrency.SetAmount(200);
         }
 
         /// <summary>
@@ -88,20 +88,20 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            Buy(AdaUsdt.Symbol, 1000);
+            Buy(_adaUsdt.Symbol, 1000);
 
             _amountAfterTrade = Portfolio.CashBook["USDT"].Amount;
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (!_interestPerSymbol.TryGetValue(AdaUsdt.Symbol, out var count) || count != 1)
+            if (!_interestPerSymbol.TryGetValue(_adaUsdt.Symbol, out var count) || count != 1)
             {
                 throw new RegressionTestException($"Unexpected interest rate count {count}");
             }
 
             // negative because we are long. Rate * Value * Application Count
-            var expectedFundingRateDifference = - (0.0001m * AdaUsdt.Holdings.HoldingsValue * 3);
+            var expectedFundingRateDifference = - (0.0001m * _adaUsdt.Holdings.HoldingsValue * 3);
             var finalCash = Portfolio.CashBook["USDT"].Amount;
             if (Math.Abs(finalCash - (_amountAfterTrade + expectedFundingRateDifference)) > Math.Abs(expectedFundingRateDifference * 0.05m))
             {
