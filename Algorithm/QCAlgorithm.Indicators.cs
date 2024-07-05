@@ -2259,6 +2259,24 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new VolumeWeightedMovingAverage indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose VWMA we want</param>
+        /// <param name="period">The smoothing period used to smooth the computed VWMA values</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new AverageTrueRange indicator with the specified smoothing type and period</returns>
+        [DocumentationAttribute(Indicators)]
+        public VolumeWeightedMovingAverage VWMA(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"VWMA({period})", resolution);
+            var indicator = new VolumeWeightedMovingAverage(name, period);
+            InitializeIndicator(symbol, indicator, resolution, selector);
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates a new Williams %R indicator. This will compute the percentage change of
         /// the current closing price in relation to the high and low of the past N periods.
         /// The indicator will be automatically updated on the given resolution.
