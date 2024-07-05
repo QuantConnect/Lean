@@ -51,7 +51,7 @@ namespace QuantConnect.Algorithm.CSharp
             _aig.SetShortableProvider(new RegressionTestShortableProvider());
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!_initialize)
             {

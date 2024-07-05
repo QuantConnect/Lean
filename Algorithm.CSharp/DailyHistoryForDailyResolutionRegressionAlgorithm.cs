@@ -48,9 +48,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            using (var enumerator = data.GetEnumerator())
+            using (var enumerator = slice.GetEnumerator())
             {
                 while (enumerator.MoveNext())
                 {

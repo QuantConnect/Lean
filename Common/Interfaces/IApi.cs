@@ -169,10 +169,10 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id to update</param>
         /// <param name="backtestId">Backtest id to update</param>
-        /// <param name="backtestName">New backtest name to set</param>
-        /// <param name="backtestNote">Note attached to the backtest</param>
+        /// <param name="name">New backtest name to set</param>
+        /// <param name="note">Note attached to the backtest</param>
         /// <returns>Rest response on success</returns>
-        RestResponse UpdateBacktest(int projectId, string backtestId, string backtestName = "", string backtestNote = "");
+        RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "");
 
         /// <summary>
         /// Delete a backtest from the specified project and backtestId.
@@ -189,6 +189,17 @@ namespace QuantConnect.Interfaces
         /// <param name="includeStatistics">True for include statistics in the response, false otherwise</param>
         /// <returns>BacktestList container for list of backtests</returns>
         BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = false);
+
+        /// <summary>
+        /// Read out the insights of a backtest
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the backtest</param>
+        /// <param name="backtestId">Backtest id from which we want to get the insights</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0);
 
         /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API
@@ -381,12 +392,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>
         /// <param name="compileId">Id of the compilation on QuantConnect</param>
-        /// <param name="serverType">Type of server instance that will run the algorithm</param>
-        /// <param name="baseLiveAlgorithmSettings">Dictionary with Brokerage specific settings</param>
+        /// <param name="nodeId">Id of the node that will run the algorithm</param>
+        /// <param name="brokerageSettings">Dictionary with Brokerage specific settings</param>
         /// <param name="versionId">The version identifier</param>
         /// <param name="dataProviders">Dictionary with data providers and their corresponding credentials</param>
-        /// <returns>Information regarding the new algorithm <see cref="LiveAlgorithm"/></returns>
-        CreateLiveAlgorithmResponse CreateLiveAlgorithm(int projectId, string compileId, string serverType, Dictionary<string, object> baseLiveAlgorithmSettings, string versionId = "-1", Dictionary<string, object> dataProviders = null);
+        /// <returns>Information regarding the new algorithm <see cref="CreateLiveAlgorithmResponse"/></returns>
+        CreateLiveAlgorithmResponse CreateLiveAlgorithm(int projectId, string compileId, string nodeId, Dictionary<string, object> brokerageSettings, string versionId = "-1", Dictionary<string, object> dataProviders = null);
 
         /// <summary>
         /// Get a list of live running algorithms for a logged in user.

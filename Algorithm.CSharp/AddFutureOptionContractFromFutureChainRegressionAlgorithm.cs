@@ -40,12 +40,12 @@ namespace QuantConnect.Algorithm.CSharp
             });
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!_addedOptions)
             {
                 _addedOptions = true;
-                foreach (var futuresContracts in data.FutureChains.Values)
+                foreach (var futuresContracts in slice.FutureChains.Values)
                 {
                     foreach (var contract in futuresContracts)
                     {
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var chain in data.OptionChains.Values)
+            foreach (var chain in slice.OptionChains.Values)
             {
                 foreach (var option in chain.Contracts.Keys)
                 {

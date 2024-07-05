@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp.Benchmarks
             AddEquity("SPY", Resolution.Second);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
         }
     }

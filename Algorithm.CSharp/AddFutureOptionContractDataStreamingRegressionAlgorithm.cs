@@ -66,9 +66,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            if (!data.HasData)
+            if (!slice.HasData)
             {
                 return;
             }
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             _onDataReached = true;
 
             var hasOptionQuoteBars = false;
-            foreach (var qb in data.QuoteBars.Values)
+            foreach (var qb in slice.QuoteBars.Values)
             {
                 if (qb.Symbol.SecurityType != SecurityType.FutureOption)
                 {
@@ -99,7 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (data.ContainsKey(_es20h20) && data.ContainsKey(_es19m20))
+            if (slice.ContainsKey(_es20h20) && slice.ContainsKey(_es19m20))
             {
                 SetHoldings(_es20h20, 0.2);
                 SetHoldings(_es19m20, 0.2);

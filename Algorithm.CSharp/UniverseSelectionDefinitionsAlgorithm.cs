@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddUniverse(Universe.Top(3));
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (_changes == SecurityChanges.None) return;
 

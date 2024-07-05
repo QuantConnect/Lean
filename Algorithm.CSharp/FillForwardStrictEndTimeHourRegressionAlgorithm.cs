@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class FillForwardStrictEndTimeHourRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private readonly bool _updateExpectedData = false;
+        private readonly bool _updateExpectedData;
         private readonly StringBuilder _data = new();
 
         protected virtual string ExpectedDataFile => $"../../TestData/{GetType().Name}.zip";
@@ -51,11 +51,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Index EMA Cross trading index options of the index.
         /// </summary>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            if (data.ContainsKey("SPX"))
+            if (slice.ContainsKey("SPX"))
             {
-                var spxData = data.Bars["SPX"];
+                var spxData = slice.Bars["SPX"];
                 var message = $"{Time} ==== FF {spxData.IsFillForward}. {spxData} {spxData.Time:HH:mm:ss}->{spxData.EndTime:HH:mm:ss}";
                 _data.AppendLine(message);
                 Debug(message);

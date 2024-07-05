@@ -55,12 +55,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Raises the data event.
         /// </summary>
-        /// <param name="data">Data.</param>
-        public override void OnDividends(Dividends data)
+        /// <param name="dividends">Data.</param>
+        public override void OnDividends(Dividends dividends)
         {
-            if (data.ContainsKey(_splitAndDividendSymbol))
+            if (dividends.ContainsKey(_splitAndDividendSymbol))
             {
-                var dividend = data[_splitAndDividendSymbol];
+                var dividend = dividends[_splitAndDividendSymbol];
                 if (Time.Date == new DateTime(2010, 06, 15) &&
                     (dividend.Price != 0.5m || dividend.ReferencePrice != 88.8m || dividend.Distribution != 0.5m))
                 {
@@ -72,12 +72,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Raises the data event.
         /// </summary>
-        /// <param name="data">Data.</param>
-        public override void OnSplits(Splits data)
+        /// <param name="splits">Splits.</param>
+        public override void OnSplits(Splits splits)
         {
-            if (data.ContainsKey(_splitAndDividendSymbol))
+            if (splits.ContainsKey(_splitAndDividendSymbol))
             {
-                var split = data[_splitAndDividendSymbol];
+                var split = splits[_splitAndDividendSymbol];
                 if (split.Type == SplitType.Warning)
                 {
                     _receivedWarningEvent = true;
@@ -96,11 +96,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Checks the symbol change event
         /// </summary>
-        public override void OnSymbolChangedEvents(SymbolChangedEvents symbolChanged)
+        public override void OnSymbolChangedEvents(SymbolChangedEvents symbolsChanged)
         {
-            if (symbolChanged.ContainsKey(_mappingSymbol))
+            if (symbolsChanged.ContainsKey(_mappingSymbol))
             {
-                var mappingEvent = symbolChanged.Single(x => x.Key.SecurityType == SecurityType.Equity).Value;
+                var mappingEvent = symbolsChanged.Single(x => x.Key.SecurityType == SecurityType.Equity).Value;
                 Log($"{Time} - Ticker changed from: {mappingEvent.OldSymbol} to {mappingEvent.NewSymbol}");
                 if (Time.Date == new DateTime(1999, 01, 01))
                 {

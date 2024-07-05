@@ -52,9 +52,9 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = option.Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            if (_done || !data.OptionChains.TryGetValue(_symbol, out var chain) || !chain.Any())
+            if (_done || !slice.OptionChains.TryGetValue(_symbol, out var chain) || !chain.Any())
             {
                 return;
             }

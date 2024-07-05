@@ -65,15 +65,15 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             { "AAPL R735QTJ8XC9X", 22337000000000 },
         };
 
-        public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty enumName)
+        public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
         {
             if (securityIdentifier == SecurityIdentifier.Empty)
             {
                 return default;
             }
 
-            var name = Enum.GetName(enumName);
-            switch (name)
+            var enumName = Enum.GetName(name);
+            switch (enumName)
             {
                 case nameof(CoarseFundamental.Price):
                 case nameof(CoarseFundamental.Value):
@@ -82,9 +82,9 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                 case nameof(CoarseFundamental.PriceFactor):
                 case nameof(CoarseFundamental.SplitFactor):
                 case nameof(CoarseFundamental.DollarVolume):
-                    return _coarseFundamentalData.Get<T>(time, securityIdentifier, enumName);
+                    return _coarseFundamentalData.Get<T>(time, securityIdentifier, name);
                 default:
-                    return Get(time, securityIdentifier, name);
+                    return Get(time, securityIdentifier, enumName);
             }
         }
 

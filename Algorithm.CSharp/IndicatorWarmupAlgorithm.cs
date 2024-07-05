@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetWarmup(SymbolData.RequiredBarsWarmup);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // we are only using warmup for indicator spooling, so wait for us to be warm then continue
             if (IsWarmingUp) return;
@@ -77,12 +77,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent fill)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
             SymbolData sd;
-            if (_sd.TryGetValue(fill.Symbol, out sd))
+            if (_sd.TryGetValue(orderEvent.Symbol, out sd))
             {
-                sd.OnOrderEvent(fill);
+                sd.OnOrderEvent(orderEvent);
             }
         }
 

@@ -32,8 +32,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateIntrinioEconomicData : QCAlgorithm
     {
         // Set your Intrinio user and password.
-        public string _user = "";
-        public string _password = "";
+        private string _user = string.Empty;
+        private string _password = string.Empty;
 
         private Symbol _uso; // United States Oil Fund LP
         private Symbol _bno; // United States Brent Oil Fund LP
@@ -81,9 +81,9 @@ namespace QuantConnect.Algorithm.CSharp
         ///     OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            var customData = data.Get<IntrinioEconomicData>();
+            var customData = slice.Get<IntrinioEconomicData>();
             if (customData.Count == 0) return;
 
             foreach (var economicData in customData.Values)

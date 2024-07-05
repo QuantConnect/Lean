@@ -71,17 +71,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             // can access the current set of active securitie through UniverseManager.ActiveSecurities
             Log(Time + ": Active Securities: " + string.Join(", ", UniverseManager.ActiveSecurities.Keys));
 
             // verify we don't receive data for inactive securities
-            var inactiveSymbols = data.Keys
+            var inactiveSymbols = slice.Keys
                 .Where(sym => !UniverseManager.ActiveSecurities.ContainsKey(sym))
                 // on daily data we'll get the last data point and the delisting at the same time
-                .Where(sym => !data.Delistings.ContainsKey(sym) || data.Delistings[sym].Type != DelistingType.Delisted)
+                .Where(sym => !slice.Delistings.ContainsKey(sym) || slice.Delistings[sym].Type != DelistingType.Delisted)
                 .ToList();
             if (inactiveSymbols.Any())
             {
@@ -94,12 +94,12 @@ namespace QuantConnect.Algorithm.CSharp
                 MarketOrder("SPY", 100);
             }
 
-            foreach (var kvp in data.Delistings)
+            foreach (var kvp in slice.Delistings)
             {
                 _delistedSymbols.Add(kvp.Key);
             }
 
-            if (_changes != null && _changes.AddedSecurities.All(x => data.Bars.ContainsKey(x.Symbol)))
+            if (_changes != null && _changes.AddedSecurities.All(x => slice.Bars.ContainsKey(x.Symbol)))
             {
                 foreach (var security in _changes.AddedSecurities)
                 {

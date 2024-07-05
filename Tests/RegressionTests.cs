@@ -108,12 +108,12 @@ namespace QuantConnect.Tests
 
         public class AlgorithmStatisticsTestParameters
         {
-            public readonly string Algorithm;
-            public readonly Dictionary<string, string> Statistics;
-            public readonly Language Language;
-            public readonly AlgorithmStatus ExpectedFinalStatus;
-            public readonly long DataPoints;
-            public readonly int AlgorithmHistoryDataPoints;
+            public string Algorithm { get; init; }
+            public Dictionary<string, string> Statistics { get; init; }
+            public Language Language { get; init; }
+            public AlgorithmStatus ExpectedFinalStatus { get; init; }
+            public long DataPoints { get; init; }
+            public int AlgorithmHistoryDataPoints { get; init; }
 
             public AlgorithmStatisticsTestParameters(
                 string algorithm,

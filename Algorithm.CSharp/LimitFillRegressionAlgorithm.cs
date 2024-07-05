@@ -46,16 +46,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">TradeBars IDictionary object with your stock data</param>
+        public override void OnData(Slice slice)
         {
-            if (data.ContainsKey("SPY"))
+            if (slice.ContainsKey("SPY"))
             {
                 if (Time.Second == 0 && Time.Minute == 0)
                 {
                     var goLong = Time < StartDate.AddDays(2);
                     var negative = goLong ? 1 : -1;
-                    LimitOrder("SPY", negative*10, data["SPY"].Price);
+                    LimitOrder("SPY", negative*10, slice["SPY"].Price);
                 }
             }
         }

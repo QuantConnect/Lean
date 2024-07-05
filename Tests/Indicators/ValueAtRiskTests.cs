@@ -19,7 +19,7 @@ using System;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class ValueAtRiskTests : CommonIndicatorTests<IndicatorDataPoint>
     {
         private const int _tradingDays = 252;

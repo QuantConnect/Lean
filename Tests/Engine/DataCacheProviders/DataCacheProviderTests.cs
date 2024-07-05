@@ -25,7 +25,7 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
     /// </summary>
     public abstract class DataCacheProviderTests
     {
-        protected IDataCacheProvider DataCacheProvider;
+        protected IDataCacheProvider DataCacheProvider { get; set; }
 
         [OneTimeSetUp]
         public void Setup()

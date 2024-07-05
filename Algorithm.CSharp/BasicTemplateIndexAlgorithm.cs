@@ -30,8 +30,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="indexes" />
     public class BasicTemplateIndexAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        protected Symbol Spx;
-        protected Symbol SpxOption;
+        protected Symbol Spx { get; set; }
+        protected Symbol SpxOption { get; set; }
         private ExponentialMovingAverage _emaSlow;
         private ExponentialMovingAverage _emaFast;
 

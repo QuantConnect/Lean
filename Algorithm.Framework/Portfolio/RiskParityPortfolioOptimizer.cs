@@ -44,10 +44,10 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         /// </summary>
         /// <param name="historicalReturns">Matrix of annualized historical returns where each column represents a security and each row returns for the given date/time (size: K x N).</param>
-        /// <param name="budget">Risk budget vector (size: K x 1).</param>
+        /// <param name="expectedReturns">Risk budget vector (size: K x 1).</param>
         /// <param name="covariance">Multi-dimensional array of double with the portfolio covariance of annualized returns (size: K x K).</param>
         /// <returns>Array of double with the portfolio weights (size: K x 1)</returns>
-        public double[] Optimize(double[,] historicalReturns, double[] budget = null, double[,] covariance = null)
+        public double[] Optimize(double[,] historicalReturns, double[] expectedReturns = null, double[,] covariance = null)
         {
             covariance = covariance ?? historicalReturns.Covariance();
             var size = covariance.GetLength(0);
@@ -57,8 +57,8 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             // b = 1 / num_of_assets (equal budget of risk)
             // df(x)/dx = S.x - b / x
             // H(x) = S + Diag(b / x^2)
-            budget = budget ?? Vector.Create(size, 1d / size);
-            var solution = RiskParityNewtonMethodOptimization(size, covariance, budget);
+            expectedReturns = expectedReturns ?? Vector.Create(size, 1d / size);
+            var solution = RiskParityNewtonMethodOptimization(size, covariance, expectedReturns);
             
             // Normalize weights: w = x / x^T.1
             solution = Elementwise.Divide(solution, solution.Sum());

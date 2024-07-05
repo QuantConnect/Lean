@@ -54,7 +54,7 @@ namespace QuantConnect.AlgorithmFactory
         /// <summary>
         /// Memory space of the user algorithm
         /// </summary>
-        public AppDomain appDomain;
+        public AppDomain appDomain { get; set; }
 
         /// <summary>
         /// The algorithm's interface type that we'll be trying to load

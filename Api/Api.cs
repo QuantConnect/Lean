@@ -750,6 +750,46 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Read out the insights of a backtest
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the backtest</param>
+        /// <param name="backtestId">Backtest id from which we want to get the insights</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0)
+        {
+            var request = new RestRequest("backtests/insights/read", Method.POST)
+            {
+                RequestFormat = DataFormat.Json,
+            };
+
+            var diff = end - start;
+            if (diff > 100)
+            {
+                throw new ArgumentException($"The difference between the start and end index of the insights must be smaller than 100, but it was {diff}.");
+            }
+            else if (end == 0)
+            {
+                end = start + 100;
+            }
+
+            JObject obj = new()
+            {
+                { "projectId", projectId },
+                { "backtestId", backtestId },
+                { "start", start },
+                { "end", end },
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out InsightResponse result);
+            return result;
+        }
+
+        /// <summary>
         /// Create a live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>

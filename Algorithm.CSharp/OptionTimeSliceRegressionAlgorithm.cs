@@ -41,11 +41,11 @@ namespace QuantConnect.Algorithm.CSharp
             _symbol = aapl.Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // Compare our previous slice time to this slice
             // Because of issues with Delisting data we have to let Auxiliary data pass through GH #5207
-            if (Time.Ticks - _lastSliceTime.Ticks < 1000 && data.Values.Any(x => x.DataType != MarketDataType.Auxiliary))
+            if (Time.Ticks - _lastSliceTime.Ticks < 1000 && slice.Values.Any(x => x.DataType != MarketDataType.Auxiliary))
             {
                 throw new RegressionTestException($"Emitted two slices within 1000 ticks of each other.");
             }

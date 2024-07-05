@@ -23,7 +23,7 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class McClellanSummationIndexTests : CommonIndicatorTests<TradeBar>
     {
         protected override IndicatorBase<TradeBar> CreateIndicator()
