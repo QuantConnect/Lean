@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Securities
     {
         private readonly ConcurrentDictionary<int, Order> _orders = new ConcurrentDictionary<int, Order>();
         private readonly ConcurrentDictionary<int, OrderTicket> _tickets = new ConcurrentDictionary<int, OrderTicket>();
-        public readonly ConcurrentDictionary<int, OrderRequest> ProcessedOrdersRequests = new ConcurrentDictionary<int, OrderRequest>();
+        public ConcurrentDictionary<int, OrderRequest> ProcessedOrdersRequests { get; init; } = new ConcurrentDictionary<int, OrderRequest>();
 
         public SecurityTransactionManager TransactionManager { get; set; }
         public void AddOrder(Order order)

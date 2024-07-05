@@ -234,15 +234,15 @@ namespace QuantConnect.Tests.Algorithm.Framework.Risk
 
         public class TrailingStopRiskManagementModelTestParameters
         {
-            public readonly string Name;
-            public readonly Language Language;
-            public readonly decimal MaxDrawdownPercent;
-            public readonly decimal InitialPrice;
-            public readonly decimal Quantity;
-            public readonly decimal[] Prices;
-            public readonly bool[] InvestedArray;
-            public readonly bool[] ChangePosition;
-            public readonly bool[] ShouldLiquidateArray;
+            public string Name { get; init; }
+            public Language Language { get; init; }
+            public decimal MaxDrawdownPercent { get; init; }
+            public decimal InitialPrice { get; init; }
+            public decimal Quantity { get; init; }
+            public decimal[] Prices { get; init; }
+            public bool[] InvestedArray { get; init; }
+            public bool[] ChangePosition { get; init; }
+            public bool[] ShouldLiquidateArray { get; init; }
 
             public TrailingStopRiskManagementModelTestParameters(
                 string name,

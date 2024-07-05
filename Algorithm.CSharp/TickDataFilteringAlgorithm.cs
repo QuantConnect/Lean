@@ -48,11 +48,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data arriving here will now be filtered.
         /// </summary>
-        /// <param name="data">Ticks data array</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Ticks data array</param>
+        public override void OnData(Slice slice)
         {
-            if (!data.ContainsKey("SPY")) return;
-            var spyTickList = data["SPY"];
+            if (!slice.ContainsKey("SPY")) return;
+            var spyTickList = slice["SPY"];
 
             //Ticks return a list of ticks this second
             foreach (var tick in spyTickList)
@@ -145,9 +145,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Filter out a tick from this vehicle, with this new data:
         /// </summary>
-        /// <param name="data">New data packet:</param>
+        /// <param name="vehicle">New data packet:</param>
         /// <param name="asset">Vehicle of this filter.</param>
-        public bool Filter(Security asset, BaseData data)
+        public bool Filter(Security vehicle, BaseData data)
         {
             // TRUE -->  Accept Tick
             // FALSE --> Reject Tick

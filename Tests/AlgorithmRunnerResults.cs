@@ -27,27 +27,27 @@ namespace QuantConnect.Tests
         /// <summary>
         /// Algorithm name
         /// </summary>
-        public readonly string Algorithm;
+        public string Algorithm { get; init; }
 
         /// <summary>
         /// Algorithm language (C#, Python)
         /// </summary>
-        public readonly Language Language;
+        public Language Language { get; init; }
 
         /// <summary>
         /// AlgorithmManager instance that is used to run the algorithm
         /// </summary>
-        public readonly AlgorithmManager AlgorithmManager;
+        public AlgorithmManager AlgorithmManager { get; init; }
 
         /// <summary>
         /// Algorithm results containing all of the sampled series
         /// </summary>
-        public readonly BacktestingResultHandler Results;
+        public BacktestingResultHandler Results { get; init; }
 
         /// <summary>
         /// The logs generated during the algorithm's execution
         /// </summary>
-        public readonly List<string> Logs;
+        public List<string> Logs { get; init; }
 
         public AlgorithmRunnerResults(
             string algorithm,

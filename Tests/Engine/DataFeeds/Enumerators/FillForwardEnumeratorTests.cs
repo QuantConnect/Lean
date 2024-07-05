@@ -2251,8 +2251,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
 
         public class FillForwardTestAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
         {
-            protected Symbol _symbol;
-            public static List<string> FillForwardBars = new List<string>();
+            protected Symbol _symbol { get; set; }
+            public static List<string> FillForwardBars { get; set; } = new List<string>();
             public static Lazy<string> Result { get; set; }
             public static Resolution Resolution { get; set; }
             public static Resolution ResolutionAnotherSymbol { get; set; }

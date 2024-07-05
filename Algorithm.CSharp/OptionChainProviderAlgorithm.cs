@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             _equitySymbol = equity.Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio[_equitySymbol].Invested)
             {
@@ -54,13 +54,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!(Securities.ContainsKey(_optionContract) && Portfolio[_optionContract].Invested))
             {
-                var contracts = OptionChainProvider.GetOptionContractList(_equitySymbol, data.Time);
+                var contracts = OptionChainProvider.GetOptionContractList(_equitySymbol, slice.Time);
                 var underlyingPrice = Securities[_equitySymbol].Price;
                 // filter the out-of-money call options from the contract list which expire in 10 to 30 days from now on
                 var otmCalls = (from symbol in contracts
                                 where symbol.ID.OptionRight == OptionRight.Call
                                 where symbol.ID.StrikePrice - underlyingPrice > 0
-                                where ((symbol.ID.Date - data.Time).TotalDays < 30 && (symbol.ID.Date - data.Time).TotalDays > 10)
+                                where ((symbol.ID.Date - slice.Time).TotalDays < 30 && (symbol.ID.Date - slice.Time).TotalDays > 10)
                                 select symbol);
 
                 if (otmCalls.Count() != 0)

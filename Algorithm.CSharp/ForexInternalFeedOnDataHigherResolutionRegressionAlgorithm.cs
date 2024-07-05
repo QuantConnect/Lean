@@ -49,15 +49,15 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            if (lastDataTime == data.Time)
+            if (lastDataTime == slice.Time)
             {
                 throw new RegressionTestException("Duplicate time for current data and last data slice");
             }
 
-            lastDataTime = data.Time;
+            lastDataTime = slice.Time;
 
             if (_added)
             {
@@ -84,7 +84,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _added = true;
             }
 
-            foreach (var kvp in data)
+            foreach (var kvp in slice)
             {
                 var symbol = kvp.Key;
                 _dataPointsPerSymbol[symbol]++;

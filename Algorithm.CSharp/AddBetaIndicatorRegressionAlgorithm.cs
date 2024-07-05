@@ -51,11 +51,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
-                var price = data["IBM"].Close;
+                var price = slice["IBM"].Close;
                 Buy("IBM", 10);
                 LimitOrder("IBM", 10, price * 0.1m);
                 StopMarketOrder("IBM", 10, price / 0.1m);

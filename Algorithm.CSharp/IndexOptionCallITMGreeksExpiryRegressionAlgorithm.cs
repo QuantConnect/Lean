@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // Let the algo warmup, but without using SetWarmup. Otherwise, we get
             // no contracts in the option chain
@@ -69,26 +69,26 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (data.OptionChains.Count == 0)
+            if (slice.OptionChains.Count == 0)
             {
                 return;
             }
-            if (data.OptionChains.Values.All(o => o.Contracts.Values.Any(c => !data.ContainsKey(c.Symbol))))
+            if (slice.OptionChains.Values.All(o => o.Contracts.Values.Any(c => !slice.ContainsKey(c.Symbol))))
             {
                 return;
             }
-            if (data.OptionChains.Values.First().Contracts.Count == 0)
+            if (slice.OptionChains.Values.First().Contracts.Count == 0)
             {
-                throw new RegressionTestException($"No contracts found in the option {data.OptionChains.Keys.First()}");
+                throw new RegressionTestException($"No contracts found in the option {slice.OptionChains.Keys.First()}");
             }
 
-            var deltas = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Delta).ToList();
-            var gammas = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Gamma).ToList();
-            var lambda = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Lambda).ToList();
-            var rho = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Rho).ToList();
-            var theta = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Theta).ToList();
-            var impliedVol = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.ImpliedVolatility).ToList();
-            var vega = data.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Vega).ToList();
+            var deltas = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Delta).ToList();
+            var gammas = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Gamma).ToList();
+            var lambda = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Lambda).ToList();
+            var rho = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Rho).ToList();
+            var theta = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Theta).ToList();
+            var impliedVol = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.ImpliedVolatility).ToList();
+            var vega = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Vega).ToList();
 
             // The commented out test cases all return zero.
             // This is because of failure to evaluate the greeks in the option pricing model, most likely
@@ -122,7 +122,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!_invested)
             {
-                SetHoldings(data.OptionChains.Values.First().Contracts.Values.First().Symbol, 1);
+                SetHoldings(slice.OptionChains.Values.First().Contracts.Values.First().Symbol, 1);
                 _invested = true;
             }
         }

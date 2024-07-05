@@ -63,21 +63,21 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
                 SetHoldings(_aapl, 1);
             }
 
-            if (data.Splits.ContainsKey(_aapl))
+            if (slice.Splits.ContainsKey(_aapl))
             {
-                Log(data.Splits[_aapl].ToString());
+                Log(slice.Splits[_aapl].ToString());
             }
 
-            if (data.Bars.ContainsKey(_aapl))
+            if (slice.Bars.ContainsKey(_aapl))
             {
-                var aaplData = data.Bars[_aapl];
+                var aaplData = slice.Bars[_aapl];
 
                 // Assert our volume matches what we expect
                 if (_expectedAdjustedVolume.MoveNext() && _expectedAdjustedVolume.Current != aaplData.Volume)
@@ -99,9 +99,9 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            if (data.QuoteBars.ContainsKey(_aapl))
+            if (slice.QuoteBars.ContainsKey(_aapl))
             {
-                var aaplQuoteData = data.QuoteBars[_aapl];
+                var aaplQuoteData = slice.QuoteBars[_aapl];
 
                 // Assert our askSize matches what we expect
                 if (_expectedAdjustedAskSize.MoveNext() && _expectedAdjustedAskSize.Current != aaplQuoteData.LastAskSize)

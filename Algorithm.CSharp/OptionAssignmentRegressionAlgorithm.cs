@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
             CallOption = AddOptionContract(CallOptionSymbol);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested && Stock.Price != 0 && PutOption.Price != 0 && CallOption.Price != 0)
             {

@@ -24,7 +24,7 @@ using QuantConnect.Indicators;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class ImpliedVolatilityTests : OptionBaseIndicatorTests<ImpliedVolatility>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()

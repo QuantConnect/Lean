@@ -67,7 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
             return symbols;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested && Transactions.GetOpenOrders().Count == 0)
             {

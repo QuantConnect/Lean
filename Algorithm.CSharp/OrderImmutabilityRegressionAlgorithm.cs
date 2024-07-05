@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {
@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _originalOrder = Transactions.GetOrderById(_ticket.OrderId);
 
                 // Create an UpdateOrderRequest and send it to the ticket
-                var updateFields = new UpdateOrderFields { Quantity = 20, Tag = "Pepe", LimitPrice = data[_spy].Low};
+                var updateFields = new UpdateOrderFields { Quantity = 20, Tag = "Pepe", LimitPrice = slice[_spy].Low};
                 var response = _ticket.Update(updateFields);
 
                 // Test order time

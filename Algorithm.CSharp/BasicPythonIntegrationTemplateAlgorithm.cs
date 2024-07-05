@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// Slice object keyed by symbol containing the stock data
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {

@@ -29,8 +29,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class AddRemoveOptionUniverseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private const string UnderlyingTicker = "GOOG";
-        public readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
-        public readonly Symbol OptionChainSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
+        private readonly Symbol Underlying = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Equity, Market.USA);
+        private readonly Symbol OptionChainSymbol = QuantConnect.Symbol.Create(UnderlyingTicker, SecurityType.Option, Market.USA);
         private readonly HashSet<Symbol> _expectedSecurities = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedData = new HashSet<Symbol>();
         private readonly HashSet<Symbol> _expectedUniverses = new HashSet<Symbol>();
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             _expectedUniverses.Add(UserDefinedUniverse.CreateSymbol(SecurityType.Equity, Market.USA));
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // verify expectations
             if (SubscriptionManager.Subscriptions.Count(x => x.Symbol == OptionChainSymbol)
@@ -68,7 +68,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Log($"SubscriptionManager.Subscriptions:  {string.Join(" -- ", SubscriptionManager.Subscriptions)}");
                 throw new RegressionTestException($"Unexpected {OptionChainSymbol} subscription presence");
             }
-            if (!data.ContainsKey(Underlying))
+            if (!slice.ContainsKey(Underlying))
             {
                 // TODO : In fact, we're unable to properly detect whether or not we auto-added or it was manually added
                 // this is because when we auto-add the underlying we don't mark it as an internal security like we do with other auto adds
@@ -91,10 +91,10 @@ namespace QuantConnect.Algorithm.CSharp
                 var actual = string.Join(Environment.NewLine, UniverseManager.Keys.OrderBy(s => s.ToString()));
                 throw new RegressionTestException($"{Time}:: Detected differences in expected and actual universes{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
-            if (_expectedData.AreDifferent(data.Keys.ToHashSet()))
+            if (_expectedData.AreDifferent(slice.Keys.ToHashSet()))
             {
                 var expected = string.Join(Environment.NewLine, _expectedData.OrderBy(s => s.ToString()));
-                var actual = string.Join(Environment.NewLine, data.Keys.OrderBy(s => s.ToString()));
+                var actual = string.Join(Environment.NewLine, slice.Keys.OrderBy(s => s.ToString()));
                 throw new RegressionTestException($"{Time}:: Detected differences in expected and actual slice data keys{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
             }
 

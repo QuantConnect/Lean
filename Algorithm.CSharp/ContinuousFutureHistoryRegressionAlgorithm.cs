@@ -51,8 +51,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             // ES has an expiration on december but because we are using 'contractDepthOffset: 1' we expect to use the next contract
             if (_continuousContract.Mapped.ID.Date.Month != 3)
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"ContinuousContract did not get any data during warmup!");
                 }
 
-                var backMonthExpiration =   data.Keys.Single().Underlying.ID.Date;
+                var backMonthExpiration =   slice.Keys.Single().Underlying.ID.Date;
                 var frontMonthExpiration = FuturesExpiryFunctions.FuturesExpiryFunction(_continuousContract.Symbol)(Time.AddMonths(1));
                 if (backMonthExpiration <= frontMonthExpiration.Date)
                 {
@@ -78,9 +78,9 @@ namespace QuantConnect.Algorithm.CSharp
                         $" @ {Time} it should be AFTER front month expiration {frontMonthExpiration}");
                 }
             }
-            if (data.Keys.Count != 1)
+            if (slice.Keys.Count != 1)
             {
-                throw new RegressionTestException($"We are getting data for more than one symbols! {string.Join(",", data.Keys.Select(symbol => symbol))}");
+                throw new RegressionTestException($"We are getting data for more than one symbols! {string.Join(",", slice.Keys.Select(symbol => symbol))}");
             }
 
             if (!Portfolio.Invested && !IsWarmingUp)

@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
             AddOptionContract(_option);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             // We are done
             if (_optionSold)

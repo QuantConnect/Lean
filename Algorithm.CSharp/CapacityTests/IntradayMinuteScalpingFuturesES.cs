@@ -48,9 +48,9 @@ namespace QuantConnect.Algorithm.CSharp
             a.SetFilter(0, 10000);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
-            var contract = data.FutureChains.Values.SelectMany(c => c.Contracts.Values)
+            var contract = slice.FutureChains.Values.SelectMany(c => c.Contracts.Values)
                 .OrderBy(c => c.Symbol.ID.Date)
                 .FirstOrDefault()?
                 .Symbol;

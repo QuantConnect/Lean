@@ -98,10 +98,10 @@ namespace QuantConnect.Algorithm.CSharp
         {
             private QCAlgorithm _algorithm;
             private Future _future;
-            public ExponentialMovingAverage EMA;
-            public decimal Price;
-            public bool IsLong;
-            public bool IsShort;
+            public ExponentialMovingAverage EMA { get; set; }
+            public decimal Price { get; set; }
+            public bool IsLong { get; set; }
+            public bool IsShort { get; set; }
             public Symbol Symbol => _future.Symbol;
             public Symbol Mapped => _future.Mapped;
 

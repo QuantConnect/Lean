@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (_contractSymbol != null)
             {
@@ -69,17 +69,17 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Buy the underlying for our covered put
-            if (data.ContainsKey(_equity) && !_purchasedUnderlying)
+            if (slice.ContainsKey(_equity) && !_purchasedUnderlying)
             {
                 MarketOrder(_equity, 100 * quantity);
             }
 
             // Buy a contract and exercise it immediately
-            if (_purchasedUnderlying && data.OptionChains.TryGetValue(_option, out OptionChain chain))
+            if (_purchasedUnderlying && slice.OptionChains.TryGetValue(_option, out OptionChain chain))
             {
                 var contract = chain
                     .Where(x => x.Right == OptionRight.Put)
-                    .OrderByDescending(x => x.Strike - data[_equity].Price)
+                    .OrderByDescending(x => x.Strike - slice[_equity].Price)
                     .FirstOrDefault();
 
                 _contractSymbol = contract.Symbol;

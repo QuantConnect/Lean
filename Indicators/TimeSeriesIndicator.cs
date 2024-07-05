@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// "Integration" constants
         /// </summary>
-        protected double[] _diffHeads;
+        protected double[] _diffHeads { get; set; }
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.

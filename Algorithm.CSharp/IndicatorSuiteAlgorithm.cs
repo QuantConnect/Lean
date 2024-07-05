@@ -131,12 +131,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">TradeBars IDictionary object with your stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">TradeBars IDictionary object with your stock data</param>
+        public override void OnData(Slice slice)
         {
             if (!_indicators.BB.IsReady || !_indicators.RSI.IsReady) return;
 
-            _price = data[_symbol].Close;
+            _price = slice[_symbol].Close;
 
             if (!Portfolio.HoldStock)
             {

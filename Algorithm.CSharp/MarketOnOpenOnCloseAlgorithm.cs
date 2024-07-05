@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -65,10 +65,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        public override void OnOrderEvent(OrderEvent fill)
+        public override void OnOrderEvent(OrderEvent orderEvent)
         {
-            var order = Transactions.GetOrderById(fill.OrderId);
-            Console.WriteLine(Time + " - " + order.Type + " - " + fill.Status + ":: " + fill);
+            var order = Transactions.GetOrderById(orderEvent.OrderId);
+            Console.WriteLine(Time + " - " + order.Type + " - " + orderEvent.Status + ":: " + orderEvent);
         }
     }
 }

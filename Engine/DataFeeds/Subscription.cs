@@ -54,12 +54,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the security this subscription points to
         /// </summary>
-        public readonly ISecurityPrice Security;
+        public ISecurityPrice Security { get; init; }
 
         /// <summary>
         /// Gets the configuration for this subscritions
         /// </summary>
-        public readonly SubscriptionDataConfig Configuration;
+        public SubscriptionDataConfig Configuration { get; init; }
 
         /// <summary>
         /// Gets the exchange time zone associated with this subscription
@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Gets the offset provider for time zone conversions to and from the data's local time
         /// </summary>
-        public readonly TimeZoneOffsetProvider OffsetProvider;
+        public TimeZoneOffsetProvider OffsetProvider { get; init; }
 
         /// <summary>
         /// Gets the most current value from the subscription source

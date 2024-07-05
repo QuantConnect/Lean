@@ -56,17 +56,17 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Fitted AR parameters (φ terms).
         /// </summary>
-        public double[] ArParameters;
+        public double[] ArParameters { get; private set; }
 
         /// <summary>
         /// Fitted MA parameters (θ terms).
         /// </summary>
-        public double[] MaParameters;
+        public double[] MaParameters { get; private set; }
 
         /// <summary>
         /// Fitted intercept (c term).
         /// </summary>
-        public double Intercept;
+        public double Intercept { get; private set; }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
@@ -181,7 +181,9 @@ namespace QuantConnect.Indicators
             if (_rollingData.IsReady)
             {
                 var arrayData = _rollingData.ToArray();
-                arrayData = _diffOrder > 0 ? DifferenceSeries(_diffOrder, arrayData, out _diffHeads) : arrayData;
+                double[] diffHeads = default;
+                arrayData = _diffOrder > 0 ? DifferenceSeries(_diffOrder, arrayData, out diffHeads) : arrayData;
+                _diffHeads = diffHeads;
                 TwoStepFit(arrayData);
                 double summants = 0;
                 if (_arOrder > 0)

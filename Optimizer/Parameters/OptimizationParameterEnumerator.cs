@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -26,12 +26,12 @@ namespace QuantConnect.Optimizer.Parameters
         /// <summary>
         /// The target optimization parameter to enumerate
         /// </summary>
-        protected readonly T OptimizationParameter;
+        protected T OptimizationParameter { get; }
 
         /// <summary>
         /// The current enumeration state
         /// </summary>
-        protected int Index = -1;
+        protected int Index { get; set; } = -1;
 
         protected OptimizationParameterEnumerator(T optimizationParameter)
         {

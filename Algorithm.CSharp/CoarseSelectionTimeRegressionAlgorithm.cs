@@ -61,12 +61,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            if (data.Count != 2)
+            if (slice.Count != 2)
             {
-                throw new RegressionTestException($"Unexpected data count: {data.Count}");
+                throw new RegressionTestException($"Unexpected data count: {slice.Count}");
             }
             if (ActiveSecurities.Count != 2)
             {

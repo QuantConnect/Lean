@@ -34,17 +34,17 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <remarks>
         /// Set default equal to 1 so that we can use it even in the event of no splits
         /// </remarks>
-        public decimal FinalSplitFactor = 1m;
+        public decimal FinalSplitFactor { get; set; } = 1m;
 
         /// <summary>
         /// Stores <see cref="MapFileRow"/> instances
         /// </summary>
-        public List<MapFileRow> MapRows = new();
+        public List<MapFileRow> MapRows { get; set; } = new();
 
         /// <summary>
         /// Stores <see cref="CorporateFactorRow"/> instances
         /// </summary>
-        public List<CorporateFactorRow> DividendsSplits = new List<CorporateFactorRow>();
+        public List<CorporateFactorRow> DividendsSplits { get; set; } = new List<CorporateFactorRow>();
 
         /// <summary>
         /// Current Symbol value. Can be renamed

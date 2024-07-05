@@ -40,10 +40,10 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
-            foreach (var dividend in data.Dividends)
+            foreach (var dividend in slice.Dividends)
             {
                 Debug($"{Time}. {dividend.Value}");
                 _gotDividend = true;
@@ -52,7 +52,7 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException("Got a dividend at an unexpected point in time");
                 }
             }
-            foreach (var tradeBar in data.Bars)
+            foreach (var tradeBar in slice.Bars)
             {
                 Debug($"{Time}. {tradeBar.Value}");
             }

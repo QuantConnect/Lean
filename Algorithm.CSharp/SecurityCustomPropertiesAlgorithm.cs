@@ -60,7 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
             _dynamicSpy.OrdersFeesPrices = new Dictionary<int, decimal>();
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!_dynamicSpy.FastEma.IsReady)
             {

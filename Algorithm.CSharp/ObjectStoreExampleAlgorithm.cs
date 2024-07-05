@@ -39,9 +39,9 @@ namespace QuantConnect.Algorithm.CSharp
         private ExponentialMovingAverage SPY_Close_EMA50;
 
         // track last year of close and EMA10/EMA50
-        public readonly RollingWindow<IndicatorDataPoint> SPY_Close_History = new RollingWindow<IndicatorDataPoint>(252);
-        public readonly RollingWindow<IndicatorDataPoint> SPY_Close_EMA10_History = new RollingWindow<IndicatorDataPoint>(252);
-        public readonly RollingWindow<IndicatorDataPoint> SPY_Close_EMA50_History = new RollingWindow<IndicatorDataPoint>(252);
+        private readonly RollingWindow<IndicatorDataPoint> SPY_Close_History = new RollingWindow<IndicatorDataPoint>(252);
+        private readonly RollingWindow<IndicatorDataPoint> SPY_Close_EMA10_History = new RollingWindow<IndicatorDataPoint>(252);
+        private readonly RollingWindow<IndicatorDataPoint> SPY_Close_EMA50_History = new RollingWindow<IndicatorDataPoint>(252);
 
         public override void Initialize()
         {

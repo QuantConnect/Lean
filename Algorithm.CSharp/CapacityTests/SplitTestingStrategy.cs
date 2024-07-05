@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
             _htgm = htgm.Symbol;
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!Portfolio.Invested)
             {

@@ -63,7 +63,7 @@ namespace QuantConnect.Algorithm.CSharp
             _slowIbmEma = EMA(_spy, 30, Resolution.Minute);
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (!_slowSpyEma.IsReady) return;
 

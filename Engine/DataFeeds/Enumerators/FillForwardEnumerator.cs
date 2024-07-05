@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <summary>
         /// The exchange used to determine when to insert fill forward data
         /// </summary>
-        protected readonly SecurityExchange Exchange;
+        protected SecurityExchange Exchange { get; init; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FillForwardEnumerator"/> class that accepts

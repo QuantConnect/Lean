@@ -14,7 +14,6 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -23,14 +22,14 @@ using static QuantConnect.Tests.Indicators.TestHelper;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class CorrelationPearsonTests : CommonIndicatorTests<IBaseDataBar>
     { 
         protected override string TestFileName => "spy_qqq_corr.csv";
         
         private DateTime _reference = new DateTime(2020, 1, 1);
 
-        protected CorrelationType _correlationType = CorrelationType.Pearson;
+        protected CorrelationType _correlationType { get; set; } = CorrelationType.Pearson;
         protected override string TestColumnName => (_correlationType==CorrelationType.Pearson)?"Correlation_Pearson":"Correlation_Spearman";
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {

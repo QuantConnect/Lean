@@ -107,12 +107,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
             /// <summary>
             /// List of Symbols that follow the components direction
             /// </summary>
-            public readonly List<Symbol> Long;
+            public List<Symbol> Long { get; init; }
 
             /// <summary>
             /// List of Symbols that follow the components inverse direction
             /// </summary>
-            public readonly List<Symbol> Inverse;
+            public List<Symbol> Inverse { get; init; }
 
             /// <summary>
             /// Creates a new instance of <see cref="Grouping"/>.

@@ -38,8 +38,8 @@ namespace QuantConnect.Algorithm.CSharp
         private MovingAverageConvergenceDivergence _macd;
         private readonly string _symbol = "SPY";
 
-        public readonly int FastEmaPeriod = 12;
-        public readonly int SlowEmaPeriod = 26;
+        private readonly int _fastEmaPeriod = 12;
+        private readonly int _slowEmaPeriod = 26;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -52,14 +52,14 @@ namespace QuantConnect.Algorithm.CSharp
             AddSecurity(SecurityType.Equity, _symbol, Resolution.Daily);
 
             // define our daily macd(12,26) with a 9 day signal
-            _macd = MACD(_symbol, FastEmaPeriod, SlowEmaPeriod, 9, MovingAverageType.Exponential, Resolution.Daily);
+            _macd = MACD(_symbol, _fastEmaPeriod, _slowEmaPeriod, 9, MovingAverageType.Exponential, Resolution.Daily);
         }
 
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
         /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
-        public override void OnData(Slice data)
+        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        public override void OnData(Slice slice)
         {
             // wait for our indicator to be ready
             if (!_macd.IsReady) return;
@@ -76,7 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
                 //    The EmitInsights method can accept multiple insights separated by commas
                 EmitInsights(
                     // Creates an insight for our symbol, predicting that it will move up within the fast ema period number of days
-                    Insight.Price(_symbol, TimeSpan.FromDays(FastEmaPeriod), InsightDirection.Up)
+                    Insight.Price(_symbol, TimeSpan.FromDays(_fastEmaPeriod), InsightDirection.Up)
                 );
 
                 // longterm says buy as well
@@ -89,7 +89,7 @@ namespace QuantConnect.Algorithm.CSharp
                 //    The EmitInsights method can accept multiple insights separated by commas
                 EmitInsights(
                     // Creates an insight for our symbol, predicting that it will move down within the fast ema period number of days
-                    Insight.Price(_symbol, TimeSpan.FromDays(FastEmaPeriod), InsightDirection.Down)
+                    Insight.Price(_symbol, TimeSpan.FromDays(_fastEmaPeriod), InsightDirection.Down)
                 );
 
                 // shortterm says sell as well
@@ -108,9 +108,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             // plot both lines
             Plot("MACD", _macd, _macd.Signal);
-            if (data.Bars.ContainsKey(_symbol))
+            if (slice.Bars.ContainsKey(_symbol))
             {
-                Plot(_symbol, "Open", data[_symbol].Open);
+                Plot(_symbol, "Open", slice[_symbol].Open);
             }
             Plot(_symbol, _macd.Fast, _macd.Slow);
         }

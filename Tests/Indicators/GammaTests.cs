@@ -22,7 +22,7 @@ using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
-    [TestFixture]
+    [TestFixture, Parallelizable(ParallelScope.Fixtures)]
     public class GammaTests : OptionBaseIndicatorTests<Gamma>
     {
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()

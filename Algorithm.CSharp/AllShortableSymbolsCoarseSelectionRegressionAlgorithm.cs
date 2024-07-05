@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
             SetBrokerageModel(new AllShortableSymbolsRegressionAlgorithmBrokerageModel());
         }
 
-        public override void OnData(Slice data)
+        public override void OnData(Slice slice)
         {
             if (Time.Date == _lastTradeDate)
             {
