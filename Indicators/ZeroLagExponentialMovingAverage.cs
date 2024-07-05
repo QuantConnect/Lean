@@ -80,7 +80,7 @@ namespace QuantConnect.Indicators
         {
             _rollingWindow.Add(input);
 
-            if (Samples >= _lag + 1)
+            if (_rollingWindow.IsReady)
             {
                 _ema.Update(input.Time, input.Value + (input.Value - _rollingWindow[_lag].Value));
             }
