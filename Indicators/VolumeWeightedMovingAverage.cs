@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using MathNet.Numerics;
 using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
