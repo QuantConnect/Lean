@@ -26,6 +26,10 @@ namespace QuantConnect.Indicators
         private IndicatorBase<IndicatorDataPoint> _rollingSumS { get; }
         private IndicatorBase<IndicatorDataPoint> _rollingSumV { get; }
 
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VolumeWeightedMovingAverage"/> class using the specified name.
@@ -35,6 +39,7 @@ namespace QuantConnect.Indicators
         public VolumeWeightedMovingAverage(string name, int period)
             : base(name)
         {
+            WarmUpPeriod = period;
             _rollingSumS = new Sum(name + "_SumS", period);
             _rollingSumV = new Sum(name + "_SumV", period);
         }
@@ -43,12 +48,6 @@ namespace QuantConnect.Indicators
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _rollingSumS.IsReady && _rollingSumV.IsReady;
-
-        /// <summary>
-        /// Required period, in data points, for the indicator to be ready and fully initialized.
-        /// </summary>
-        //public int WarmUpPeriod => 1;
-        public int WarmUpPeriod => _rollingSumS.Window.Size;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
