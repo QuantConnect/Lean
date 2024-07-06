@@ -16,7 +16,6 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
-using static Plotly.NET.StyleParam.LinearAxisId;
 
 namespace QuantConnect.Tests.Indicators
 {
