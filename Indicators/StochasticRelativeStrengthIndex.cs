@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Linq;
 
 namespace QuantConnect.Indicators
@@ -54,7 +53,7 @@ namespace QuantConnect.Indicators
         /// <param name="stochPeriod">The period of the stochastic indicator</param>
         /// <param name="kSmoothingPeriod">The smoothing period of k output (aka %K)</param>
         /// <param name="dSmoothingPeriod">The smoothing period of d output (aka %D)</param>
-        /// <param name="movingAverageType">The type of moving average to be used</param>
+        /// <param name="movingAverageType">The type of moving average to be used for k and d</param>
         public StochasticRelativeStrengthIndex(int rsiPeriod, int stochPeriod, int kSmoothingPeriod, int dSmoothingPeriod, MovingAverageType movingAverageType = MovingAverageType.Simple)
             : this($"StochRSI({rsiPeriod},{stochPeriod},{kSmoothingPeriod},{dSmoothingPeriod},{movingAverageType})", rsiPeriod, stochPeriod, kSmoothingPeriod, dSmoothingPeriod, movingAverageType)
         {
@@ -86,7 +85,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => true; // MiddleBand.IsReady && UpperBand.IsReady && LowerBand.IsReady && BandWidth.IsReady && PercentB.IsReady;
+        public override bool IsReady => _rsi.IsReady && _recentRSIValues.IsReady && k.IsReady && d.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -105,7 +104,6 @@ namespace QuantConnect.Indicators
 
             if (Samples < _stochPeriod)
             {
-                Console.WriteLine(Samples);
                 return 0;
             }
 
@@ -121,7 +119,6 @@ namespace QuantConnect.Indicators
             k.Update(input.Time, _k);
             d.Update(input.Time, k.Current.Value);
 
-            Console.WriteLine(k.Current.Value);
             return input.Value;
         }
 

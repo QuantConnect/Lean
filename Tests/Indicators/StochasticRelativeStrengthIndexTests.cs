@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(expected, (double) ((StochasticRelativeStrengthIndex) indicator).k.Current.Value, 1e-3);
 
         [Test]
-        public void ComparesWithExternalDataMiddleBand()
+        public void ComparesWithExternalDataColumnD()
         {
             TestHelper.TestIndicator(
                 CreateIndicator() as StochasticRelativeStrengthIndex,
