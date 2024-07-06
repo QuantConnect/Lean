@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
+using static Plotly.NET.StyleParam.LinearAxisId;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -41,14 +42,14 @@ namespace QuantConnect.Tests.Indicators
         public void IsReadyAfterPeriodUpdates()
         {
             var zlema = new ZeroLagExponentialMovingAverage(5);
-            zlema.Update(DateTime.UtcNow, 1m);
-            zlema.Update(DateTime.UtcNow, 1m);
-            zlema.Update(DateTime.UtcNow, 1m);
-            zlema.Update(DateTime.UtcNow, 1m);
-            zlema.Update(DateTime.UtcNow, 1m);
-            zlema.Update(DateTime.UtcNow, 1m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 0, 0), 1m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 1, 0), 1m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 2, 0), 1m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 3, 0), 1m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 4, 0), 1m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 5, 0), 1m);
             Assert.IsFalse(zlema.IsReady);
-            zlema.Update(DateTime.UtcNow, 1m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 6, 0), 1m);
             Assert.IsTrue(zlema.IsReady);
             Assert.AreEqual(zlema.WarmUpPeriod, 7);
         }
@@ -67,10 +68,10 @@ namespace QuantConnect.Tests.Indicators
             zlema.Reset();
 
             TestHelper.AssertIndicatorIsInDefaultState(zlema);
-            zlema.Update(DateTime.UtcNow, 2.0m);
-            zlema.Update(DateTime.UtcNow, 2.0m);
-            zlema.Update(DateTime.UtcNow, 2.0m);
-            zlema.Update(DateTime.UtcNow, 2.0m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 0, 0), 2.0m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 1, 0), 2.0m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 2, 0), 2.0m);
+            zlema.Update(new DateTime(2024, 07, 05, 0, 3, 0), 2.0m);
             Assert.AreEqual(zlema.Current.Value, 2.0m);
         }
     }
