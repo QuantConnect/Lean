@@ -32,11 +32,6 @@ namespace QuantConnect.Tests.Indicators
 
         protected override string TestColumnName => "ZLEMA5";
 
-        protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion
-        {
-            get { return (indicator, expected) => Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-2); }
-        }
-
 
         [Test]
         public void IsReadyAfterPeriodUpdates()
