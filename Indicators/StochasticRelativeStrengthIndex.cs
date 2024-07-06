@@ -95,7 +95,7 @@ namespace QuantConnect.Indicators
 
         /// <summary>
         /// Computes the next value of the following sub-indicators from the given state:
-        /// StandardDeviation, MiddleBand, UpperBand, LowerBand, BandWidth, %B
+        /// k (%K) and d (%D)
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>The input is returned unmodified.</returns>
@@ -122,7 +122,7 @@ namespace QuantConnect.Indicators
             d.Update(input.Time, k.Current.Value);
 
             Console.WriteLine(k.Current.Value);
-            return k.Current.Value;
+            return input.Value;
         }
 
         /// <summary>
