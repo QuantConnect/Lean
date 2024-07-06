@@ -25,8 +25,8 @@ namespace QuantConnect.Indicators
     public class VolumeWeightedMovingAverage : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
 
-        private IndicatorBase<IndicatorDataPoint> rollingSumS { get; }
-        private IndicatorBase<IndicatorDataPoint> rollingSumV { get; }
+        private IndicatorBase<IndicatorDataPoint> _rollingSumS { get; }
+        private IndicatorBase<IndicatorDataPoint> _rollingSumV { get; }
 
 
         /// <summary>
@@ -37,20 +37,20 @@ namespace QuantConnect.Indicators
         public VolumeWeightedMovingAverage(string name, int period)
             : base(name)
         {
-            rollingSumS = new Sum(name + "_SumS", period);
-            rollingSumV = new Sum(name + "_SumV", period);
+            _rollingSumS = new Sum(name + "_SumS", period);
+            _rollingSumV = new Sum(name + "_SumV", period);
         }
 
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => rollingSumS.IsReady && rollingSumV.IsReady;
+        public override bool IsReady => _rollingSumS.IsReady && _rollingSumV.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         //public int WarmUpPeriod => 1;
-        public int WarmUpPeriod => rollingSumS.Window.Size;
+        public int WarmUpPeriod => _rollingSumS.Window.Size;
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
@@ -59,9 +59,9 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            rollingSumS.Update(input.Time, input.Close * input.Volume);
-            rollingSumV.Update(input.Time, input.Volume);
-            return rollingSumS.Current.Value / rollingSumV.Current.Value;
+            _rollingSumS.Update(input.Time, input.Close * input.Volume);
+            _rollingSumV.Update(input.Time, input.Volume);
+            return _rollingSumS.Current.Value / _rollingSumV.Current.Value;
         }
 
         /// <summary>
@@ -69,8 +69,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            rollingSumS.Reset();
-            rollingSumV.Reset();
+            _rollingSumS.Reset();
+            _rollingSumV.Reset();
             base.Reset();
         }
 
